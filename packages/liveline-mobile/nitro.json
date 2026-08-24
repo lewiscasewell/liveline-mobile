@@ -1,0 +1,23 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["liveline"],
+  "ios": {
+    "iosModuleName": "LivelineMobile"
+  },
+  "android": {
+    "androidNamespace": ["liveline"],
+    "androidCxxLibName": "LivelineMobile"
+  },
+  "autolinking": {
+    "Liveline": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridLivelineView"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridLivelineView"
+      }
+    }
+  }
+}

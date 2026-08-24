@@ -1,0 +1,23 @@
+{
+  "name": "react-native-liveline-mobile",
+  "version": "0.0.0",
+  "description": "Real-time line/candle chart for React Native, backed by native Swift (LivelineKit) via Nitro Modules.",
+  "main": "src/index.ts",
+  "scripts": {
+    "codegen": "nitrogen"
+  },
+  "keywords": ["react-native", "nitro", "chart", "liveline"],
+  "license": "MIT",
+  "devDependencies": {
+    "nitrogen": "0.37.0",
+    "react-native-nitro-modules": "0.37.0",
+    "react": "19.2.3",
+    "@types/react": "~19.2.2",
+    "typescript": "^5.4.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-nitro-modules": "*"
+  }
+}

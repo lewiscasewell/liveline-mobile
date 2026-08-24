@@ -1,0 +1,37 @@
+# macOS
+.DS_Store
+
+# Xcode / SPM
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+*.xcworkspace/xcshareddata/swiftpm/.build/
+
+# Swift Package Manager
+Package.resolved
+
+# Android (later phases)
+android/.gradle/
+android/build/
+android/**/build/
+android/local.properties
+.idea/
+
+# Node / RN (later phases)
+node_modules/
+packages/**/lib/
+*.log
+
+# Build products
+build/
+
+# CocoaPods (generated from Podfile)
+Pods/
+
+# Expo / Metro
+.expo/
+.expo-shared/
+.metro-health-check*
+*.tsbuildinfo

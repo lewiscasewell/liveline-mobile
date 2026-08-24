@@ -1,0 +1,253 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		574C3CE3EE3F49D19FC6FB1B /* LivelineDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC715B1200D84E568A0FA90B /* LivelineDemoApp.swift */; };
+		BBB8A2002D544C5AA05C01EF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8850D82B67B44B5592A8E15B /* ContentView.swift */; };
+		FDAC78F93C8241038AB69962 /* LivelineKit in Frameworks */ = {isa = PBXBuildFile; productRef = 995CD5E9623C42BC9F6687CE /* LivelineKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		EEB93AF15040457F98EF61B6 /* LivelineDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LivelineDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EC715B1200D84E568A0FA90B /* LivelineDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivelineDemoApp.swift; sourceTree = "<group>"; };
+		8850D82B67B44B5592A8E15B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		14C892134FCA4E4B953D6E17 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDAC78F93C8241038AB69962 /* LivelineKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D8AEC616E4254A909A8B5393 = {
+			isa = PBXGroup;
+			children = (
+				51E9AA2371534144BE8B3D87 /* LivelineDemo */,
+				13D88297D635450C8BF2CA30 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		13D88297D635450C8BF2CA30 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EEB93AF15040457F98EF61B6 /* LivelineDemo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		51E9AA2371534144BE8B3D87 /* LivelineDemo */ = {
+			isa = PBXGroup;
+			children = (
+				EC715B1200D84E568A0FA90B /* LivelineDemoApp.swift */,
+				8850D82B67B44B5592A8E15B /* ContentView.swift */,
+			);
+			path = LivelineDemo;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D94A4C7706F74C4A91ED575D /* LivelineDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7ED406FD29CC419A9F9C49DC /* Build configuration list for PBXNativeTarget "LivelineDemo" */;
+			buildPhases = (
+				48BC754FCCA64464B7E628D0 /* Sources */,
+				14C892134FCA4E4B953D6E17 /* Frameworks */,
+				9AFEF71FDDCC41558E7C4296 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LivelineDemo;
+			packageProductDependencies = (
+				995CD5E9623C42BC9F6687CE /* LivelineKit */,
+			);
+			productName = LivelineDemo;
+			productReference = EEB93AF15040457F98EF61B6 /* LivelineDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0A4299E358A842368055EDAD /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1700;
+				LastUpgradeCheck = 1700;
+				TargetAttributes = {
+					D94A4C7706F74C4A91ED575D = {
+						CreatedOnToolsVersion = 17.0;
+					};
+				};
+			};
+			buildConfigurationList = 900D97CEE72D4349822B11CD /* Build configuration list for PBXProject "LivelineDemo" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D8AEC616E4254A909A8B5393;
+			packageReferences = (
+				454CE91B074F4CA3B0DDBC1E /* XCLocalSwiftPackageReference "../../ios" */,
+			);
+			productRefGroup = 13D88297D635450C8BF2CA30 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D94A4C7706F74C4A91ED575D /* LivelineDemo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9AFEF71FDDCC41558E7C4296 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		48BC754FCCA64464B7E628D0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				574C3CE3EE3F49D19FC6FB1B /* LivelineDemoApp.swift in Sources */,
+				BBB8A2002D544C5AA05C01EF /* ContentView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		7767BF901C194E29B9AA091A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		3DF7BA77670042EB9723C9DC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E3B4AF7391F84A949B0EC829 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.liveline.LivelineDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E1B9C01BA6064768A27D6C6C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.liveline.LivelineDemo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		900D97CEE72D4349822B11CD /* Build configuration list for PBXProject "LivelineDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7767BF901C194E29B9AA091A /* Debug */,
+				3DF7BA77670042EB9723C9DC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7ED406FD29CC419A9F9C49DC /* Build configuration list for PBXNativeTarget "LivelineDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E3B4AF7391F84A949B0EC829 /* Debug */,
+				E1B9C01BA6064768A27D6C6C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		454CE91B074F4CA3B0DDBC1E /* XCLocalSwiftPackageReference "../../ios" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../..";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		995CD5E9623C42BC9F6687CE /* LivelineKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LivelineKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 0A4299E358A842368055EDAD /* Project object */;
+}

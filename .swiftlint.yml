@@ -1,0 +1,47 @@
+# SwiftLint configuration for LivelineKit.
+# Install: brew install swiftlint. Run: swiftlint --strict from repo root.
+
+included:
+  - ios/Sources
+  - ios/Tests
+  - examples/ios
+
+excluded:
+  - ios/.build
+  - "**/.build"
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - closure_spacing
+  - contains_over_first_not_nil
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - redundant_nil_coalescing
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+
+# No force unwraps or IUOs in the public API — this is a hard project rule.
+force_unwrapping:
+  severity: error
+implicitly_unwrapped_optional:
+  severity: error
+
+line_length:
+  warning: 120
+  error: 160
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  min_length:
+    warning: 1
+  allowed_symbols: ["_"]
+
+type_name:
+  min_length: 2
+
+file_length:
+  warning: 500
+  error: 800
