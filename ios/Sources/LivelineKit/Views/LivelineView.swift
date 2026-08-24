@@ -128,6 +128,12 @@ public final class LivelineView: UIView {
 
     private var displayValue: Double = 0
     private var displayValueInited = false
+    /// Time of the last COMMITTED live sample, used to auto-bucket ``push(_:)``
+    /// to the current window's resolution. `-inf` forces the next push to commit.
+    private var lastCommitTime: Double = -.infinity
+    /// Roughly how many live points to commit across the visible window before
+    /// sliding the head instead of appending.
+    private static let liveResolution: Double = 300
     var domain = Domain()
 
     var badgeY: CGFloat = 0
@@ -350,19 +356,46 @@ public final class LivelineView: UIView {
     /// load (from empty) snaps the domain to initialise it.
     public func setData(_ points: [LivelinePoint]) {
         let wasEmpty = buffer.count == 0
+        // Keep any existing samples OLDER than the new series' start. Switching to
+        // a narrower window (zoom in) then still has data covering the left, so
+        // the zoom magnifies smoothly instead of chopping the line off; switching
+        // to a wider window keeps nothing (the new series already reaches back
+        // further). Buffer points are chronological, so stop at the first overlap.
+        var older: [LivelinePoint] = []
+        if !wasEmpty, let newStart = points.first?.time {
+            older.reserveCapacity(buffer.count)
+            for i in 0..<buffer.count {
+                let p = buffer[i]
+                if p.time < newStart { older.append(p) } else { break }
+            }
+        }
         buffer.removeAll()
+        for p in older { buffer.push(p) }
         for p in points { buffer.push(p) }
         if wasEmpty, let last = points.last {
             displayValue = last.value
             displayValueInited = true
             domain.reset()
         }
+        // The next live push starts a fresh point after this backfill.
+        lastCommitTime = -.infinity
         setNeedsDisplay()
     }
 
-    /// Appends a single live sample. Call once per tick, never per frame.
+    /// Adds a live sample, adapting to the current window automatically: it
+    /// commits a new point about every `windowSeconds / liveResolution` and
+    /// slides the head in place between commits. So a fast feed on a wide window
+    /// (1W, 4Y) repaints the current point at the window's resolution instead of
+    /// piling ticks onto "now", while a live/short window keeps every tick. Just
+    /// call it once per data tick — no per-window bookkeeping needed.
     public func push(_ point: LivelinePoint) {
-        buffer.push(point)
+        let bucket = windowSeconds / LivelineView.liveResolution
+        if buffer.count == 0 || point.time - lastCommitTime >= bucket {
+            buffer.push(point)
+            lastCommitTime = point.time
+        } else {
+            buffer.replaceLast(point)
+        }
         if !displayValueInited {
             displayValue = point.value
             displayValueInited = true
@@ -655,7 +688,10 @@ public final class LivelineView: UIView {
         // 6. Left-edge fade.
         drawLeftEdgeFade(ctx, w: w, h: h, padLeft: pad.left)
 
-        // 7. Crosshair.
+        // 7. Crosshair. Recompute the hovered value from the CURRENT line every
+        // frame (not just on finger-move) so the dot stays glued to the line as
+        // a live chart scrolls and updates underneath it.
+        if hoverX != nil, scrubAmount > 0.01 { updateHover() }
         if let hx = hoverX, let hover = lastHover, scrubAmount > 0.01 {
             let dist = dotPoint.x - hx
             let fadeStart = min(80, layout.chartW * 0.3)
