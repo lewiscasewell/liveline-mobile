@@ -8,6 +8,14 @@
   },
   "keywords": ["react-native", "nitro", "chart", "liveline"],
   "license": "MIT",
+  "codegenConfig": {
+    "name": "LivelineMobileSpec",
+    "type": "all",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.margelo.nitro.liveline"
+    }
+  },
   "devDependencies": {
     "nitrogen": "0.37.0",
     "react-native-nitro-modules": "0.37.0",

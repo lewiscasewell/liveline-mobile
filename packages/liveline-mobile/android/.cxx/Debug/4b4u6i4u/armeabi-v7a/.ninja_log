@@ -1,8 +1,8 @@
 # ninja log v5
-0	32	1787691429280000439	CMakeFiles/LivelineMobile.dir/src/main/cpp/liveline.cpp.o	702ae650e820c1c0
-0	2743	1787691431944910610	CMakeFiles/LivelineMobile.dir/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/nitrogen/generated/android/c++/JHybridLivelineSpec.cpp.o	467bfc265e880f1e
-0	3237	1787691432464042246	CMakeFiles/LivelineMobile.dir/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/nitrogen/generated/android/c++/views/JHybridLivelineStateUpdater.cpp.o	51a2073a4b326ebf
 0	4182	1787691433393414360	CMakeFiles/LivelineMobile.dir/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/nitrogen/generated/android/LivelineMobileOnLoad.cpp.o	95ee57ac5999fb49
-0	4186	1787691433401593104	CMakeFiles/LivelineMobile.dir/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/nitrogen/generated/shared/c++/views/HybridLivelineComponent.cpp.o	66094e960bdc6efb
+0	3237	1787691432464042246	CMakeFiles/LivelineMobile.dir/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/nitrogen/generated/android/c++/views/JHybridLivelineStateUpdater.cpp.o	51a2073a4b326ebf
+0	2743	1787691431944910610	CMakeFiles/LivelineMobile.dir/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/nitrogen/generated/android/c++/JHybridLivelineSpec.cpp.o	467bfc265e880f1e
 0	4355	1787691433557842046	CMakeFiles/LivelineMobile.dir/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/nitrogen/generated/shared/c++/HybridLivelineSpec.cpp.o	217b0689162d688c
 4355	4449	1787691433676181627	../../../../build/intermediates/cxx/Debug/4b4u6i4u/obj/armeabi-v7a/libLivelineMobile.so	1a6859b28cc97565
+0	32	1787691429280000439	CMakeFiles/LivelineMobile.dir/src/main/cpp/liveline.cpp.o	702ae650e820c1c0
+0	4186	1787691433401593104	CMakeFiles/LivelineMobile.dir/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/nitrogen/generated/shared/c++/views/HybridLivelineComponent.cpp.o	66094e960bdc6efb

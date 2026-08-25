@@ -32,10 +32,13 @@ android {
     buildConfig true
   }
 
-  // Pull in the shared Kotlin engine (com.liveline.core) for the probe renderer.
+  // Pull in the shared Kotlin engine + renderer as source (monorepo local dev).
   sourceSets {
     main {
-      java.srcDirs += ["../../../android/liveline-core/src/main/kotlin"]
+      java.srcDirs += [
+        "../../../android/liveline-core/src/main/kotlin",
+        "../../../android/liveline/src/main/kotlin",
+      ]
     }
   }
 }
