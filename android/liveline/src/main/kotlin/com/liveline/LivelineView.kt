@@ -426,12 +426,16 @@ class LivelineView @JvmOverloads constructor(
         while (t <= rightEdge + interval && targetKeys.size < 30) { targetKeys.add(Math.round(t * 100)); t += interval }
         for (key in targetKeys) { val text = axisTimeLabel(key / 100.0, interval); val e = timeAlphas[key]; if (e == null) timeAlphas[key] = TimeLabel(0.0, text) else e.text = text }
         val remove = ArrayList<Long>()
-        for ((key, label) in timeAlphas) { val x = toX(key / 100.0); val target = if (targetKeys.contains(key)) edgeAlpha(x) else 0.0; var next = Clock.lerp(label.alpha, target, 0.08, dt); if (abs(next - target) < 0.02) next = target; if (next < 0.01 && target == 0.0) remove.add(key) else label.alpha = next }
+        // `label.alpha` is presence (eased appear/disappear); the geometric edge
+        // fade is applied directly at draw time so it never lags.
+        for ((key, label) in timeAlphas) { val target = if (targetKeys.contains(key)) 1.0 else 0.0; var next = Clock.lerp(label.alpha, target, 0.08, dt); if (abs(next - target) < 0.02) next = target; if (next < 0.01 && target == 0.0) remove.add(key) else label.alpha = next }
         for (k in remove) timeAlphas.remove(k)
         axisPaint.alpha = (palette.gridLine.a * 255).toInt(); canvas.drawLine(chartLeft, lineY, chartRight, lineY, axisPaint)
         class L(val x: Float, val alpha: Double, val text: String, val wpx: Float)
         val list = ArrayList<L>()
-        for ((key, label) in timeAlphas) { if (label.alpha < 0.02) continue; val x = toX(key / 100.0); if (x < chartLeft - dp(20f) || x > chartRight) continue; list.add(L(x, label.alpha, label.text, timeLabelPaint.measureText(label.text))) }
+        // Draw a label as long as it has any alpha; only cull ones that have
+        // scrolled well off an edge (so they fade out rather than pop).
+        for ((key, label) in timeAlphas) { if (label.alpha < 0.02) continue; val x = toX(key / 100.0); if (x < chartLeft - dp(90f) || x > chartRight + dp(20f)) continue; val a = label.alpha * edgeAlpha(x); if (a < 0.01) continue; list.add(L(x, a, label.text, timeLabelPaint.measureText(label.text))) }
         list.sortBy { it.x }
         val drawn = ArrayList<L>()
         for (label in list) { val prev = drawn.lastOrNull(); if (prev != null && label.x - label.wpx / 2 < prev.x + prev.wpx / 2 + dp(8f)) { if (label.alpha > prev.alpha) drawn[drawn.size - 1] = label; continue }; drawn.add(label) }
