@@ -27,13 +27,15 @@ import com.liveline.core.LivelineMode
 import com.liveline.core.LivelinePoint
 import com.liveline.core.LivelineTheme
 import com.liveline.core.Momentum
+import com.liveline.core.OrderbookData
+import com.liveline.core.OrderbookLevel
 import com.liveline.core.ReferenceLine
 import kotlin.random.Random
 
 /** A native Android showcase mirroring the iOS ContentView demo menu. */
 class MainActivity : AppCompatActivity() {
 
-    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, PAUSED, CANDLE }
+    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, PAUSED, CANDLE, ORDERBOOK }
 
     private class Demo(
         val name: String,
@@ -72,6 +74,9 @@ class MainActivity : AppCompatActivity() {
         ) { it.accent = Color.parseColor("#f0a020") },
         Demo("Candlestick", "OHLC candles + a live candle.", intervalMs = 60, kind = Kind.CANDLE, window = 54.0) {
             it.mode = LivelineMode.CANDLE; it.valueDecimals = 1
+        },
+        Demo("Orderbook", "Bid/ask sizes stream up behind the line.", center = 62.0, vol = 0.8, kind = Kind.ORDERBOOK, window = 45.0) {
+            it.valueSuffix = "¢"; it.valueDecimals = 0
         },
         Demo("Loading", "Breathing, then data.", kind = Kind.LOADING) {},
         Demo("Paused", "Freezes, then catches up.", center = 160.0, vol = 1.0, kind = Kind.PAUSED) {
@@ -151,7 +156,7 @@ class MainActivity : AppCompatActivity() {
             loading = false; paused = false; referenceLine = null
             valuePrefix = ""; valueSuffix = ""; valueDecimals = 2
             accent = Color.parseColor("#3b82f6"); windowSeconds = demo.window
-            mode = LivelineMode.LINE; setCandles(emptyList(), null, 1.0)
+            mode = LivelineMode.LINE; setCandles(emptyList(), null, 1.0); orderbook = null
         }
         demo.configure(chart)
 
@@ -209,6 +214,18 @@ class MainActivity : AppCompatActivity() {
                     Kind.LOADING -> { if (elapsedMs >= 3000) chart.loading = false; v += (demo.center - v) * 0.01 + Random.nextDouble(-demo.vol, demo.vol); chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v)) }
                     Kind.PAUSED -> { chart.paused = (elapsedMs / 4000) % 2 == 1L; v += (demo.center - v) * 0.01 + Random.nextDouble(-demo.vol, demo.vol); chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v)) }
                     Kind.WALK -> { v += (demo.center - v) * 0.012 + Random.nextDouble(-demo.vol * 0.35, demo.vol * 0.35); chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v)) }
+                    Kind.ORDERBOOK -> {
+                        v += (demo.center - v) * 0.008 + Random.nextDouble(-0.8, 0.8)
+                        chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v))
+                        val bids = ArrayList<OrderbookLevel>(); val asks = ArrayList<OrderbookLevel>()
+                        for (i in 0 until 6) {
+                            val dPr = i * 0.12 + 0.08
+                            val bidSize = if (Random.nextDouble() > 0.9) Random.nextDouble(80.0, 260.0) else Random.nextDouble(4.0, 70.0)
+                            val askSize = if (Random.nextDouble() > 0.9) Random.nextDouble(80.0, 260.0) else Random.nextDouble(4.0, 70.0)
+                            bids.add(OrderbookLevel(v - dPr, bidSize)); asks.add(OrderbookLevel(v + dPr, askSize))
+                        }
+                        chart.orderbook = OrderbookData(bids, asks)
+                    }
                     Kind.CANDLE -> {
                         candlePrice += Random.nextDouble(-1.8, 1.8)
                         val bucket = floor(System.currentTimeMillis() / 1000.0 / candleWidth) * candleWidth

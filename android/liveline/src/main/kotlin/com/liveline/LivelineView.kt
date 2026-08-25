@@ -27,6 +27,7 @@ import com.liveline.core.LivelinePoint
 import com.liveline.core.LivelineTheme
 import com.liveline.core.Momentum
 import com.liveline.core.MomentumDetect
+import com.liveline.core.OrderbookData
 import com.liveline.core.PathBuilder
 import com.liveline.core.Point
 import com.liveline.core.ReferenceLine
@@ -81,9 +82,30 @@ class LivelineView @JvmOverloads constructor(
     var mode: LivelineMode = LivelineMode.LINE
     var candleWidth: Double = 1.0
 
+    /** Order-book depth; resting sizes stream up behind the line. Also folds the
+     *  change in total depth into an eased churn signal driving the stream speed. */
+    var orderbook: OrderbookData? = null
+        set(v) {
+            if (v != null) {
+                val total = v.bids.sumOf { it.size } + v.asks.sumOf { it.size }
+                if (orderbookLastTotal >= 0 && total > 0) {
+                    val inst = min(1.0, abs(total - orderbookLastTotal) / total * 5)
+                    orderbookChurn = orderbookChurn * 0.6 + inst * 0.4
+                }
+                orderbookLastTotal = total
+            }
+            field = v
+        }
+
     private var candles: List<LivelineCandle> = emptyList()
     private var liveCandle: LivelineCandle? = null
     private var liveBull = 0.5
+
+    private class ObLabel(val text: String, val x: Float, val spawnY: Float, val isBid: Boolean, val weight: Double, var yOffset: Float = 0f)
+    private val obLabels = ArrayList<ObLabel>()
+    private var obSpawnClock = 0.0
+    private var orderbookLastTotal = -1.0
+    private var orderbookChurn = 0.0
 
     /** Sets the OHLC candles + the currently-forming live candle (candle mode). */
     fun setCandles(candles: List<LivelineCandle>, live: LivelineCandle?, width: Double) {
@@ -160,6 +182,7 @@ class LivelineView @JvmOverloads constructor(
     private val fadePaint = Paint().apply { style = Paint.Style.FILL }
     private val candleStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
     private val candleFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    private val obPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(11f); typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD); textAlign = Paint.Align.LEFT }
     private val bull = Theme.up
     private val bear = Theme.down
     private fun blend(a: Rgba, b: Rgba, t: Double) = Rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
@@ -276,6 +299,12 @@ class LivelineView @JvmOverloads constructor(
             else -> MomentumDetect.detect(visible)
         }
         val dotColor = when (trend) { Trend.UP -> palette.dotUp; Trend.DOWN -> palette.dotDown; else -> palette.dotFlat }
+
+        // 2b. Orderbook: resting sizes stream up behind the price line.
+        if (orderbook != null) {
+            val mMag = min(1.0, abs(value - displayValue) / max(range * 0.15, 1e-9))
+            drawOrderbook(canvas, padL, padT, chartH, mMag, 1.0, dt)
+        }
 
         val endX = toX(now); val endY = toY(displayValue)
         val pts = ArrayList<Point>(visible.size)
@@ -450,6 +479,52 @@ class LivelineView @JvmOverloads constructor(
         tipPaint.color = palette.gridLabel.withAlpha(palette.gridLabel.a * op).toInt()
         canvas.drawText("  ·  $timeText", tx + vW, ty, tipPaint)
         tipPaint.color = save
+    }
+
+    // ── Orderbook stream (ported from Swift LivelineView+Orderbook) ─────────────
+    private fun drawOrderbook(canvas: Canvas, padL: Float, padT: Float, chartH: Float, momentumMag: Double, groupAlpha: Double, dt: Double) {
+        val book = orderbook ?: return
+        if (book.bids.isEmpty() && book.asks.isEmpty()) return
+        val dtSec = dt / 1000
+        val activity = min(1.0, max(0.0, momentumMag * 0.5 + orderbookChurn * 0.8))
+        if (dtSec > 0) {
+            obSpawnClock += dtSec
+            val interval = 0.26 - 0.16 * activity
+            var guard = 0
+            while (obSpawnClock >= interval && guard < 4) { obSpawnClock -= interval; guard++; emitOrderbook(book, padL, padT, chartH) }
+        }
+        if (obLabels.isEmpty()) return
+        val travel = chartH + dp(24f)
+        val step = ((60.0 + 90.0 * activity) * dtSec).toFloat()
+        for (l in obLabels) l.yOffset += step
+        obLabels.removeAll { it.yOffset >= travel }
+        for (l in obLabels) {
+            val progress = (l.yOffset / travel).toDouble()
+            val fadeIn = min(1.0, progress / 0.08); val fadeOut = 1 - max(0.0, (progress - 0.7) / 0.3)
+            val alpha = max(0.0, min(1.0, fadeIn * fadeOut)) * (0.28 + 0.5 * l.weight) * groupAlpha
+            if (alpha < 0.01) continue
+            obPaint.color = (if (l.isBid) bull else bear).withAlpha(alpha).toInt()
+            canvas.drawText(l.text, l.x, l.spawnY - l.yOffset, obPaint)
+        }
+    }
+
+    private fun emitOrderbook(book: OrderbookData, padL: Float, padT: Float, chartH: Float) {
+        val preferBid = Math.random() < 0.5
+        val isBid = (preferBid && book.bids.isNotEmpty()) || book.asks.isEmpty()
+        val levels = if (isBid) book.bids else book.asks
+        val top = levels.take(8)
+        val pick = if (top.isEmpty()) return else top[(Math.random() * top.size).toInt().coerceAtMost(top.size - 1)]
+        val maxSize = top.maxOf { it.size }
+        val weight = if (maxSize > 0) min(1.0, pick.size / maxSize) else 0.5
+        obLabels.add(ObLabel("+$" + fmtSize(pick.size), padL + dp(6f), padT + chartH - dp(6f), isBid, weight))
+        if (obLabels.size > 40) obLabels.removeAt(0)
+    }
+
+    private fun fmtSize(s: Double): String = when {
+        s >= 1_000_000 -> String.format("%.1fM", s / 1_000_000)
+        s >= 1_000 -> String.format("%.1fk", s / 1_000)
+        s >= 10 -> String.format("%.0f", s)
+        else -> String.format("%.1f", s)
     }
 
     // ── Candle mode ─────────────────────────────────────────────────────────────
