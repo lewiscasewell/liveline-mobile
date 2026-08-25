@@ -36,6 +36,14 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridSetter("lineWidth", &HybridLivelineSpec::setLineWidth);
       prototype.registerHybridGetter("window", &HybridLivelineSpec::getWindow);
       prototype.registerHybridSetter("window", &HybridLivelineSpec::setWindow);
+      prototype.registerHybridGetter("windows", &HybridLivelineSpec::getWindows);
+      prototype.registerHybridSetter("windows", &HybridLivelineSpec::setWindows);
+      prototype.registerHybridGetter("windowStyle", &HybridLivelineSpec::getWindowStyle);
+      prototype.registerHybridSetter("windowStyle", &HybridLivelineSpec::setWindowStyle);
+      prototype.registerHybridGetter("onWindowChange", &HybridLivelineSpec::getOnWindowChange);
+      prototype.registerHybridSetter("onWindowChange", &HybridLivelineSpec::setOnWindowChange);
+      prototype.registerHybridGetter("onModeChange", &HybridLivelineSpec::getOnModeChange);
+      prototype.registerHybridSetter("onModeChange", &HybridLivelineSpec::setOnModeChange);
       prototype.registerHybridGetter("grid", &HybridLivelineSpec::getGrid);
       prototype.registerHybridSetter("grid", &HybridLivelineSpec::setGrid);
       prototype.registerHybridGetter("badge", &HybridLivelineSpec::getBadge);
@@ -75,7 +83,6 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridGetter("valueDecimals", &HybridLivelineSpec::getValueDecimals);
       prototype.registerHybridSetter("valueDecimals", &HybridLivelineSpec::setValueDecimals);
       prototype.registerHybridMethod("push", &HybridLivelineSpec::push);
-      prototype.registerHybridMethod("updateHead", &HybridLivelineSpec::updateHead);
     });
   }
 

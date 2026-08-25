@@ -72,6 +72,14 @@ namespace margelo::nitro::liveline {
     void setLineWidth(std::optional<double> lineWidth) override;
     std::optional<double> getWindow() override;
     void setWindow(std::optional<double> window) override;
+    std::optional<std::vector<WindowOption>> getWindows() override;
+    void setWindows(const std::optional<std::vector<WindowOption>>& windows) override;
+    std::optional<LivelineWindowStyle> getWindowStyle() override;
+    void setWindowStyle(std::optional<LivelineWindowStyle> windowStyle) override;
+    std::optional<std::function<void(double /* secs */)>> getOnWindowChange() override;
+    void setOnWindowChange(const std::optional<std::function<void(double /* secs */)>>& onWindowChange) override;
+    std::optional<std::function<void(LivelineMode /* mode */)>> getOnModeChange() override;
+    void setOnModeChange(const std::optional<std::function<void(LivelineMode /* mode */)>>& onModeChange) override;
     std::optional<bool> getGrid() override;
     void setGrid(std::optional<bool> grid) override;
     std::optional<bool> getBadge() override;
@@ -114,7 +122,6 @@ namespace margelo::nitro::liveline {
   public:
     // Methods
     void push(const LivelinePoint& point) override;
-    void updateHead(const LivelinePoint& point) override;
 
   private:
     jni::global_ref<JHybridLivelineSpec::JavaPart> _javaPart;

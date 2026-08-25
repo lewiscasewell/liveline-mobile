@@ -100,24 +100,28 @@ public final class LivelineView: UIView {
 
     /// Chart type. Default `.line`. Switching crossfades between line and
     /// candle rendering while the shared Y-range eases between the two extents.
-    public var mode: LivelineMode = .line {
-        didSet {
-            if oldValue != mode {
-                let transition = CATransition()
-                transition.type = .fade
-                transition.duration = 0.4
-                transition.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                layer.add(transition, forKey: "modeChange")
-            }
-            setNeedsDisplay()
-        }
-    }
+    public var mode: LivelineMode = .line { didSet { setNeedsDisplay() } }
+    /// Eased line↔candle morph: 0 = line, 1 = candle. The line fades out as the
+    /// candles grow into their height.
+    private var modeProgress: Double = 0
     /// OHLC candles (required when `mode == .candle`).
     public var candles: [LivelineCandle] = []
     /// Seconds per candle (required when `mode == .candle`).
-    public var candleWidth: Double = 1
+    public var candleWidth: Double = 1 {
+        didSet {
+            // A new candle scale (e.g. interval switch) invalidates the ticks
+            // aggregated at the old width.
+            if oldValue != candleWidth {
+                liveCandles.removeAll()
+                liveCandle = nil
+            }
+        }
+    }
     /// The current live candle with real-time OHLC, if any.
     public var liveCandle: LivelineCandle?
+    /// Candles aggregated from live `push()` ticks — the forming candle rolls into
+    /// here once its bucket closes, so candle mode streams like the line.
+    var liveCandles: [LivelineCandle] = []
 
     // MARK: Data
 
@@ -400,26 +404,55 @@ public final class LivelineView: UIView {
             displayValue = point.value
             displayValueInited = true
         }
+        aggregateLiveCandle(point)
         setNeedsDisplay()
     }
 
-    /// Moves the live "head" — replaces the most recent sample in place instead
-    /// of appending. Use this to update the current bucket at a wide interval's
-    /// resolution: the head keeps moving live every frame while the committed
-    /// points behind it stay put (like a candle's forming bar). Falls back to
-    /// ``push(_:)`` when the buffer is empty.
-    public func updateHead(_ point: LivelinePoint) {
-        guard buffer.count > 0 else { push(point); return }
-        buffer.replaceLast(point)
-        if !displayValueInited {
-            displayValue = point.value
-            displayValueInited = true
+    /// Folds a tick into the forming candle (OHLC), rolling to a new bucket when
+    /// `candleWidth` elapses, so candle mode streams from the same `push()` feed.
+    private func aggregateLiveCandle(_ point: LivelinePoint) {
+        guard candleWidth > 0 else { return }
+        let start = (point.time / candleWidth).rounded(.down) * candleWidth
+        if var lc = liveCandle, lc.time == start {
+            lc.high = max(lc.high, point.value)
+            lc.low = min(lc.low, point.value)
+            lc.close = point.value
+            liveCandle = lc
+        } else {
+            if let closed = liveCandle { liveCandles.append(closed) }
+            liveCandle = LivelineCandle(
+                time: start, open: point.value, high: point.value, low: point.value, close: point.value)
         }
-        setNeedsDisplay()
     }
 
     /// The most recently pushed value, or 0.
     public var currentValue: Double { buffer.last?.value ?? 0 }
+
+    /// Strokes the plain line from the tick buffer over `layout` at `alpha` — used
+    /// to fade the line out during the line→candle morph.
+    func drawLineOverlay(_ ctx: CGContext, layout: Layout, now: Double, alpha: Double) {
+        guard alpha > 0.01, buffer.count >= 2 else { return }
+        var pts = [CGPoint]()
+        pts.reserveCapacity(buffer.count)
+        for i in 0..<buffer.count {
+            let p = buffer[i]
+            if p.time < layout.leftEdge - 2 { continue }
+            if p.time > now { break }
+            pts.append(CGPoint(x: layout.toX(p.time), y: layout.toY(p.value)))
+        }
+        guard pts.count >= 2 else { return }
+        ctx.saveGState()
+        ctx.setAlpha(CGFloat(alpha))
+        ctx.setStrokeColor(UIColor(rgba: palette.line).cgColor)
+        ctx.setLineWidth(lineWidth)
+        ctx.setLineJoin(.round)
+        ctx.setLineCap(.round)
+        ctx.beginPath()
+        ctx.move(to: pts[0])
+        for p in pts.dropFirst() { ctx.addLine(to: p) }
+        ctx.strokePath()
+        ctx.restoreGState()
+    }
 
     // MARK: Palette
 
@@ -461,7 +494,22 @@ public final class LivelineView: UIView {
 
     private func padding() -> (top: CGFloat, right: CGFloat, bottom: CGFloat, left: CGFloat) {
         let right: CGFloat = badge ? 80 : (grid ? 54 : 12)
-        return (12, right, 28, 12)
+        // Reserve a row above the plot for the showValue overlay (web parity).
+        let top: CGFloat = showValue ? 40 : 12
+        return (top, right, 28, 12)
+    }
+
+    /// The right-edge window buffer (fraction of the span). In line mode with
+    /// momentum arrows + badge, it widens to leave a gap for the arrows. This is
+    /// the single source of truth so the render and the crosshair's
+    /// screen-x→time mapping agree — otherwise the crosshair drifts off the line.
+    private func currentWinBuffer(chartW: CGFloat) -> Double {
+        if mode == .candle { return 0.015 }  // matches CK.buffer in LivelineView+Candle
+        var b = badge ? K.windowBuffer : K.windowBufferNoBadge
+        if badge, momentum != .off {
+            b = max(b, 37.0 / max(Double(chartW), 1))
+        }
+        return b
     }
 
     /// Eases the displayed window (span) toward the target `windowSeconds` with a
@@ -528,8 +576,14 @@ public final class LivelineView: UIView {
             if timeDebt < 0.01 { timeDebt = 0 }
         }
 
-        let isCandle = mode == .candle
-        let hasData = isCandle ? (!candles.isEmpty || liveCandle != nil) : buffer.count >= 2
+        // Ease the line↔candle morph (0 = line, 1 = candle).
+        modeProgress = Clock.lerp(current: modeProgress, target: mode == .candle ? 1 : 0, speed: 0.1, dt: dt)
+        if modeProgress < 0.002 { modeProgress = 0 }
+        if modeProgress > 0.998 { modeProgress = 1 }
+
+        let isCandle = modeProgress > 0
+        let hasCandle = !candles.isEmpty || liveCandle != nil || !liveCandles.isEmpty
+        let hasData = isCandle ? (hasCandle || buffer.count >= 2) : buffer.count >= 2
 
         // Loading + reveal crossfades.
         let loadingTarget = loading ? 1.0 : 0.0
@@ -559,8 +613,9 @@ public final class LivelineView: UIView {
         }
 
         if isCandle {
-            valueLabel.isHidden = true
-            drawCandleFrame(ctx, w: w, h: h, pad: pad, now: now, dt: dt, pausedDt: pausedDt, nowMs: nowMs)
+            drawCandleFrame(
+                ctx, w: w, h: h, pad: pad, now: now, dt: dt, pausedDt: pausedDt, nowMs: nowMs,
+                modeProgress: modeProgress)
             return
         }
 
@@ -574,8 +629,9 @@ public final class LivelineView: UIView {
         if abs(displayValue - value) < domain.valRange * 0.001 { displayValue = value }
         let smoothValue = displayValue
 
-        // Window edges.
-        let winBuffer = badge ? K.windowBuffer : K.windowBufferNoBadge
+        // Window edges. The buffer widens for the momentum-arrow gap; using the
+        // shared helper keeps the crosshair's hit-testing in sync.
+        let winBuffer = currentWinBuffer(chartW: w - pad.left - pad.right)
         let rightEdge = now + displayWindow * winBuffer
         let leftEdge = rightEdge - displayWindow
 
@@ -724,7 +780,7 @@ public final class LivelineView: UIView {
 
     // MARK: showValue overlay
 
-    private func updateValueLabel(
+    func updateValueLabel(
         value: Double, trend: Trend, pad: (top: CGFloat, right: CGFloat, bottom: CGFloat, left: CGFloat)
     ) {
         guard showValue else {
@@ -732,7 +788,8 @@ public final class LivelineView: UIView {
             return
         }
         valueLabel.isHidden = false
-        valueLabel.text = formatValue(value)
+        // When momentum-coloured, drop the sign — the colour conveys direction (web parity).
+        valueLabel.text = formatValue(valueMomentumColor ? abs(value) : value)
         let color: RGBA
         if valueMomentumColor, trend != .flat {
             color = trend == .up ? Theme.up : Theme.down
@@ -742,12 +799,13 @@ public final class LivelineView: UIView {
         valueLabel.textColor = UIColor(rgba: color)
         valueLabel.sizeToFit()
         // Sit just past the left-edge fade zone so the digits stay readable.
-        valueLabel.frame.origin = CGPoint(x: pad.left + K.fadeEdgeWidth, y: pad.top)
+        // Top-left, above the plot (matching web's block above the chart).
+        valueLabel.frame.origin = CGPoint(x: pad.left, y: 6)
     }
 
     // MARK: Momentum resolution
 
-    private func resolveTrend() -> Trend? {
+    func resolveTrend() -> Trend? {
         switch momentum {
         case .off: return nil
         case .up: return .up
@@ -790,7 +848,7 @@ public final class LivelineView: UIView {
         let w = bounds.width
         guard hx >= pad.left, hx <= w - pad.right else { return }
         let now = Date().timeIntervalSince1970 - timeDebt
-        let winBuffer = badge ? K.windowBuffer : K.windowBufferNoBadge
+        let winBuffer = currentWinBuffer(chartW: w - pad.left - pad.right)
         let rightEdge = now + displayWindow * winBuffer
         let leftEdge = rightEdge - displayWindow
         let maxX = pad.left + CGFloat((now - leftEdge) / (rightEdge - leftEdge)) * (w - pad.left - pad.right)

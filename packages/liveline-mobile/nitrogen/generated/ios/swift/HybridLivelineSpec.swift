@@ -21,6 +21,10 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
   var surfaceColor: String? { get set }
   var lineWidth: Double? { get set }
   var window: Double? { get set }
+  var windows: [WindowOption]? { get set }
+  var windowStyle: LivelineWindowStyle? { get set }
+  var onWindowChange: ((_ secs: Double) -> Void)? { get set }
+  var onModeChange: ((_ mode: LivelineMode) -> Void)? { get set }
   var grid: Bool? { get set }
   var badge: Bool? { get set }
   var badgeTail: Bool? { get set }
@@ -43,7 +47,6 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
 
   // Methods
   func push(point: LivelinePoint) throws -> Void
-  func updateHead(point: LivelinePoint) throws -> Void
 }
 
 public extension HybridLivelineSpec_protocol {

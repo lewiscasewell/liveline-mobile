@@ -97,6 +97,46 @@ abstract class HybridLivelineSpec: HybridView() {
   @get:Keep
   @set:DoNotStrip
   @set:Keep
+  abstract var windows: Array<WindowOption>?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var windowStyle: LivelineWindowStyle?
+  
+  abstract var onWindowChange: ((secs: Double) -> Unit)?
+  
+  private var onWindowChange_cxx: Func_void_double?
+    @Keep
+    @DoNotStrip
+    get() {
+      return onWindowChange?.let { Func_void_double_java(it) }
+    }
+    @Keep
+    @DoNotStrip
+    set(value) {
+      onWindowChange = value?.let { it }
+    }
+  
+  abstract var onModeChange: ((mode: LivelineMode) -> Unit)?
+  
+  private var onModeChange_cxx: Func_void_LivelineMode?
+    @Keep
+    @DoNotStrip
+    get() {
+      return onModeChange?.let { Func_void_LivelineMode_java(it) }
+    }
+    @Keep
+    @DoNotStrip
+    set(value) {
+      onModeChange = value?.let { it }
+    }
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
   abstract var grid: Boolean?
   
   @get:DoNotStrip
@@ -211,10 +251,6 @@ abstract class HybridLivelineSpec: HybridView() {
   @DoNotStrip
   @Keep
   abstract fun push(point: LivelinePoint): Unit
-  
-  @DoNotStrip
-  @Keep
-  abstract fun updateHead(point: LivelinePoint): Unit
 
   // Default implementation of `HybridObject.toString()`
   override fun toString(): String {

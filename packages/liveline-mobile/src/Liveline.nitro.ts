@@ -45,6 +45,17 @@ export type LivelineMomentum = 'off' | 'auto' | 'up' | 'down' | 'flat'
 /** Badge visual style: `default` (accent-filled) or `minimal` (neutral pill). */
 export type LivelineBadgeVariant = 'default' | 'minimal'
 
+/** Visual style of the built-in time-window bar. */
+export type LivelineWindowStyle = 'default' | 'rounded' | 'text'
+
+/** One button in the built-in time-window bar. */
+export interface WindowOption {
+  /** Button text, e.g. `'1D'`. */
+  label: string
+  /** The visible span this button selects, in seconds. */
+  secs: number
+}
+
 /**
  * Props for the {@link Liveline} view. Names mirror the Swift/SwiftUI API and,
  * where they exist, web liveline. Every prop is optional and has a sensible
@@ -97,6 +108,22 @@ export interface LivelineProps extends HybridViewProps {
   /** Visible time span in seconds. Default `30`. */
   window?: number
 
+  /**
+   * Render the built-in interval bar with these buttons above the chart. The
+   * native view draws it (a segmented control) and reports taps via
+   * `onWindowChange`; the active button is the one whose `secs` matches `window`.
+   */
+  windows?: WindowOption[]
+  /** Visual style of the window bar. Default `'default'`. */
+  windowStyle?: LivelineWindowStyle
+  /** Called with the chosen span (seconds) when a window button is tapped. */
+  onWindowChange?: (secs: number) => void
+  /**
+   * When set, the window bar shows an optional line/candle mode toggle at its
+   * end; this fires with the chosen mode when tapped. Drive `mode` from it.
+   */
+  onModeChange?: (mode: LivelineMode) => void
+
   /** Draw the value grid lines + right-edge value labels. Default `true`. */
   grid?: boolean
   /** Draw the endpoint value badge (the pill on the right). Default `true`. */
@@ -141,20 +168,12 @@ export interface LivelineProps extends HybridViewProps {
 /** Imperative methods, reached via `hybridRef`. */
 export interface LivelineMethods extends HybridViewMethods {
   /**
-   * Append one live sample. This is the live path — a direct native call with
-   * no React re-render. Call once per data tick, never per animation frame.
+   * Add one live sample. A direct native call with no React re-render — call
+   * once per data tick, never per animation frame. It auto-adapts to the current
+   * window: on a wide window a fast feed slides the current point in place; on a
+   * live/short window it keeps every tick.
    */
   push(point: LivelinePoint): void
-
-  /**
-   * Move the live "head" — replace the most recent sample in place instead of
-   * appending. Use this to keep the current point updating live at a wide
-   * interval's resolution: call `updateHead()` every tick to slide the head,
-   * and `push()` only when a new bucket opens. The committed points behind the
-   * head stay put, like a candle's forming bar. A direct native call, no
-   * re-render.
-   */
-  updateHead(point: LivelinePoint): void
 }
 
 export type Liveline = HybridView<LivelineProps, LivelineMethods>

@@ -1,17 +1,38 @@
-import { useEffect, useRef, useState } from 'react'
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { callback } from 'react-native-nitro-modules'
-import { Liveline, type LivelinePoint } from 'react-native-liveline-mobile'
+import { useEffect, useMemo, useState } from 'react'
+import { SafeAreaView, StyleSheet, Text } from 'react-native'
+import { Liveline, useLiveline } from 'react-native-liveline-mobile'
 import { INTERVALS, useCandles } from './useData'
+
+const WINDOWS = INTERVALS.map((i) => ({ label: i.label, secs: i.seconds }))
 
 export default function App() {
   // The selected interval, and its bars from the (mock) API. Switching refetches
   // — the loader shows on a cache miss, and cached intervals return instantly.
   const [interval, changeInterval] = useState(INTERVALS[4]!) // 1D
+  const [mode, setMode] = useState<'line' | 'candle'>('line')
   const { data, isLoading } = useCandles(interval)
 
-  // The native chart, captured via hybridRef, for the live feed.
-  const chart = useRef<{ push: (point: LivelinePoint) => void } | null>(null)
+  // Aggregate the line points into OHLC candles for candle mode (every 4 points).
+  const candles = useMemo(() => {
+    if (!data) return []
+    const out = []
+    for (let i = 0; i < data.length; i += 4) {
+      const g = data.slice(i, i + 4)
+      if (g.length === 0) break
+      const v = g.map((p) => p.value)
+      out.push({
+        time: g[0]!.time,
+        open: v[0]!,
+        high: Math.max(...v),
+        low: Math.min(...v),
+        close: v[v.length - 1]!,
+      })
+    }
+    return out
+  }, [data])
+
+  // useLiveline owns the ref + push — no hybridRef/callback plumbing here.
+  const { attachHybridRef, push } = useLiveline()
 
   // Live feed: just push ticks. The chart buckets them to the current window
   // automatically — dense on Live, a sliding head on 4Y — so this stays a dumb
@@ -26,61 +47,47 @@ export default function App() {
       // scale — otherwise it drifts far and, on a wide window where seconds are
       // sub-pixel, renders as a harsh vertical spike. The Live view still looks
       // lively because auto-range fills the frame with whatever movement there is.
-      v += (Math.random() - 0.5) * 0.3 + (v0 - v) * 0.04
-      chart.current?.push({ time: Date.now() / 1000, value: v })
+      v += (Math.random() - 0.5) * 0.2 + (v0 - v) * 0.008
+      push({ time: Date.now() / 1000, value: v })
       timer = setTimeout(tick, 200 + Math.random() * 2000)
     }
     tick()
     return () => clearTimeout(timer)
-  }, [isLoading, data])
+  }, [isLoading, data, push])
 
   return (
     <SafeAreaView style={styles.root}>
       <Text style={styles.title}>Liveline · Nitro</Text>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.barScroll}
-        contentContainerStyle={styles.bar}
-      >
-        {INTERVALS.map((iv) => {
-          const active = iv.label === interval.label
-          return (
-            <Pressable
-              key={iv.label}
-              onPress={() => changeInterval(iv)}
-              style={[styles.chip, active && styles.chipActive]}
-            >
-              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{iv.label}</Text>
-            </Pressable>
-          )
-        })}
-      </ScrollView>
-
-      <View style={styles.card}>
-        <Liveline
-          style={styles.chart}
-          data={data}
-          window={interval.seconds}
-          loading={isLoading}
-          color="#AB9FF2"
-          theme="light"
-          surfaceColor="#f9f4ff"
-          grid
-          fill
-          scrub
-          showValue
-          valueMomentumColor
-          momentum="auto"
-          pulse={interval.live}
-          valuePrefix="$"
-          valueDecimals={2}
-          hybridRef={callback((ref) => {
-            chart.current = ref
-          })}
-        />
-      </View>
+      <Liveline
+        style={styles.card}
+        // The built-in interval bar (web-liveline parity): the library renders
+        // the buttons and reports the chosen span; we just refetch on change.
+        windows={WINDOWS}
+        window={interval.seconds}
+        windowStyle='rounded'
+        onWindowChange={(secs) => {
+          const next = INTERVALS.find((i) => i.seconds === secs)
+          if (next) changeInterval(next)
+        }}
+        // Optional line/candle toggle at the end of the bar.
+        mode={mode}
+        candles={candles}
+        candleWidth={interval.seconds / Math.max(candles.length, 1)}
+        onModeChange={setMode}
+        data={data}
+        loading={isLoading}
+        badge={true}
+        color="#AB9FF2"
+        theme="light"
+        surfaceColor="#fff"
+        momentum="auto"
+        badgeVariant="minimal"
+        pulse={interval.live}
+        valuePrefix="$"
+        valueDecimals={2}
+        hybridRef={attachHybridRef()}
+      />
 
       <Text style={styles.caption}>
         {isLoading ? `Loading ${interval.label}…` : `${interval.label} · streaming live`}
@@ -92,13 +99,6 @@ export default function App() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#fff', padding: 20, gap: 12 },
   title: { fontSize: 28, fontWeight: '700' },
-  card: { height: 300, overflow: 'hidden', backgroundColor: '#f4ebff' },
-  chart: { flex: 1 },
+  card: { height: 348 },
   caption: { fontSize: 13, color: '#666' },
-  barScroll: { flexGrow: 0 },
-  bar: { flexDirection: 'row', gap: 6, alignItems: 'center', paddingRight: 20 },
-  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: '#eee' },
-  chipActive: { backgroundColor: '#AB9FF2' },
-  chipLabel: { fontSize: 13, fontWeight: '600', color: '#555' },
-  chipLabelActive: { color: '#fff' },
 })

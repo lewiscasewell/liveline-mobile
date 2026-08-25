@@ -376,6 +376,117 @@ open class HybridLivelineSpec_cxx {
     }
   }
   
+  public final var windows: bridge.std__optional_std__vector_WindowOption__ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_std__vector_WindowOption__ in
+        if let __unwrappedValue = self.__implementation.windows {
+          return bridge.create_std__optional_std__vector_WindowOption__({ () -> bridge.std__vector_WindowOption_ in
+            var __vector = bridge.create_std__vector_WindowOption_(__unwrappedValue.count)
+            for __item in __unwrappedValue {
+              __vector.push_back(__item)
+            }
+            return __vector
+          }())
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.windows = { () -> [WindowOption]? in
+        if bridge.has_value_std__optional_std__vector_WindowOption__(newValue) {
+          let __unwrapped = bridge.get_std__optional_std__vector_WindowOption__(newValue)
+          return __unwrapped.map({ __item in __item })
+        } else {
+          return nil
+        }
+      }()
+    }
+  }
+  
+  public final var windowStyle: bridge.std__optional_LivelineWindowStyle_ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_LivelineWindowStyle_ in
+        if let __unwrappedValue = self.__implementation.windowStyle {
+          return bridge.create_std__optional_LivelineWindowStyle_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.windowStyle = newValue.value
+    }
+  }
+  
+  public final var onWindowChange: bridge.std__optional_std__function_void_double____secs______ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_std__function_void_double____secs______ in
+        if let __unwrappedValue = self.__implementation.onWindowChange {
+          return bridge.create_std__optional_std__function_void_double____secs______({ () -> bridge.Func_void_double in
+            let __closureWrapper = Func_void_double(__unwrappedValue)
+            return bridge.create_Func_void_double(__closureWrapper.toUnsafe())
+          }())
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.onWindowChange = { () -> ((_ secs: Double) -> Void)? in
+        if bridge.has_value_std__optional_std__function_void_double____secs______(newValue) {
+          let __unwrapped = bridge.get_std__optional_std__function_void_double____secs______(newValue)
+          return { () -> (Double) -> Void in
+            let __wrappedFunction = bridge.wrap_Func_void_double(__unwrapped)
+            return { (__secs: Double) -> Void in
+              __wrappedFunction.call(__secs)
+            }
+          }()
+        } else {
+          return nil
+        }
+      }()
+    }
+  }
+  
+  public final var onModeChange: bridge.std__optional_std__function_void_LivelineMode____mode______ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_std__function_void_LivelineMode____mode______ in
+        if let __unwrappedValue = self.__implementation.onModeChange {
+          return bridge.create_std__optional_std__function_void_LivelineMode____mode______({ () -> bridge.Func_void_LivelineMode in
+            let __closureWrapper = Func_void_LivelineMode(__unwrappedValue)
+            return bridge.create_Func_void_LivelineMode(__closureWrapper.toUnsafe())
+          }())
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.onModeChange = { () -> ((_ mode: LivelineMode) -> Void)? in
+        if bridge.has_value_std__optional_std__function_void_LivelineMode____mode______(newValue) {
+          let __unwrapped = bridge.get_std__optional_std__function_void_LivelineMode____mode______(newValue)
+          return { () -> (LivelineMode) -> Void in
+            let __wrappedFunction = bridge.wrap_Func_void_LivelineMode(__unwrapped)
+            return { (__mode: LivelineMode) -> Void in
+              __wrappedFunction.call(__mode.rawValue)
+            }
+          }()
+        } else {
+          return nil
+        }
+      }()
+    }
+  }
+  
   public final var grid: bridge.std__optional_bool_ {
     @inline(__always)
     get {
@@ -816,17 +927,6 @@ open class HybridLivelineSpec_cxx {
   public final func push(point: LivelinePoint) -> bridge.Result_void_ {
     do {
       try self.__implementation.push(point: point)
-      return bridge.create_Result_void_()
-    } catch (let __error) {
-      let __exceptionPtr = __error.toCpp()
-      return bridge.create_Result_void_(__exceptionPtr)
-    }
-  }
-  
-  @inline(__always)
-  public final func updateHead(point: LivelinePoint) -> bridge.Result_void_ {
-    do {
-      try self.__implementation.updateHead(point: point)
       return bridge.create_Result_void_()
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()

@@ -20,6 +20,10 @@ namespace margelo::nitro::liveline { enum class LivelineMode; }
 namespace margelo::nitro::liveline { struct CandlePoint; }
 // Forward declaration of `LivelineTheme` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineTheme; }
+// Forward declaration of `WindowOption` to properly resolve imports.
+namespace margelo::nitro::liveline { struct WindowOption; }
+// Forward declaration of `LivelineWindowStyle` to properly resolve imports.
+namespace margelo::nitro::liveline { enum class LivelineWindowStyle; }
 // Forward declaration of `LivelineBadgeVariant` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 // Forward declaration of `LivelineMomentum` to properly resolve imports.
@@ -34,6 +38,9 @@ namespace margelo::nitro::liveline { struct LivelineReference; }
 #include "CandlePoint.hpp"
 #include <string>
 #include "LivelineTheme.hpp"
+#include "WindowOption.hpp"
+#include "LivelineWindowStyle.hpp"
+#include <functional>
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
 #include "LivelineReference.hpp"
@@ -160,6 +167,34 @@ namespace margelo::nitro::liveline {
     }
     inline void setWindow(std::optional<double> window) noexcept override {
       _swiftPart.setWindow(window);
+    }
+    inline std::optional<std::vector<WindowOption>> getWindows() noexcept override {
+      auto __result = _swiftPart.getWindows();
+      return __result;
+    }
+    inline void setWindows(const std::optional<std::vector<WindowOption>>& windows) noexcept override {
+      _swiftPart.setWindows(windows);
+    }
+    inline std::optional<LivelineWindowStyle> getWindowStyle() noexcept override {
+      auto __result = _swiftPart.getWindowStyle();
+      return __result;
+    }
+    inline void setWindowStyle(std::optional<LivelineWindowStyle> windowStyle) noexcept override {
+      _swiftPart.setWindowStyle(windowStyle);
+    }
+    inline std::optional<std::function<void(double /* secs */)>> getOnWindowChange() noexcept override {
+      auto __result = _swiftPart.getOnWindowChange();
+      return __result;
+    }
+    inline void setOnWindowChange(const std::optional<std::function<void(double /* secs */)>>& onWindowChange) noexcept override {
+      _swiftPart.setOnWindowChange(onWindowChange);
+    }
+    inline std::optional<std::function<void(LivelineMode /* mode */)>> getOnModeChange() noexcept override {
+      auto __result = _swiftPart.getOnModeChange();
+      return __result;
+    }
+    inline void setOnModeChange(const std::optional<std::function<void(LivelineMode /* mode */)>>& onModeChange) noexcept override {
+      _swiftPart.setOnModeChange(onModeChange);
     }
     inline std::optional<bool> getGrid() noexcept override {
       auto __result = _swiftPart.getGrid();
@@ -299,12 +334,6 @@ namespace margelo::nitro::liveline {
     // Methods
     inline void push(const LivelinePoint& point) override {
       auto __result = _swiftPart.push(std::forward<decltype(point)>(point));
-      if (__result.hasError()) [[unlikely]] {
-        std::rethrow_exception(__result.error());
-      }
-    }
-    inline void updateHead(const LivelinePoint& point) override {
-      auto __result = _swiftPart.updateHead(std::forward<decltype(point)>(point));
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

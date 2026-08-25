@@ -24,12 +24,14 @@
 #include "CandlePoint.hpp"
 #include <string>
 #include "LivelineTheme.hpp"
+#include "WindowOption.hpp"
+#include "LivelineWindowStyle.hpp"
+#include <functional>
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
 #include "LivelineReference.hpp"
 #include <memory>
 #include "HybridLivelineSpec.hpp"
-#include <functional>
 
 namespace margelo::nitro::liveline::views {
 
@@ -62,6 +64,10 @@ namespace margelo::nitro::liveline::views {
     nitro::ReactProp<std::optional<std::string>> surfaceColor;
     nitro::ReactProp<std::optional<double>> lineWidth;
     nitro::ReactProp<std::optional<double>> window;
+    nitro::ReactProp<std::optional<std::vector<WindowOption>>> windows;
+    nitro::ReactProp<std::optional<LivelineWindowStyle>> windowStyle;
+    nitro::ReactProp<std::optional<std::function<void(double /* secs */)>>> onWindowChange;
+    nitro::ReactProp<std::optional<std::function<void(LivelineMode /* mode */)>>> onModeChange;
     nitro::ReactProp<std::optional<bool>> grid;
     nitro::ReactProp<std::optional<bool>> badge;
     nitro::ReactProp<std::optional<bool>> badgeTail;
@@ -96,6 +102,10 @@ namespace margelo::nitro::liveline::views {
              surfaceColor.hasSameValue(other.surfaceColor) &&
              lineWidth.hasSameValue(other.lineWidth) &&
              window.hasSameValue(other.window) &&
+             windows.hasSameValue(other.windows) &&
+             windowStyle.hasSameValue(other.windowStyle) &&
+             onWindowChange.hasSameValue(other.onWindowChange) &&
+             onModeChange.hasSameValue(other.onModeChange) &&
              grid.hasSameValue(other.grid) &&
              badge.hasSameValue(other.badge) &&
              badgeTail.hasSameValue(other.badgeTail) &&
@@ -131,6 +141,10 @@ namespace margelo::nitro::liveline::views {
              surfaceColor.isProvided() ||
              lineWidth.isProvided() ||
              window.isProvided() ||
+             windows.isProvided() ||
+             windowStyle.isProvided() ||
+             onWindowChange.isProvided() ||
+             onModeChange.isProvided() ||
              grid.isProvided() ||
              badge.isProvided() ||
              badgeTail.isProvided() ||

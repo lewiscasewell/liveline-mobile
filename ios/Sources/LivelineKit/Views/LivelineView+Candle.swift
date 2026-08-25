@@ -25,7 +25,7 @@ extension LivelineView {
         _ ctx: CGContext,
         w: CGFloat, h: CGFloat,
         pad: (top: CGFloat, right: CGFloat, bottom: CGFloat, left: CGFloat),
-        now: Double, dt: Double, pausedDt: Double, nowMs: Double
+        now: Double, dt: Double, pausedDt: Double, nowMs: Double, modeProgress: Double = 1
     ) {
         let chartH = h - pad.top - pad.bottom
         let rightEdge = now + displayWindow * CK.buffer
@@ -56,10 +56,13 @@ extension LivelineView {
             liveBull = 0.5
         }
 
-        // Visible candles.
+        // Visible candles: static (backfill) + those aggregated from live pushes.
         var visible = [LivelineCandle]()
-        visible.reserveCapacity(candles.count + 1)
+        visible.reserveCapacity(candles.count + liveCandles.count + 1)
         for c in candles where c.time + candleWidth >= leftEdge && c.time <= rightEdge {
+            visible.append(c)
+        }
+        for c in liveCandles where c.time + candleWidth >= leftEdge && c.time <= rightEdge {
             visible.append(c)
         }
         if let sl = smoothLive, sl.time + candleWidth >= leftEdge, sl.time <= rightEdge {
@@ -106,7 +109,11 @@ extension LivelineView {
         drawCandlesticks(
             ctx, layout: layout, candles: visible,
             liveTime: smoothLive?.time ?? -Double.greatestFiniteMagnitude,
-            nowMs: nowMs, scrubX: scrubX, scrubDim: scrubAmount)
+            nowMs: nowMs, scrubX: scrubX, scrubDim: scrubAmount, grow: modeProgress)
+        // Fade the line out over the growing candles during the morph.
+        if modeProgress < 1 {
+            drawLineOverlay(ctx, layout: layout, now: now, alpha: (1 - modeProgress) * reveal)
+        }
         ctx.restoreGState()
 
         // 4. Time axis.
@@ -124,6 +131,29 @@ extension LivelineView {
         {
             drawCandleCrosshair(ctx, layout: layout, hoverX: hx, candle: candle, opacity: scrubAmount)
         }
+
+        // 7. Live value overlays — dot, momentum arrows, badge and value label,
+        //    the same as line mode (they persist for candlesticks). The live
+        //    value is the forming candle's close, else the last visible close.
+        let liveValue = smoothLive?.close ?? visible.last?.close ?? domain.minVal
+        let smoothValue = liveValue
+        let trend = resolveTrend()
+        let showMomentum = momentum != .off
+        let dotY = max(pad.top, min(h - pad.bottom, layout.toY(smoothValue)))
+        let dotPoint = CGPoint(x: layout.toX(now), y: dotY)
+
+        if reveal >= 0.3 {
+            drawDot(ctx, at: dotPoint, showPulse: pulse && reveal > 0.6, scrubDim: scrubAmount, nowMs: nowMs)
+        }
+        if showMomentum, let trend {
+            drawArrows(ctx, at: dotPoint, trend: trend, dt: dt, nowMs: nowMs)
+        }
+        if badge, reveal >= 0.25 {
+            updateBadge(
+                smoothValue: smoothValue, layout: layout, trend: trend, showMomentum: showMomentum, dt: dt)
+            drawBadge(ctx, smoothValue: smoothValue, layout: layout, reveal: reveal)
+        }
+        updateValueLabel(value: smoothValue, trend: trend ?? .flat, pad: pad)
 
         // Scrub easing.
         let scrubTarget = isHovering ? 1.0 : 0.0
@@ -150,13 +180,14 @@ extension LivelineView {
 
     func drawCandlesticks(
         _ ctx: CGContext, layout: Layout, candles: [LivelineCandle],
-        liveTime: Double, nowMs: Double, scrubX: CGFloat, scrubDim: Double
+        liveTime: Double, nowMs: Double, scrubX: CGFloat, scrubDim: Double, grow: Double = 1
     ) {
         let dims = candleDims(layout)
         let halfBody = dims.bodyW / 2
         let padL = layout.padLeft
         let padR = layout.padLeft + layout.chartW
         let livePulse = 0.12 + sin(nowMs * 0.004) * 0.08
+        let growF = CGFloat(min(max(grow, 0), 1))
 
         for c in candles {
             let cx = layout.toX(c.time + candleWidth / 2)
@@ -175,11 +206,14 @@ extension LivelineView {
             }
             let drawColor = color.withAlpha(color.a * alpha)
 
-            let bodyTop = layout.toY(max(c.open, c.close))
-            let bodyBottom = layout.toY(min(c.open, c.close))
+            // Grow each candle out of its close as the line→candle morph plays.
+            let baseY = layout.toY(c.close)
+            func grown(_ y: CGFloat) -> CGFloat { baseY + (y - baseY) * growF }
+            let bodyTop = grown(layout.toY(max(c.open, c.close)))
+            let bodyBottom = grown(layout.toY(min(c.open, c.close)))
             let bodyH = max(1, bodyBottom - bodyTop)
-            let wickTop = layout.toY(c.high)
-            let wickBottom = layout.toY(c.low)
+            let wickTop = grown(layout.toY(c.high))
+            let wickBottom = grown(layout.toY(c.low))
 
             ctx.setStrokeColor(UIColor(rgba: drawColor).cgColor)
             ctx.setLineCap(.round)

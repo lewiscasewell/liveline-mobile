@@ -16,6 +16,8 @@
 #include <NitroModules/HybridObjectRegistry.hpp>
 
 #include "JHybridLivelineSpec.hpp"
+#include "JFunc_void_double.hpp"
+#include "JFunc_void_LivelineMode.hpp"
 #include "views/JHybridLivelineStateUpdater.hpp"
 #include <NitroModules/DefaultConstructableObject.hpp>
 
@@ -42,6 +44,8 @@ void registerAllNatives() {
 
   // Register native JNI methods
   margelo::nitro::liveline::JHybridLivelineSpec::CxxPart::registerNatives();
+  margelo::nitro::liveline::JFunc_void_double_cxx::registerNatives();
+  margelo::nitro::liveline::JFunc_void_LivelineMode_cxx::registerNatives();
   margelo::nitro::liveline::views::JHybridLivelineStateUpdater::registerNatives();
 
   // Register Nitro Hybrid Objects

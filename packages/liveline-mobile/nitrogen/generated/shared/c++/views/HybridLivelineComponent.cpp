@@ -31,6 +31,10 @@ namespace margelo::nitro::liveline::views {
     surfaceColor(nitro::ReactProp<std::optional<std::string>>::fromRawValue("Liveline", "surfaceColor", rawProps, sourceProps.surfaceColor)),
     lineWidth(nitro::ReactProp<std::optional<double>>::fromRawValue("Liveline", "lineWidth", rawProps, sourceProps.lineWidth)),
     window(nitro::ReactProp<std::optional<double>>::fromRawValue("Liveline", "window", rawProps, sourceProps.window)),
+    windows(nitro::ReactProp<std::optional<std::vector<WindowOption>>>::fromRawValue("Liveline", "windows", rawProps, sourceProps.windows)),
+    windowStyle(nitro::ReactProp<std::optional<LivelineWindowStyle>>::fromRawValue("Liveline", "windowStyle", rawProps, sourceProps.windowStyle)),
+    onWindowChange(nitro::ReactProp<std::optional<std::function<void(double /* secs */)>>>::fromRawValue("Liveline", "onWindowChange", rawProps, sourceProps.onWindowChange)),
+    onModeChange(nitro::ReactProp<std::optional<std::function<void(LivelineMode /* mode */)>>>::fromRawValue("Liveline", "onModeChange", rawProps, sourceProps.onModeChange)),
     grid(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "grid", rawProps, sourceProps.grid)),
     badge(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "badge", rawProps, sourceProps.badge)),
     badgeTail(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "badgeTail", rawProps, sourceProps.badgeTail)),
@@ -65,6 +69,10 @@ namespace margelo::nitro::liveline::views {
       case hashString("surfaceColor"): return true;
       case hashString("lineWidth"): return true;
       case hashString("window"): return true;
+      case hashString("windows"): return true;
+      case hashString("windowStyle"): return true;
+      case hashString("onWindowChange"): return true;
+      case hashString("onModeChange"): return true;
       case hashString("grid"): return true;
       case hashString("badge"): return true;
       case hashString("badgeTail"): return true;

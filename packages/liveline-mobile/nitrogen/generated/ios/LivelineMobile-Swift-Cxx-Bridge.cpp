@@ -14,6 +14,22 @@
 
 namespace margelo::nitro::liveline::bridge::swift {
 
+  // pragma MARK: std::function<void(double /* secs */)>
+  Func_void_double create_Func_void_double(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = LivelineMobile::Func_void_double::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](double secs) mutable -> void {
+      swiftClosure.call(secs);
+    };
+  }
+  
+  // pragma MARK: std::function<void(LivelineMode /* mode */)>
+  Func_void_LivelineMode create_Func_void_LivelineMode(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = LivelineMobile::Func_void_LivelineMode::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](LivelineMode mode) mutable -> void {
+      swiftClosure.call(static_cast<int>(mode));
+    };
+  }
+  
   // pragma MARK: std::shared_ptr<HybridLivelineSpec>
   std::shared_ptr<HybridLivelineSpec> create_std__shared_ptr_HybridLivelineSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
     LivelineMobile::HybridLivelineSpec_cxx swiftPart = LivelineMobile::HybridLivelineSpec_cxx::fromUnsafe(swiftUnsafePointer);

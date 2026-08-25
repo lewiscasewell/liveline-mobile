@@ -1,8 +1,8 @@
 import * as React from 'react'
-import { getHostComponent } from 'react-native-nitro-modules'
+import { callback, getHostComponent } from 'react-native-nitro-modules'
 
 import LivelineConfig from '../nitrogen/generated/shared/json/LivelineConfig.json'
-import type { LivelineMethods, LivelineProps } from './Liveline.nitro'
+import type { LivelineMethods, LivelineMode, LivelinePoint, LivelineProps } from './Liveline.nitro'
 
 const NativeLiveline = getHostComponent<LivelineProps, LivelineMethods>(
   'Liveline',
@@ -49,7 +49,23 @@ const defaults: Partial<LivelineProps> = {
   valueDecimals: 2,
 }
 
+// The native props now include the window bar (`windows`/`windowStyle`/
+// `onWindowChange`) — the bar is drawn natively, so the wrapper just passes them
+// through.
 type LivelineComponentProps = React.ComponentProps<typeof NativeLiveline>
+
+/**
+ * Props of the `<Liveline>` wrapper. Same as the native props, except
+ * `onWindowChange` is a plain function — the wrapper wraps it in Nitro's
+ * `callback()` for you (like `hybridRef`), so callers never touch that plumbing.
+ */
+export type LivelineComponentPropsPublic = Omit<
+  LivelineComponentProps,
+  'onWindowChange' | 'onModeChange'
+> & {
+  onWindowChange?: (secs: number) => void
+  onModeChange?: (mode: LivelineMode) => void
+}
 
 declare const __DEV__: boolean | undefined
 
@@ -92,26 +108,89 @@ function defined<T extends object>(obj: T): Partial<T> {
   return out
 }
 
+// ─── Imperative access: useLiveline() + LivelineProvider ─────────────────────
+
+/** The imperative handle exposed by the native chart (push). */
+export type LivelineHandle = LivelineMethods
+
+const LivelineRefContext =
+  React.createContext<React.MutableRefObject<LivelineHandle | null> | null>(null)
+
 /**
- * The native Liveline chart, rendered by the Swift `LivelineView` via Nitro.
- * Props are declarative; the imperative `push()` is reached via `hybridRef`.
+ * Shares one chart handle across a subtree so `useLiveline().push()` can be
+ * called from a component OTHER than the one rendering `<Liveline>`. A
+ * `<Liveline>` inside a provider auto-registers its handle — you don't wire a
+ * `hybridRef` at all.
+ */
+export function LivelineProvider(props: { children?: React.ReactNode }): React.ReactElement {
+  const ref = React.useRef<LivelineHandle | null>(null)
+  return React.createElement(LivelineRefContext.Provider, { value: ref }, props.children)
+}
+
+/**
+ * Owns the ref + imperative calls for a chart, so callers never touch
+ * `hybridRef`/`callback` plumbing. Returns `push` (a safe no-op until the chart
+ * mounts) and a stable `hybridRef` (with an `attachHybridRef()` alias) to wire
+ * it up:
+ *
+ * ```tsx
+ * const { attachHybridRef, push } = useLiveline()
+ * push({ time, value })
+ * <Liveline {...rest} hybridRef={attachHybridRef()} />
+ * ```
+ *
+ * Inside a `<LivelineProvider>` it targets the shared handle, so `push()` works
+ * anywhere in the subtree and `<Liveline>` needs no `hybridRef`.
+ */
+export function useLiveline() {
+  const ctxRef = React.useContext(LivelineRefContext)
+  const localRef = React.useRef<LivelineHandle | null>(null)
+  const ref = ctxRef ?? localRef
+  const hybridRef = React.useMemo(
+    () => callback((r: LivelineHandle) => { ref.current = r }),
+    [ref]
+  )
+  const push = React.useCallback((point: LivelinePoint) => ref.current?.push(point), [ref])
+  const attachHybridRef = React.useCallback(() => hybridRef, [hybridRef])
+  return { push, hybridRef, attachHybridRef }
+}
+
+/**
+ * The native Liveline chart, rendered by the Swift `LivelineView` via Nitro,
+ * plus an optional built-in interval bar. Props are declarative; the imperative
+ * `push()` is reached via `hybridRef` (or, more simply, `useLiveline()`).
  *
  * A thin wrapper (not the raw host component) so that (a) omitting/removing any
- * prop falls back to its default instead of sending `null` — which Nitro
- * rejects on optional props — and (b) data-shaped props (`referenceLine`,
- * `data`, `candles`) coalesce to sentinels the native side treats as "unset",
- * so they can be toggled off without error.
+ * prop falls back to its default instead of sending `null` — which Nitro rejects
+ * on optional props; and (b) data-shaped props (`referenceLine`, `data`,
+ * `candles`) coalesce to sentinels the native side treats as "unset". The
+ * interval bar (`windows`/`windowStyle`/`onWindowChange`) is drawn natively, so
+ * those props just pass straight through.
  */
-export function Liveline(props: LivelineComponentProps): React.ReactElement {
-  warnIfOverfed(props)
-  const merged = { ...defaults, ...defined(props) } as Record<string, unknown>
+export function Liveline(props: LivelineComponentPropsPublic): React.ReactElement {
+  const ctxRef = React.useContext(LivelineRefContext)
+  const { onWindowChange, onModeChange, ...rest } = props
+  // Auto-register with the nearest LivelineProvider when the caller didn't pass
+  // a hybridRef, so `useLiveline().push()` works with zero manual wiring.
+  const autoHybridRef = React.useMemo(
+    () => (ctxRef ? callback((r: LivelineHandle) => { ctxRef.current = r }) : undefined),
+    [ctxRef]
+  )
+  warnIfOverfed(rest)
+  const merged = { ...defaults, ...defined(rest) } as Record<string, unknown>
   if (merged.referenceLine == null) merged.referenceLine = { value: Number.NaN }
   if (merged.data == null) merged.data = []
   if (merged.candles == null) merged.candles = []
+  if (merged.hybridRef == null && autoHybridRef) merged.hybridRef = autoHybridRef
+  // Wrap the callbacks for Nitro (like hybridRef).
+  if (onWindowChange) merged.onWindowChange = callback(onWindowChange)
+  if (onModeChange) merged.onModeChange = callback(onModeChange)
   return React.createElement(NativeLiveline, merged)
 }
 
 export type {
+  WindowOption,
+  LivelineWindowStyle,
   LivelineProps,
   LivelineMethods,
   LivelinePoint,

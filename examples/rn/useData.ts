@@ -9,8 +9,8 @@ export type Interval = { label: string; seconds: number; live?: boolean }
 const DAY = 86400
 
 export const INTERVALS: Interval[] = [
-  { label: '4Y', seconds: 4 * 365 * DAY },
-  { label: '1Y', seconds: 365 * DAY },
+  // { label: '4Y', seconds: 4 * 365 * DAY },
+  // { label: '1Y', seconds: 365 * DAY },
   { label: '1M', seconds: 30 * DAY },
   { label: '1W', seconds: 7 * DAY },
   { label: '1D', seconds: DAY },

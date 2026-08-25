@@ -21,6 +21,10 @@ namespace margelo::nitro::liveline { enum class LivelineMode; }
 namespace margelo::nitro::liveline { struct CandlePoint; }
 // Forward declaration of `LivelineTheme` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineTheme; }
+// Forward declaration of `WindowOption` to properly resolve imports.
+namespace margelo::nitro::liveline { struct WindowOption; }
+// Forward declaration of `LivelineWindowStyle` to properly resolve imports.
+namespace margelo::nitro::liveline { enum class LivelineWindowStyle; }
 // Forward declaration of `LivelineBadgeVariant` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 // Forward declaration of `LivelineMomentum` to properly resolve imports.
@@ -35,6 +39,9 @@ namespace margelo::nitro::liveline { struct LivelineReference; }
 #include "CandlePoint.hpp"
 #include <string>
 #include "LivelineTheme.hpp"
+#include "WindowOption.hpp"
+#include "LivelineWindowStyle.hpp"
+#include <functional>
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
 #include "LivelineReference.hpp"
@@ -88,6 +95,14 @@ namespace margelo::nitro::liveline {
       virtual void setLineWidth(std::optional<double> lineWidth) = 0;
       virtual std::optional<double> getWindow() = 0;
       virtual void setWindow(std::optional<double> window) = 0;
+      virtual std::optional<std::vector<WindowOption>> getWindows() = 0;
+      virtual void setWindows(const std::optional<std::vector<WindowOption>>& windows) = 0;
+      virtual std::optional<LivelineWindowStyle> getWindowStyle() = 0;
+      virtual void setWindowStyle(std::optional<LivelineWindowStyle> windowStyle) = 0;
+      virtual std::optional<std::function<void(double /* secs */)>> getOnWindowChange() = 0;
+      virtual void setOnWindowChange(const std::optional<std::function<void(double /* secs */)>>& onWindowChange) = 0;
+      virtual std::optional<std::function<void(LivelineMode /* mode */)>> getOnModeChange() = 0;
+      virtual void setOnModeChange(const std::optional<std::function<void(LivelineMode /* mode */)>>& onModeChange) = 0;
       virtual std::optional<bool> getGrid() = 0;
       virtual void setGrid(std::optional<bool> grid) = 0;
       virtual std::optional<bool> getBadge() = 0;
@@ -130,7 +145,6 @@ namespace margelo::nitro::liveline {
     public:
       // Methods
       virtual void push(const LivelinePoint& point) = 0;
-      virtual void updateHead(const LivelinePoint& point) = 0;
 
     protected:
       // Hybrid Setup

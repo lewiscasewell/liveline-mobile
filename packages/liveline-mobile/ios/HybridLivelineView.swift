@@ -17,10 +17,57 @@ import UIKit
 @MainActor
 final class HybridLivelineView: HybridLivelineSpec {
     private let chart = LivelineKit.LivelineView()
+    private let bar = LivelineKit.WindowBarView()
     private var lastValue: Double?
 
-    /// The UIView Nitro mounts into the RN view tree.
-    var view: UIView { chart }
+    /// Notifies JS when a window button is tapped (set by Nitro).
+    var onWindowChange: ((_ secs: Double) -> Void)?
+    /// Notifies JS when the mode toggle is tapped; its presence shows the toggle.
+    var onModeChange: ((_ mode: LivelineMode) -> Void)? {
+        didSet { bar.showModeToggle = onModeChange != nil }
+    }
+
+    private lazy var container: LivelineContainerView = {
+        bar.isHidden = true
+        bar.onSelect = { [weak self] secs in
+            guard let self else { return }
+            // Optimistic native update (no JS round-trip lag), then notify JS.
+            self.chart.windowSeconds = secs
+            self.bar.activeSecs = secs
+            self.onWindowChange?(secs)
+        }
+        bar.onModeSelect = { [weak self] candle in
+            guard let self else { return }
+            self.chart.mode = candle ? .candle : .line
+            self.bar.isCandle = candle
+            self.onModeChange?(candle ? .candle : .line)
+        }
+        return LivelineContainerView(bar: bar, chart: chart)
+    }()
+
+    /// The UIView Nitro mounts into the RN view tree — the bar stacked above the chart.
+    var view: UIView { container }
+
+    // MARK: Window bar
+
+    var windows: [WindowOption]? {
+        didSet {
+            let ws = windows ?? []
+            bar.windows = ws.map { (label: $0.label, secs: $0.secs) }
+            bar.isHidden = ws.isEmpty
+            container.setNeedsLayout()
+        }
+    }
+
+    var windowStyle: LivelineWindowStyle? {
+        didSet {
+            switch windowStyle {
+            case .rounded: bar.style = .rounded
+            case .text: bar.style = .text
+            default: bar.style = .default
+            }
+        }
+    }
 
     // MARK: Data
 
@@ -42,7 +89,10 @@ final class HybridLivelineView: HybridLivelineSpec {
     // MARK: Candle mode
 
     var mode: LivelineMode? {
-        didSet { chart.mode = (mode == .candle) ? .candle : .line }
+        didSet {
+            chart.mode = (mode == .candle) ? .candle : .line
+            bar.isCandle = mode == .candle
+        }
     }
 
     var candles: [CandlePoint]? {
@@ -74,7 +124,10 @@ final class HybridLivelineView: HybridLivelineSpec {
     }
 
     var theme: LivelineTheme? {
-        didSet { chart.theme = (theme == .light) ? .light : .dark }
+        didSet {
+            chart.theme = (theme == .light) ? .light : .dark
+            bar.isDark = theme != .light
+        }
     }
 
     var surfaceColor: String? {
@@ -95,7 +148,12 @@ final class HybridLivelineView: HybridLivelineSpec {
     // MARK: Time
 
     var window: Double? {
-        didSet { if let window { chart.windowSeconds = window } }
+        didSet {
+            if let window {
+                chart.windowSeconds = window
+                bar.activeSecs = window
+            }
+        }
     }
 
     // MARK: Feature flags
@@ -190,16 +248,6 @@ final class HybridLivelineView: HybridLivelineSpec {
             DispatchQueue.main.async { self.chart.push(p) }
         }
     }
-
-    func updateHead(point: LivelinePoint) throws {
-        // Same main-thread hop as `push` — this mutates the buffer's last element.
-        let p = LivelineKit.LivelinePoint(time: point.time, value: point.value)
-        if Thread.isMainThread {
-            chart.updateHead(p)
-        } else {
-            DispatchQueue.main.async { self.chart.updateHead(p) }
-        }
-    }
 }
 
 extension UIColor {
@@ -220,5 +268,31 @@ extension UIColor {
             }
         }
         self.init(red: 59 / 255, green: 130 / 255, blue: 246 / 255, alpha: 1)
+    }
+}
+
+/// Stacks the interval bar above the chart. When there are no windows the bar is
+/// hidden and the chart fills the whole view.
+final class LivelineContainerView: UIView {
+    private let bar: LivelineKit.WindowBarView
+    private let chart: LivelineKit.LivelineView
+
+    init(bar: LivelineKit.WindowBarView, chart: LivelineKit.LivelineView) {
+        self.bar = bar
+        self.chart = chart
+        super.init(frame: .zero)
+        addSubview(bar)
+        addSubview(chart)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) not supported") }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Bar at the BOTTOM (mobile placement); the chart fills the space above.
+        let barH = bar.isHidden ? 0 : bar.intrinsicContentSize.height
+        chart.frame = CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height - barH)
+        bar.frame = CGRect(x: 0, y: bounds.height - barH, width: bounds.width, height: barH)
     }
 }

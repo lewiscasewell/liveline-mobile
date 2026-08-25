@@ -164,6 +164,30 @@ using namespace margelo::nitro::liveline::views;
           : !newViewProps.window.hasSameValue(oldViewProps->window)) {
       swiftPart.setWindow(newViewProps.window.get());
     }
+    // windows: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.windows.isProvided()
+          : !newViewProps.windows.hasSameValue(oldViewProps->windows)) {
+      swiftPart.setWindows(newViewProps.windows.get());
+    }
+    // windowStyle: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.windowStyle.isProvided()
+          : !newViewProps.windowStyle.hasSameValue(oldViewProps->windowStyle)) {
+      swiftPart.setWindowStyle(newViewProps.windowStyle.get());
+    }
+    // onWindowChange: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.onWindowChange.isProvided()
+          : !newViewProps.onWindowChange.hasSameValue(oldViewProps->onWindowChange)) {
+      swiftPart.setOnWindowChange(newViewProps.onWindowChange.get());
+    }
+    // onModeChange: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.onModeChange.isProvided()
+          : !newViewProps.onModeChange.hasSameValue(oldViewProps->onModeChange)) {
+      swiftPart.setOnModeChange(newViewProps.onModeChange.get());
+    }
     // grid: optional
     if (oldViewProps == nullptr
           ? newViewProps.grid.isProvided()

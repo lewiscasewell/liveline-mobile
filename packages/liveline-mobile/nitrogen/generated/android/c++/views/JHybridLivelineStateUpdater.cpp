@@ -109,6 +109,26 @@ void JHybridLivelineStateUpdater::updateViewProps(jni::alias_ref<jni::JClass> /*
     hybridView->setWindow(newProps->window.get());
   }
   if (oldProps == nullptr
+        ? newProps->windows.isProvided()
+        : !newProps->windows.hasSameValue(oldProps->windows)) {
+    hybridView->setWindows(newProps->windows.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->windowStyle.isProvided()
+        : !newProps->windowStyle.hasSameValue(oldProps->windowStyle)) {
+    hybridView->setWindowStyle(newProps->windowStyle.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->onWindowChange.isProvided()
+        : !newProps->onWindowChange.hasSameValue(oldProps->onWindowChange)) {
+    hybridView->setOnWindowChange(newProps->onWindowChange.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->onModeChange.isProvided()
+        : !newProps->onModeChange.hasSameValue(oldProps->onModeChange)) {
+    hybridView->setOnModeChange(newProps->onModeChange.get());
+  }
+  if (oldProps == nullptr
         ? newProps->grid.isProvided()
         : !newProps->grid.hasSameValue(oldProps->grid)) {
     hybridView->setGrid(newProps->grid.get());

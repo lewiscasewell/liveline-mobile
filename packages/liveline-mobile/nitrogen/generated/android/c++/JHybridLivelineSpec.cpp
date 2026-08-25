@@ -15,6 +15,10 @@ namespace margelo::nitro::liveline { enum class LivelineMode; }
 namespace margelo::nitro::liveline { struct CandlePoint; }
 // Forward declaration of `LivelineTheme` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineTheme; }
+// Forward declaration of `WindowOption` to properly resolve imports.
+namespace margelo::nitro::liveline { struct WindowOption; }
+// Forward declaration of `LivelineWindowStyle` to properly resolve imports.
+namespace margelo::nitro::liveline { enum class LivelineWindowStyle; }
 // Forward declaration of `LivelineBadgeVariant` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 // Forward declaration of `LivelineMomentum` to properly resolve imports.
@@ -33,6 +37,14 @@ namespace margelo::nitro::liveline { struct LivelineReference; }
 #include <string>
 #include "LivelineTheme.hpp"
 #include "JLivelineTheme.hpp"
+#include "WindowOption.hpp"
+#include "JWindowOption.hpp"
+#include "LivelineWindowStyle.hpp"
+#include "JLivelineWindowStyle.hpp"
+#include <functional>
+#include "JFunc_void_double.hpp"
+#include <NitroModules/JNICallable.hpp>
+#include "JFunc_void_LivelineMode.hpp"
 #include "LivelineBadgeVariant.hpp"
 #include "JLivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
@@ -204,6 +216,76 @@ namespace margelo::nitro::liveline {
   void JHybridLivelineSpec::setWindow(std::optional<double> window) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JDouble> /* window */)>("setWindow");
     method(_javaPart, window.has_value() ? jni::JDouble::valueOf(window.value()) : nullptr);
+  }
+  std::optional<std::vector<WindowOption>> JHybridLivelineSpec::getWindows() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JArrayClass<JWindowOption>>()>("getWindows");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional([&](auto&& __input) {
+      size_t __size = __input->size();
+      std::vector<WindowOption> __vector;
+      __vector.reserve(__size);
+      for (size_t __i = 0; __i < __size; __i++) {
+        auto __element = __input->getElement(__i);
+        __vector.push_back(__element->toCpp());
+      }
+      return __vector;
+    }(__result)) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setWindows(const std::optional<std::vector<WindowOption>>& windows) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JArrayClass<JWindowOption>> /* windows */)>("setWindows");
+    method(_javaPart, windows.has_value() ? [&](auto&& __input) {
+      size_t __size = __input.size();
+      jni::local_ref<jni::JArrayClass<JWindowOption>> __array = jni::JArrayClass<JWindowOption>::newArray(__size);
+      for (size_t __i = 0; __i < __size; __i++) {
+        const auto& __element = __input[__i];
+        auto __elementJni = JWindowOption::fromCpp(__element);
+        __array->setElement(__i, *__elementJni);
+      }
+      return __array;
+    }(windows.value()) : nullptr);
+  }
+  std::optional<LivelineWindowStyle> JHybridLivelineSpec::getWindowStyle() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JLivelineWindowStyle>()>("getWindowStyle");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(__result->toCpp()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setWindowStyle(std::optional<LivelineWindowStyle> windowStyle) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelineWindowStyle> /* windowStyle */)>("setWindowStyle");
+    method(_javaPart, windowStyle.has_value() ? JLivelineWindowStyle::fromCpp(windowStyle.value()) : nullptr);
+  }
+  std::optional<std::function<void(double /* secs */)>> JHybridLivelineSpec::getOnWindowChange() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JFunc_void_double::javaobject>()>("getOnWindowChange_cxx");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional([&]() -> std::function<void(double /* secs */)> {
+      if (__result->isInstanceOf(JFunc_void_double_cxx::javaClassStatic())) [[likely]] {
+        auto downcast = jni::static_ref_cast<JFunc_void_double_cxx::javaobject>(__result);
+        return downcast->cthis()->getFunction();
+      } else {
+        auto __resultRef = jni::make_global(__result);
+        return JNICallable<JFunc_void_double, void(double)>(std::move(__resultRef));
+      }
+    }()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setOnWindowChange(const std::optional<std::function<void(double /* secs */)>>& onWindowChange) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JFunc_void_double::javaobject> /* onWindowChange */)>("setOnWindowChange_cxx");
+    method(_javaPart, onWindowChange.has_value() ? JFunc_void_double_cxx::fromCpp(onWindowChange.value()) : nullptr);
+  }
+  std::optional<std::function<void(LivelineMode /* mode */)>> JHybridLivelineSpec::getOnModeChange() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JFunc_void_LivelineMode::javaobject>()>("getOnModeChange_cxx");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional([&]() -> std::function<void(LivelineMode /* mode */)> {
+      if (__result->isInstanceOf(JFunc_void_LivelineMode_cxx::javaClassStatic())) [[likely]] {
+        auto downcast = jni::static_ref_cast<JFunc_void_LivelineMode_cxx::javaobject>(__result);
+        return downcast->cthis()->getFunction();
+      } else {
+        auto __resultRef = jni::make_global(__result);
+        return JNICallable<JFunc_void_LivelineMode, void(LivelineMode)>(std::move(__resultRef));
+      }
+    }()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setOnModeChange(const std::optional<std::function<void(LivelineMode /* mode */)>>& onModeChange) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JFunc_void_LivelineMode::javaobject> /* onModeChange */)>("setOnModeChange_cxx");
+    method(_javaPart, onModeChange.has_value() ? JFunc_void_LivelineMode_cxx::fromCpp(onModeChange.value()) : nullptr);
   }
   std::optional<bool> JHybridLivelineSpec::getGrid() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JBoolean>()>("getGrid");
@@ -380,10 +462,6 @@ namespace margelo::nitro::liveline {
   // Methods
   void JHybridLivelineSpec::push(const LivelinePoint& point) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelinePoint> /* point */)>("push");
-    method(_javaPart, JLivelinePoint::fromCpp(point));
-  }
-  void JHybridLivelineSpec::updateHead(const LivelinePoint& point) {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelinePoint> /* point */)>("updateHead");
     method(_javaPart, JLivelinePoint::fromCpp(point));
   }
 

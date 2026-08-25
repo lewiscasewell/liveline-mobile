@@ -24,6 +24,10 @@ namespace margelo::nitro::liveline { struct LivelinePoint; }
 namespace margelo::nitro::liveline { struct LivelineReference; }
 // Forward declaration of `LivelineTheme` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineTheme; }
+// Forward declaration of `LivelineWindowStyle` to properly resolve imports.
+namespace margelo::nitro::liveline { enum class LivelineWindowStyle; }
+// Forward declaration of `WindowOption` to properly resolve imports.
+namespace margelo::nitro::liveline { struct WindowOption; }
 
 // Forward declarations of Swift defined types
 // Forward declaration of `HybridLivelineSpec_cxx` to properly resolve imports.
@@ -38,8 +42,11 @@ namespace LivelineMobile { class HybridLivelineSpec_cxx; }
 #include "LivelinePoint.hpp"
 #include "LivelineReference.hpp"
 #include "LivelineTheme.hpp"
+#include "LivelineWindowStyle.hpp"
+#include "WindowOption.hpp"
 #include <NitroModules/Result.hpp>
 #include <exception>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -175,6 +182,121 @@ namespace margelo::nitro::liveline::bridge::swift {
     return optional.has_value();
   }
   inline LivelineTheme get_std__optional_LivelineTheme_(const std::optional<LivelineTheme>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::vector<WindowOption>
+  /**
+   * Specialized version of `std::vector<WindowOption>`.
+   */
+  using std__vector_WindowOption_ = std::vector<WindowOption>;
+  inline std::vector<WindowOption> create_std__vector_WindowOption_(size_t size) noexcept {
+    std::vector<WindowOption> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::optional<std::vector<WindowOption>>
+  /**
+   * Specialized version of `std::optional<std::vector<WindowOption>>`.
+   */
+  using std__optional_std__vector_WindowOption__ = std::optional<std::vector<WindowOption>>;
+  inline std::optional<std::vector<WindowOption>> create_std__optional_std__vector_WindowOption__(const std::vector<WindowOption>& value) noexcept {
+    return std::optional<std::vector<WindowOption>>(value);
+  }
+  inline bool has_value_std__optional_std__vector_WindowOption__(const std::optional<std::vector<WindowOption>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::vector<WindowOption> get_std__optional_std__vector_WindowOption__(const std::optional<std::vector<WindowOption>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<LivelineWindowStyle>
+  /**
+   * Specialized version of `std::optional<LivelineWindowStyle>`.
+   */
+  using std__optional_LivelineWindowStyle_ = std::optional<LivelineWindowStyle>;
+  inline std::optional<LivelineWindowStyle> create_std__optional_LivelineWindowStyle_(const LivelineWindowStyle& value) noexcept {
+    return std::optional<LivelineWindowStyle>(value);
+  }
+  inline bool has_value_std__optional_LivelineWindowStyle_(const std::optional<LivelineWindowStyle>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline LivelineWindowStyle get_std__optional_LivelineWindowStyle_(const std::optional<LivelineWindowStyle>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::function<void(double /* secs */)>
+  /**
+   * Specialized version of `std::function<void(double)>`.
+   */
+  using Func_void_double = std::function<void(double /* secs */)>;
+  /**
+   * Wrapper class for a `std::function<void(double / * secs * /)>`, this can be used from Swift.
+   */
+  class Func_void_double_Wrapper final {
+  public:
+    explicit Func_void_double_Wrapper(std::function<void(double /* secs */)>&& func): _function(std::make_unique<std::function<void(double /* secs */)>>(std::move(func))) {}
+    inline void call(double secs) const noexcept {
+      _function->operator()(secs);
+    }
+  private:
+    std::unique_ptr<std::function<void(double /* secs */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_double create_Func_void_double(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_double_Wrapper wrap_Func_void_double(Func_void_double value) noexcept {
+    return Func_void_double_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<std::function<void(double /* secs */)>>
+  /**
+   * Specialized version of `std::optional<std::function<void(double / * secs * /)>>`.
+   */
+  using std__optional_std__function_void_double____secs______ = std::optional<std::function<void(double /* secs */)>>;
+  inline std::optional<std::function<void(double /* secs */)>> create_std__optional_std__function_void_double____secs______(const std::function<void(double /* secs */)>& value) noexcept {
+    return std::optional<std::function<void(double /* secs */)>>(value);
+  }
+  inline bool has_value_std__optional_std__function_void_double____secs______(const std::optional<std::function<void(double /* secs */)>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::function<void(double /* secs */)> get_std__optional_std__function_void_double____secs______(const std::optional<std::function<void(double /* secs */)>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::function<void(LivelineMode /* mode */)>
+  /**
+   * Specialized version of `std::function<void(LivelineMode)>`.
+   */
+  using Func_void_LivelineMode = std::function<void(LivelineMode /* mode */)>;
+  /**
+   * Wrapper class for a `std::function<void(LivelineMode / * mode * /)>`, this can be used from Swift.
+   */
+  class Func_void_LivelineMode_Wrapper final {
+  public:
+    explicit Func_void_LivelineMode_Wrapper(std::function<void(LivelineMode /* mode */)>&& func): _function(std::make_unique<std::function<void(LivelineMode /* mode */)>>(std::move(func))) {}
+    inline void call(int mode) const noexcept {
+      _function->operator()(static_cast<LivelineMode>(mode));
+    }
+  private:
+    std::unique_ptr<std::function<void(LivelineMode /* mode */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_LivelineMode create_Func_void_LivelineMode(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_LivelineMode_Wrapper wrap_Func_void_LivelineMode(Func_void_LivelineMode value) noexcept {
+    return Func_void_LivelineMode_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<std::function<void(LivelineMode /* mode */)>>
+  /**
+   * Specialized version of `std::optional<std::function<void(LivelineMode / * mode * /)>>`.
+   */
+  using std__optional_std__function_void_LivelineMode____mode______ = std::optional<std::function<void(LivelineMode /* mode */)>>;
+  inline std::optional<std::function<void(LivelineMode /* mode */)>> create_std__optional_std__function_void_LivelineMode____mode______(const std::function<void(LivelineMode /* mode */)>& value) noexcept {
+    return std::optional<std::function<void(LivelineMode /* mode */)>>(value);
+  }
+  inline bool has_value_std__optional_std__function_void_LivelineMode____mode______(const std::optional<std::function<void(LivelineMode /* mode */)>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::function<void(LivelineMode /* mode */)> get_std__optional_std__function_void_LivelineMode____mode______(const std::optional<std::function<void(LivelineMode /* mode */)>>& optional) noexcept {
     return optional.value();
   }
   
