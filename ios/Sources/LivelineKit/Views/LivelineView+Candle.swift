@@ -296,10 +296,10 @@ extension LivelineView {
         // Condensed O H L C · time.
         let segs: [(String, RGBA)] = [
             ("O ", palette.gridLabel), (formatValue(candle.open), valueColor),
-            ("  H ", palette.gridLabel), (formatValue(candle.high), valueColor),
-            ("  L ", palette.gridLabel), (formatValue(candle.low), valueColor),
-            ("  C ", palette.gridLabel), (formatValue(candle.close), valueColor),
-            ("  ·  ", palette.gridLabel), (time, palette.gridLabel),
+            (" H ", palette.gridLabel), (formatValue(candle.high), valueColor),
+            (" L ", palette.gridLabel), (formatValue(candle.low), valueColor),
+            (" C ", palette.gridLabel), (formatValue(candle.close), valueColor),
+            (" · ", palette.gridLabel), (time, palette.gridLabel),
         ]
         var widths = [CGFloat]()
         var total: CGFloat = 0
@@ -310,9 +310,13 @@ extension LivelineView {
         }
         var tx = hoverX - total / 2
         let minX = layout.padLeft + 4
-        let maxX = layout.w - layout.padRight - total
-        if tx < minX { tx = minX }
-        if tx > maxX { tx = maxX }
+        // The readout sits above the plot (clear of the badge), so it may use the
+        // full width. Clamp the right edge first, then the left — so when the label
+        // is wider than the screen the left wins and the prices stay visible (only
+        // the trailing time clips), never the High on the left.
+        let maxX = layout.w - 12 - total
+        tx = min(tx, maxX)
+        tx = max(tx, minX)
         let ty = layout.padTop + 24
         var ox = tx
         for (i, s) in segs.enumerated() {
