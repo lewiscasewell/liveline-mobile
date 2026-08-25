@@ -6,62 +6,62 @@ import { INTERVALS, useCandles } from './useData'
 
 const WINDOWS = INTERVALS.map((i) => ({ label: i.label, secs: i.seconds }))
 
+// A mock prediction market: three outcomes that always sum to 100%.
+const OUTCOMES = [
+  { id: 'yes', color: '#3b82f6', label: 'Yes' },
+  { id: 'no', color: '#ef4444', label: 'No' },
+  { id: 'maybe', color: '#f59e0b', label: 'Maybe' },
+] as const
+
+function market(t: number): Record<string, number> {
+  // A slow wave sets the trend; a smaller, faster wave keeps the live head
+  // visibly moving without the jagged spikes of a high-frequency signal.
+  const yes = 45 + Math.sin(t * 0.006) * 11 + Math.sin(t * 0.021) * 3
+  const no = 35 + Math.cos(t * 0.005) * 9 + Math.cos(t * 0.018) * 2.5
+  const maybe = 30 + Math.sin(t * 0.004 + 1) * 6 + Math.cos(t * 0.016) * 2
+  const sum = yes + no + maybe
+  return { yes: (yes / sum) * 100, no: (no / sum) * 100, maybe: (maybe / sum) * 100 }
+}
+
 export default function App() {
-  // The selected interval, and its bars from the (mock) API. Switching refetches
-  // — the loader shows on a cache miss, and cached intervals return instantly.
-  const [interval, changeInterval] = useState(INTERVALS[4]!) // 1D
-  const [mode, setMode] = useState<'line' | 'candle'>('line')
+  // Interval drives the window span + backfill length (from the mock API).
+  const [interval, changeInterval] = useState(INTERVALS[4]!)
   const { data, isLoading } = useCandles(interval)
 
-  // Load a bundled custom font (Inter) at runtime — the standard Expo pattern,
-  // no prebuild needed. Pass `fontFamily` only once loaded so the chart starts
-  // on the system font and swaps in Inter when ready.
+  // Bundled custom font, loaded at runtime (standard Expo pattern, no prebuild).
   const [fontsLoaded] = useFonts({ Inter: require('./assets/fonts/Inter.ttf') })
 
-  // Aggregate the line points into OHLC candles for candle mode (every 4 points).
-  const candles = useMemo(() => {
-    if (!data) return []
-    const out = []
-    for (let i = 0; i < data.length; i += 4) {
-      const g = data.slice(i, i + 4)
-      if (g.length === 0) break
-      const v = g.map((p) => p.value)
-      out.push({
-        time: g[0]!.time,
-        open: v[0]!,
-        high: Math.max(...v),
-        low: Math.min(...v),
-        close: v[v.length - 1]!,
-      })
-    }
-    return out
-  }, [data])
+  // Multi-series: pass `series` instead of `data`/`value`. Each outcome is one
+  // line; the legend chips, endpoint dots + labels and hover value-row are all
+  // automatic.
+  const series = useMemo(
+    () =>
+      !data
+        ? []
+        : OUTCOMES.map((o) => ({
+            id: o.id,
+            color: o.color,
+            label: o.label,
+            data: data.map((d) => ({ time: d.time, value: market(d.time)[o.id]! })),
+          })),
+    [data]
+  )
 
-  // useLiveline owns the ref + push — no hybridRef/callback plumbing here.
   const { attachHybridRef, push } = useLiveline()
 
-  // Live feed: just push ticks. The chart buckets them to the current window
-  // automatically — dense on Live, a sliding head on 4Y — so this stays a dumb
-  // loop with no per-interval bookkeeping. React never re-renders on the feed.
+  // Live feed: push each outcome once per tick, routed by series id.
   useEffect(() => {
     if (isLoading || !data || data.length === 0) return
-    const v0 = data[data.length - 1]!.value
-    // Scale volatility to the window. The chart commits one live point per
-    // `window / 300` seconds, so a fixed per-tick step swings a lot within each
-    // bucket on a wide window and paints as a near-vertical scribble. Shrinking
-    // the step for wider windows keeps the live tail as calm as the (resampled)
-    // history, while Live stays lively.
-    const vol = 0.2 * Math.pow(30 / Math.max(interval.seconds, 30), 0.35)
-    let v = v0
     let timer: ReturnType<typeof setTimeout>
     const tick = () => {
-      v += (Math.random() - 0.5) * vol + (v0 - v) * 0.008
-      push({ time: Date.now() / 1000, value: v })
-      timer = setTimeout(tick, 200 + Math.random() * 4000)
+      const now = Date.now() / 1000
+      const m = market(now)
+      for (const o of OUTCOMES) push({ time: now, value: m[o.id]! }, o.id)
+      timer = setTimeout(tick, 400 + Math.random() * 1200)
     }
     tick()
     return () => clearTimeout(timer)
-  }, [isLoading, data, push, interval.seconds])
+  }, [isLoading, data, push])
 
   return (
     <SafeAreaView style={styles.root}>
@@ -69,8 +69,6 @@ export default function App() {
 
       <Liveline
         style={styles.card}
-        // The built-in interval bar (web-liveline parity): the library renders
-        // the buttons and reports the chosen span; we just refetch on change.
         windows={WINDOWS}
         window={interval.seconds}
         windowStyle='rounded'
@@ -78,30 +76,18 @@ export default function App() {
           const next = INTERVALS.find((i) => i.seconds === secs)
           if (next) changeInterval(next)
         }}
-        // Optional line/candle toggle at the end of the bar.
-        mode={mode}
-        candles={candles}
-        candleWidth={interval.seconds / Math.max(candles.length, 1)}
-        onModeChange={setMode}
-        data={data}
+        series={series}
         loading={isLoading}
-        badge={true}
-        color="#AB9FF2"
-        theme="light"
+        theme='light'
         fontFamily={fontsLoaded ? 'Inter' : undefined}
-        showValue
         haptics
-        degen
-        momentum="auto"
-        badgeVariant="minimal"
-        pulse={interval.live}
-        valuePrefix="$"
-        valueDecimals={2}
+        valueSuffix='%'
+        valueDecimals={0}
         hybridRef={attachHybridRef()}
       />
 
       <Text style={styles.caption}>
-        {isLoading ? `Loading ${interval.label}…` : `${interval.label} · streaming live`}
+        Prediction market · three outcomes, always summing to 100% · tap a chip to toggle a line
       </Text>
     </SafeAreaView>
   )
@@ -110,6 +96,6 @@ export default function App() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#fff', padding: 20, gap: 12 },
   title: { fontSize: 28, fontWeight: '700' },
-  card: { height: 348 },
+  card: { height: 360 },
   caption: { fontSize: 13, color: '#666' },
 })

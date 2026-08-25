@@ -14,13 +14,16 @@ struct ContentView: View {
         case valueOverlay = "Value overlay"
         case referenceLine = "Reference line"
         case heartRate = "Heart rate"
+        case cpu = "CPU usage"
         case sparse = "Slow ticker"
         case timeWindows = "Time windows"
         case candlestick = "Candlestick"
+        case prediction = "Prediction market"
         case degen = "Degen"
         case states = "States (loading)"
         case paused = "Paused"
         case stale = "Stale feed"
+        case stress = "Stress tests"
         case surface = "Custom surface"
         var id: String { rawValue }
     }
@@ -76,13 +79,16 @@ struct ContentView: View {
         case .valueOverlay: ValueOverlayCard()
         case .referenceLine: ReferenceLineCard()
         case .heartRate: HeartRateCard()
+        case .cpu: CPUCard()
         case .sparse: SparseCard()
         case .timeWindows: TimeWindowsCard()
         case .candlestick: CandlestickCard()
+        case .prediction: PredictionCard()
         case .degen: DegenCard()
         case .states: StatesCard()
         case .paused: PausedCard()
         case .stale: StaleFeedCard()
+        case .stress: StressCard()
         case .surface: SurfaceCard()
         }
     }
@@ -443,6 +449,273 @@ private struct StaleFeedCard: View {
             subtitle: "The feed stops after 6s. The chart keeps scrolling; the line runs flat to the edge."
         ) {
             Liveline(data: walk.seed, value: walk.value)
+                .theme(livelineTheme(scheme))
+        }
+    }
+}
+
+// MARK: - CPU usage (spikes)
+
+/// A low idle baseline (~14%) with occasional spikes that decay away — the
+/// classic "mostly quiet, sometimes busy" system metric.
+final class CPUFeed: ObservableObject {
+    @Published var value: Double
+    let seed: [LivelinePoint]
+    private var timer: Timer?
+    private var base = 14.0
+    private var spike = 0.0
+
+    init() {
+        let now = Date().timeIntervalSince1970
+        var b = 14.0
+        var sp = 0.0
+        var pts = [LivelinePoint]()
+        for i in 0..<200 {
+            b += (14 - b) * 0.05 + Double.random(in: -2...2)
+            if Double.random(in: 0...1) > 0.97 { sp = Double.random(in: 40...75) }
+            sp *= 0.8
+            pts.append(
+                LivelinePoint(
+                    time: now - 45 + Double(i) / 199 * 45, value: max(2, min(100, b + sp))))
+        }
+        seed = pts
+        base = b
+        spike = sp
+        value = pts.last!.value
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.step()
+        }
+    }
+
+    private func step() {
+        base += (14 - base) * 0.05 + Double.random(in: -2...2)
+        if Double.random(in: 0...1) > 0.97 { spike = Double.random(in: 40...75) }
+        spike *= 0.82
+        value = max(2, min(100, base + spike))
+    }
+
+    deinit { timer?.invalidate() }
+}
+
+private struct CPUCard: View {
+    @StateObject private var feed = CPUFeed()
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        Card(
+            title: "CPU usage",
+            subtitle: "A low idle baseline with occasional spikes. Rounded time-window buttons."
+        ) {
+            Liveline(data: feed.seed, value: feed.value)
+                .color(Color(red: 0.29, green: 0.68, blue: 0.4))
+                .windows([
+                    Window(label: "30s", secs: 30), Window(label: "1m", secs: 60),
+                    Window(label: "5m", secs: 300),
+                ])
+                .windowStyle(.rounded)
+                .formatValue { String(format: "%.0f%%", $0) }
+                .theme(livelineTheme(scheme))
+        }
+    }
+}
+
+// MARK: - Stress tests
+
+/// The blog's stress-test matrix: extreme feeds that exercise the render loop
+/// and easing under wild, chaotic, spiky, reversing and irregular input.
+enum Stress: String, CaseIterable, Identifiable {
+    case wild = "Wild swings"
+    case flatSpikes = "Near-flat + spikes"
+    case chaotic = "Chaotic"
+    case reversals = "Sharp reversals"
+    case isolatedSpikes = "Isolated spikes"
+    case zigzag = "Rapid zigzag"
+    case irregular = "Irregular arrivals"
+    var id: String { rawValue }
+
+    var detail: String {
+        switch self {
+        case .wild: return "Large continuous swings at 100ms."
+        case .flatSpikes: return "A near-flat line with sudden spikes (exaggerated Y)."
+        case .chaotic: return "Massive fluctuations at 80ms."
+        case .reversals: return "Frequent sharp direction reversals at 60ms."
+        case .isolatedSpikes: return "Nearly flat with rare extreme spikes (exaggerated Y)."
+        case .zigzag: return "Rapid alternating oscillation at 50ms."
+        case .irregular: return "Bursts of updates with random 1–3s stalls."
+        }
+    }
+
+    var interval: TimeInterval {
+        switch self {
+        case .wild: return 0.1
+        case .flatSpikes: return 0.15
+        case .chaotic: return 0.08
+        case .reversals: return 0.06
+        case .isolatedSpikes: return 0.12
+        case .zigzag: return 0.05
+        case .irregular: return 0.06
+        }
+    }
+
+    var exaggerate: Bool { self == .flatSpikes || self == .isolatedSpikes }
+}
+
+final class StressFeed: ObservableObject {
+    @Published var value: Double = 100
+    @Published private(set) var variant: Stress
+    private(set) var seed: [LivelinePoint] = []
+    private var timer: Timer?
+    private var v = 100.0
+    private var dir = 1.0
+    private var ticks = 0
+
+    init(_ variant: Stress) {
+        self.variant = variant
+        reset()
+    }
+
+    func change(_ next: Stress) {
+        guard next != variant else { return }
+        variant = next
+        reset()
+    }
+
+    private func reset() {
+        timer?.invalidate()
+        let now = Date().timeIntervalSince1970
+        var s = 100.0
+        var pts = [LivelinePoint]()
+        for i in 0..<200 {
+            s += Double.random(in: -3...3)
+            pts.append(LivelinePoint(time: now - 30 + Double(i) / 199 * 30, value: s))
+        }
+        seed = pts
+        v = s
+        value = s
+        dir = 1
+        ticks = 0
+        schedule()
+    }
+
+    private func schedule() {
+        timer = Timer.scheduledTimer(withTimeInterval: variant.interval, repeats: true) {
+            [weak self] _ in self?.step()
+        }
+    }
+
+    private func step() {
+        ticks += 1
+        switch variant {
+        case .wild: v += Double.random(in: -8...8)
+        case .flatSpikes:
+            v += Double.random(in: -0.3...0.3)
+            if Double.random(in: 0...1) > 0.95 { v += Double.random(in: -25...25) }
+        case .chaotic: v += Double.random(in: -18...18)
+        case .reversals:
+            if ticks % 6 == 0 { dir = -dir }
+            v += dir * Double.random(in: 2...10)
+        case .isolatedSpikes:
+            v += Double.random(in: -0.2...0.2)
+            if Double.random(in: 0...1) > 0.97 { v += Double.random(in: -40...40) }
+        case .zigzag:
+            dir = -dir
+            v += dir * Double.random(in: 4...9)
+        case .irregular: v += Double.random(in: -6...6)
+        }
+        v = max(20, min(180, v))
+        value = v
+        // Occasionally stall the irregular feed for 1–3s, then resume.
+        if variant == .irregular, Int.random(in: 0...40) == 0 {
+            timer?.invalidate()
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double.random(in: 1...3)) {
+                [weak self] in self?.schedule()
+            }
+        }
+    }
+
+    deinit { timer?.invalidate() }
+}
+
+private struct StressCard: View {
+    @StateObject private var feed = StressFeed(.wild)
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        Card(title: "Stress tests", subtitle: feed.variant.detail) {
+            VStack(spacing: 8) {
+                Picker(
+                    "Pattern",
+                    selection: Binding(get: { feed.variant }, set: { feed.change($0) })
+                ) {
+                    ForEach(Stress.allCases) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.menu)
+                Liveline(data: feed.seed, value: feed.value)
+                    .color(Color(red: 0.9, green: 0.3, blue: 0.24))
+                    .exaggerate(feed.variant.exaggerate)
+                    .theme(livelineTheme(scheme))
+            }
+        }
+    }
+}
+
+// MARK: - Multi-series (prediction market)
+
+/// Three outcomes that always sum to 100%. Backfills each series' history and
+/// publishes a fresh set of values every tick for the live feed. A slow wave
+/// sets the trend; a smaller, faster wave keeps the head visibly moving without
+/// jagged spikes.
+final class PredictionModel: ObservableObject {
+    @Published var values: [String: Double] = [:]
+    let seriesInputs: [LivelineView.SeriesInput]
+    private var timer: Timer?
+
+    private static let defs: [(id: String, color: UIColor, label: String)] = [
+        ("yes", UIColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 1), "Yes"),
+        ("no", UIColor(red: 0.94, green: 0.27, blue: 0.27, alpha: 1), "No"),
+        ("maybe", UIColor(red: 0.96, green: 0.62, blue: 0.07, alpha: 1), "Maybe"),
+    ]
+
+    init() {
+        let now = Date().timeIntervalSince1970
+        let window = 45.0
+        let n = 200
+        seriesInputs = PredictionModel.defs.map { def in
+            let pts = (0..<n).map { i -> LivelinePoint in
+                let t = now - window + Double(i) / Double(n - 1) * window
+                return LivelinePoint(time: t, value: PredictionModel.market(t)[def.id]!)
+            }
+            return .init(id: def.id, color: def.color, label: def.label, data: pts)
+        }
+        values = PredictionModel.market(now)
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.values = PredictionModel.market(Date().timeIntervalSince1970)
+        }
+    }
+
+    /// Deterministic so backfill and live feed line up seamlessly.
+    static func market(_ t: Double) -> [String: Double] {
+        let yes = 45 + sin(t * 0.35) * 11 + sin(t * 0.9) * 3
+        let no = 35 + cos(t * 0.3) * 9 + cos(t * 0.8) * 2.5
+        let maybe = 30 + sin(t * 0.25 + 1) * 6 + cos(t * 0.7) * 2
+        let sum = yes + no + maybe
+        return ["yes": yes / sum * 100, "no": no / sum * 100, "maybe": maybe / sum * 100]
+    }
+
+    deinit { timer?.invalidate() }
+}
+
+private struct PredictionCard: View {
+    @StateObject private var model = PredictionModel()
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        Card(
+            title: "Prediction market",
+            subtitle: "Multi-series: three outcomes summing to 100%. Tap a chip to toggle a line."
+        ) {
+            Liveline()
+                .series(model.seriesInputs)
+                .seriesValues(model.values)
+                .window(45)
+                .formatValue { String(format: "%.0f%%", $0) }
                 .theme(livelineTheme(scheme))
         }
     }
