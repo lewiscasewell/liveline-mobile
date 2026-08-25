@@ -17,6 +17,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.liveline.LivelineView
+import com.liveline.WindowBarView
 import com.liveline.core.BadgeVariant
 import com.liveline.core.LivelinePoint
 import com.liveline.core.LivelineTheme
@@ -37,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         val intervalMs: Long = 100,
         val kind: Kind = Kind.WALK,
         val window: Double = 30.0,
+        val windowBar: List<WindowBarView.Window>? = null,
         val configure: (LivelineView) -> Unit = {},
     )
 
@@ -59,6 +61,10 @@ class MainActivity : AppCompatActivity() {
         Demo("Slow ticker", "One update / 4s.", intervalMs = 4000, kind = Kind.SLOW, window = 60.0) {
             it.accent = Color.parseColor("#8b5cf6")
         },
+        Demo(
+            "Time windows", "Tap a chip to zoom the interval.", vol = 1.2, window = 60.0,
+            windowBar = listOf(WindowBarView.Window("30s", 30.0), WindowBarView.Window("1m", 60.0), WindowBarView.Window("5m", 300.0)),
+        ) { it.accent = Color.parseColor("#f0a020") },
         Demo("Loading", "Breathing, then data.", kind = Kind.LOADING) {},
         Demo("Paused", "Freezes, then catches up.", center = 160.0, vol = 1.0, kind = Kind.PAUSED) {
             it.accent = Color.parseColor("#4aad66")
@@ -69,6 +75,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chart: LivelineView
     private lateinit var subtitle: TextView
     private lateinit var root: LinearLayout
+    private lateinit var windowBar: WindowBarView
     private val handler = Handler(Looper.getMainLooper())
     private var dark = true
     private var v = 100.0
@@ -101,6 +108,8 @@ class MainActivity : AppCompatActivity() {
 
         chart = LivelineView(this)
         root.addView(chart, LinearLayout.LayoutParams(MATCH_PARENT, dp(320)).apply { topMargin = dp(16) })
+        windowBar = WindowBarView(this).apply { visibility = View.GONE; onSelect = { chart.windowSeconds = it } }
+        root.addView(windowBar, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(12); gravity = Gravity.CENTER_HORIZONTAL })
         subtitle = TextView(this).apply { textSize = 13f }
         root.addView(subtitle, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(12) })
 
@@ -115,6 +124,7 @@ class MainActivity : AppCompatActivity() {
         (root.getChildAt(0) as TextView).setTextColor(fg)
         subtitle.setTextColor(if (dark) Color.parseColor("#888888") else Color.parseColor("#666666"))
         chart.theme = if (dark) LivelineTheme.DARK else LivelineTheme.LIGHT
+        windowBar.isDark = dark
     }
 
     private fun selectDemo(index: Int) {
@@ -131,6 +141,13 @@ class MainActivity : AppCompatActivity() {
             accent = Color.parseColor("#3b82f6"); windowSeconds = demo.window
         }
         demo.configure(chart)
+
+        // Interval bar (only for the Time windows demo).
+        if (demo.windowBar != null) {
+            windowBar.visibility = View.VISIBLE
+            windowBar.isDark = dark
+            windowBar.setWindows(demo.windowBar, demo.window)
+        } else windowBar.visibility = View.GONE
 
         // Seed a backfill.
         val now = System.currentTimeMillis() / 1000.0

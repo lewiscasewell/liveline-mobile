@@ -38,6 +38,9 @@ import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
@@ -108,6 +111,12 @@ class LivelineView @JvmOverloads constructor(
     private var scrubbing = false
     private var hoverX = 0f
     private var scrubAmount = 0.0
+    // Smooth window (interval) transition, log-interpolated over 750ms.
+    private var displayWindow = 0.0
+    private var windowInited = false
+    private var windowFrom = 0.0
+    private var windowTo = 0.0
+    private var windowStartMs = 0.0
 
     private val d = resources.displayMetrics.density
     private fun dp(v: Float) = v * d
@@ -173,11 +182,26 @@ class LivelineView @JvmOverloads constructor(
 
     private fun fmt(v: Double): String = valuePrefix + String.format("%.${valueDecimals}f", v) + valueSuffix
 
+    /** Smoothly log-interpolates the visible span toward [windowSeconds]. */
+    private fun advanceWindow(nowMs: Double) {
+        if (!windowInited) { displayWindow = windowSeconds; windowTo = windowSeconds; windowInited = true; return }
+        if (windowTo != windowSeconds) { windowFrom = displayWindow; windowTo = windowSeconds; windowStartMs = nowMs }
+        if (displayWindow != windowTo) {
+            val t = ((nowMs - windowStartMs) / 750.0).coerceIn(0.0, 1.0)
+            val eased = 0.5 - 0.5 * cos(t * PI)
+            val lf = ln(windowFrom); val lt = ln(windowTo)
+            displayWindow = exp(lf + (lt - lf) * eased)
+            if (t >= 1.0) displayWindow = windowTo
+        }
+    }
+
     override fun onDraw(canvas: Canvas) {
         val w = width.toFloat(); val h = height.toFloat()
         if (w <= 0 || h <= 0) return
         val nowMs = System.nanoTime() / 1_000_000.0
         val dt = frameDt
+        advanceWindow(nowMs)
+        val span = displayWindow
 
         loadingAlpha = Clock.lerp(loadingAlpha, if (loading) 1.0 else 0.0, 0.1, dt).coerceIn(0.0, 1.0)
         scrubAmount = Clock.lerp(scrubAmount, if (scrubbing) 1.0 else 0.0, 0.2, dt).coerceIn(0.0, 1.0)
@@ -190,8 +214,8 @@ class LivelineView @JvmOverloads constructor(
         val realNow = System.currentTimeMillis() / 1000.0
         if (!paused) pauseNow = realNow
         val now = if (paused) pauseNow else realNow
-        val rightEdge = now + windowSeconds * 0.05
-        val leftEdge = rightEdge - windowSeconds
+        val rightEdge = now + span * 0.05
+        val leftEdge = rightEdge - span
 
         var startIdx = 0
         for (i in buffer.indices) if (buffer[i].time >= leftEdge) { startIdx = max(0, i - 1); break }
@@ -263,7 +287,7 @@ class LivelineView @JvmOverloads constructor(
         canvas.drawRect(0f, padT, padL + fadeW, padT + chartH, fadePaint)
 
         // 6. Time axis.
-        drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, dt)
+        drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)
 
         // 7. Live dot + pulse (dimmed + line-coloured — no red/green — while scrubbing).
         val dim = scrubAmount * 0.7
@@ -413,14 +437,14 @@ class LivelineView @JvmOverloads constructor(
         val template = when { interval >= 31_536_000 -> "yyyy"; interval >= 2_592_000 -> "MMMyyyy"; interval >= 86_400 -> "dMMM"; interval >= 60 -> "jmm"; else -> "jmmss" }
         return timeFmt(template).format(Date((t * 1000).toLong()))
     }
-    private fun drawTimeAxis(canvas: Canvas, w: Float, padL: Float, padR: Float, lineY: Float, leftEdge: Double, rightEdge: Double, dt: Double) {
+    private fun drawTimeAxis(canvas: Canvas, w: Float, padL: Float, padR: Float, lineY: Float, leftEdge: Double, rightEdge: Double, span: Double, dt: Double) {
         val chartLeft = padL; val chartRight = w - padR; val chartW = chartRight - chartLeft
         val tickLen = dp(5f); val fadeZone = dp(50f)
         fun toX(t: Double) = chartLeft + ((t - leftEdge) / (rightEdge - leftEdge)).toFloat() * chartW
         fun edgeAlpha(x: Float): Double { val fromEdge = min(x - chartLeft, chartRight - x); return when { fromEdge >= fadeZone -> 1.0; fromEdge <= 0f -> 0.0; else -> (fromEdge / fadeZone).toDouble() } }
-        val targetPxPerSec = chartW / windowSeconds
-        var interval = Intervals.niceTimeInterval(windowSeconds)
-        while (interval * targetPxPerSec < 60 && interval < windowSeconds) interval *= 2
+        val targetPxPerSec = chartW / span
+        var interval = Intervals.niceTimeInterval(span)
+        while (interval * targetPxPerSec < 60 && interval < span) interval *= 2
         val firstTime = ceil((leftEdge - interval) / interval) * interval
         val targetKeys = HashSet<Long>(); var t = firstTime
         while (t <= rightEdge + interval && targetKeys.size < 30) { targetKeys.add(Math.round(t * 100)); t += interval }
