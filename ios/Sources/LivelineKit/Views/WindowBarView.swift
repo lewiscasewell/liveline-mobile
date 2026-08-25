@@ -95,13 +95,10 @@
         }
 
         private func barFont(_ weight: UIFont.Weight) -> UIFont {
-            guard let f = fontFamily, !f.isEmpty, UIFont.familyNames.contains(f) else {
+            guard let desc = LivelineView.resolveFont(fontFamily, weight: weight) else {
                 return .systemFont(ofSize: 12, weight: weight)
             }
-            return UIFont(
-                descriptor: UIFontDescriptor(fontAttributes: [.family: f])
-                    .addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]]),
-                size: 12)
+            return UIFont(descriptor: desc, size: 12)
         }
 
         private func applyAppearance() {

@@ -46,11 +46,9 @@ extension LivelineView {
     /// monospaced digits (so ticking numbers stay tabular). An unregistered
     /// family falls back to the system monospaced font.
     func chartFont(size: CGFloat, weight: UIFont.Weight) -> UIFont {
-        guard let family = fontFamily, !family.isEmpty, UIFont.familyNames.contains(family) else {
+        guard let base = LivelineView.resolveFont(fontFamily, weight: weight) else {
             return .monospacedSystemFont(ofSize: size, weight: weight)
         }
-        let base = UIFontDescriptor(fontAttributes: [.family: family])
-            .addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
         // Request the monospaced-numbers OpenType feature; ignored if unsupported.
         let mono = base.addingAttributes([
             .featureSettings: [[
@@ -59,6 +57,23 @@ extension LivelineView {
             ]]
         ])
         return UIFont(descriptor: mono, size: size)
+    }
+
+    /// Resolves a custom font family to a descriptor, or `nil` if it can't be
+    /// found (caller falls back to the system font). Handles both app-bundled
+    /// fonts (family name, in `UIFont.familyNames` — weight trait picks the face)
+    /// and fonts registered at runtime, e.g. by expo-font's `useFonts` (matched
+    /// by PostScript/registered name, which already encodes its own weight).
+    static func resolveFont(_ family: String?, weight: UIFont.Weight) -> UIFontDescriptor? {
+        guard let family, !family.isEmpty else { return nil }
+        if UIFont.familyNames.contains(family) {
+            return UIFontDescriptor(fontAttributes: [.family: family])
+                .addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
+        }
+        if let named = UIFont(name: family, size: 1) {
+            return named.fontDescriptor
+        }
+        return nil
     }
 
     // MARK: Spline path

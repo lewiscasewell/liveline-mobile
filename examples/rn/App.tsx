@@ -1,3 +1,4 @@
+import { useFonts } from 'expo-font'
 import { useEffect, useMemo, useState } from 'react'
 import { SafeAreaView, StyleSheet, Text } from 'react-native'
 import { Liveline, useLiveline } from 'liveline-mobile'
@@ -11,6 +12,11 @@ export default function App() {
   const [interval, changeInterval] = useState(INTERVALS[4]!) // 1D
   const [mode, setMode] = useState<'line' | 'candle'>('line')
   const { data, isLoading } = useCandles(interval)
+
+  // Load a bundled custom font (Inter) at runtime — the standard Expo pattern,
+  // no prebuild needed. Pass `fontFamily` only once loaded so the chart starts
+  // on the system font and swaps in Inter when ready.
+  const [fontsLoaded] = useFonts({ Inter: require('./assets/fonts/Inter.ttf') })
 
   // Aggregate the line points into OHLC candles for candle mode (every 4 points).
   const candles = useMemo(() => {
@@ -82,6 +88,7 @@ export default function App() {
         badge={true}
         color="#AB9FF2"
         theme="light"
+        fontFamily={fontsLoaded ? 'Inter' : undefined}
         showValue
         haptics
         degen
