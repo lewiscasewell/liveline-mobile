@@ -30,15 +30,15 @@ export interface LivelineReference {
   label?: string
 }
 
-/** An additional line series — a context line rendered behind the primary `data`. */
+/** One equal-peer line in multi-series mode (see the `series` prop). */
 export interface LivelineSeries {
   /** Stable id, used to route live `push(point, id)` updates to this series. */
   id: string
   /** Line colour (any CSS hex). */
   color: string
-  /** Optional label (for a legend). */
+  /** Optional label — shown on the legend chip and the endpoint label. */
   label?: string
-  /** The series' points (backfill; stream live updates via `push`). */
+  /** The series' points (backfill; stream live updates via `push(point, id)`). */
   data: LivelinePoint[]
 }
 
@@ -105,9 +105,11 @@ export interface LivelineProps extends HybridViewProps {
    */
   data?: LivelinePoint[]
   /**
-   * Additional context line series, rendered behind the primary `data` (each
-   * its own colour) and sharing the window + Y auto-range. The primary keeps
-   * the dot/badge/value/momentum. Line mode only. Live-update a secondary series
+   * Multi-series mode: several **equal-peer** lines on one chart. A non-empty
+   * array replaces `data`/`value` (there's no single-series badge/value/momentum
+   * in this mode). Each series draws its own colour, endpoint dot, dashed
+   * baseline and label; the Y-axis auto-ranges over the visible series; a legend
+   * of toggle chips renders above the chart. Line mode only. Stream live updates
    * with `push(point, id)`.
    */
   series?: LivelineSeries[]
@@ -255,8 +257,8 @@ export interface LivelineMethods extends HybridViewMethods {
    * window: on a wide window a fast feed slides the current point in place; on a
    * live/short window it keeps every tick.
    *
-   * Pass `seriesId` to route the tick to a secondary series (see `series`);
-   * omit it for the primary.
+   * In multi-series mode, pass `seriesId` to route the tick to that series (see
+   * `series`); omit it for the single-series line.
    */
   push(point: LivelinePoint, seriesId?: string): void
 
