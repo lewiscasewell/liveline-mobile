@@ -16,9 +16,14 @@ import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
 import com.liveline.LivelineView
 import com.liveline.WindowBarView
 import com.liveline.core.BadgeVariant
+import com.liveline.core.LivelineCandle
+import com.liveline.core.LivelineMode
 import com.liveline.core.LivelinePoint
 import com.liveline.core.LivelineTheme
 import com.liveline.core.Momentum
@@ -28,7 +33,7 @@ import kotlin.random.Random
 /** A native Android showcase mirroring the iOS ContentView demo menu. */
 class MainActivity : AppCompatActivity() {
 
-    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, PAUSED }
+    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, PAUSED, CANDLE }
 
     private class Demo(
         val name: String,
@@ -65,6 +70,9 @@ class MainActivity : AppCompatActivity() {
             "Time windows", "Tap a chip to zoom the interval.", vol = 1.2, window = 60.0,
             windowBar = listOf(WindowBarView.Window("30s", 30.0), WindowBarView.Window("1m", 60.0), WindowBarView.Window("5m", 300.0)),
         ) { it.accent = Color.parseColor("#f0a020") },
+        Demo("Candlestick", "OHLC candles + a live candle.", intervalMs = 60, kind = Kind.CANDLE, window = 54.0) {
+            it.mode = LivelineMode.CANDLE; it.valueDecimals = 1
+        },
         Demo("Loading", "Breathing, then data.", kind = Kind.LOADING) {},
         Demo("Paused", "Freezes, then catches up.", center = 160.0, vol = 1.0, kind = Kind.PAUSED) {
             it.accent = Color.parseColor("#4aad66")
@@ -82,6 +90,10 @@ class MainActivity : AppCompatActivity() {
     private var spike = 0.0
     private var ticks = 0
     private var elapsedMs = 0L
+    private val candleWidth = 3.0
+    private var candlePrice = 150.0
+    private val candleList = ArrayList<LivelineCandle>()
+    private var liveC = LivelineCandle(0.0, 150.0, 150.0, 150.0, 150.0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -139,6 +151,7 @@ class MainActivity : AppCompatActivity() {
             loading = false; paused = false; referenceLine = null
             valuePrefix = ""; valueSuffix = ""; valueDecimals = 2
             accent = Color.parseColor("#3b82f6"); windowSeconds = demo.window
+            mode = LivelineMode.LINE; setCandles(emptyList(), null, 1.0)
         }
         demo.configure(chart)
 
@@ -148,6 +161,8 @@ class MainActivity : AppCompatActivity() {
             windowBar.isDark = dark
             windowBar.setWindows(demo.windowBar, demo.window)
         } else windowBar.visibility = View.GONE
+
+        if (demo.kind == Kind.CANDLE) { seedCandles(); startFeed(demo); return }
 
         // Seed a backfill.
         val now = System.currentTimeMillis() / 1000.0
@@ -161,6 +176,21 @@ class MainActivity : AppCompatActivity() {
         chart.setData(seed)
         if (demo.kind == Kind.LOADING) chart.loading = true
         startFeed(demo)
+    }
+
+    private fun seedCandles() {
+        candleList.clear(); elapsedMs = 0
+        val nowSec = System.currentTimeMillis() / 1000.0
+        val liveBucket = floor(nowSec / candleWidth) * candleWidth
+        var p = 150.0
+        for (i in 0 until 18) {
+            val open = p; var hi = open; var lo = open
+            repeat(10) { p += Random.nextDouble(-1.8, 1.8); hi = max(hi, p); lo = min(lo, p) }
+            candleList.add(LivelineCandle(liveBucket - candleWidth * (18 - i), open, hi, lo, p))
+        }
+        candlePrice = p
+        liveC = LivelineCandle(liveBucket, p, p, p, p)
+        chart.setCandles(ArrayList(candleList), liveC, candleWidth)
     }
 
     private fun startFeed(demo: Demo) {
@@ -179,6 +209,15 @@ class MainActivity : AppCompatActivity() {
                     Kind.LOADING -> { if (elapsedMs >= 3000) chart.loading = false; v += (demo.center - v) * 0.01 + Random.nextDouble(-demo.vol, demo.vol); chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v)) }
                     Kind.PAUSED -> { chart.paused = (elapsedMs / 4000) % 2 == 1L; v += (demo.center - v) * 0.01 + Random.nextDouble(-demo.vol, demo.vol); chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v)) }
                     Kind.WALK -> { v += (demo.center - v) * 0.012 + Random.nextDouble(-demo.vol * 0.35, demo.vol * 0.35); chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v)) }
+                    Kind.CANDLE -> {
+                        candlePrice += Random.nextDouble(-1.8, 1.8)
+                        val bucket = floor(System.currentTimeMillis() / 1000.0 / candleWidth) * candleWidth
+                        if (bucket != liveC.time) {
+                            candleList.add(liveC); if (candleList.size > 40) candleList.removeAt(0)
+                            liveC = LivelineCandle(bucket, candlePrice, candlePrice, candlePrice, candlePrice)
+                        } else liveC = LivelineCandle(liveC.time, liveC.open, max(liveC.high, candlePrice), min(liveC.low, candlePrice), candlePrice)
+                        chart.setCandles(ArrayList(candleList), liveC, candleWidth)
+                    }
                 }
                 handler.postDelayed(this, demo.intervalMs)
             }

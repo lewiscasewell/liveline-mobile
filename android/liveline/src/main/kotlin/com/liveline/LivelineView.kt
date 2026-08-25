@@ -21,6 +21,8 @@ import com.liveline.core.Clock
 import com.liveline.core.Domain
 import com.liveline.core.Interpolate
 import com.liveline.core.Intervals
+import com.liveline.core.LivelineCandle
+import com.liveline.core.LivelineMode
 import com.liveline.core.LivelinePoint
 import com.liveline.core.LivelineTheme
 import com.liveline.core.Momentum
@@ -76,6 +78,17 @@ class LivelineView @JvmOverloads constructor(
     var valuePrefix: String = ""
     var valueSuffix: String = ""
     var valueDecimals: Int = 2
+    var mode: LivelineMode = LivelineMode.LINE
+    var candleWidth: Double = 1.0
+
+    private var candles: List<LivelineCandle> = emptyList()
+    private var liveCandle: LivelineCandle? = null
+    private var liveBull = 0.5
+
+    /** Sets the OHLC candles + the currently-forming live candle (candle mode). */
+    fun setCandles(candles: List<LivelineCandle>, live: LivelineCandle?, width: Double) {
+        this.candles = candles; this.liveCandle = live; this.candleWidth = width
+    }
 
     fun setData(points: List<LivelinePoint>) {
         buffer.clear()
@@ -145,6 +158,11 @@ class LivelineView @JvmOverloads constructor(
     private val crossDot = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val tipPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(13f) }
     private val fadePaint = Paint().apply { style = Paint.Style.FILL }
+    private val candleStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
+    private val candleFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    private val bull = Theme.up
+    private val bear = Theme.down
+    private fun blend(a: Rgba, b: Rgba, t: Double) = Rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
 
     private fun rebuildPalette() {
         palette = Theme.palette(accent.toRgba(), theme)
@@ -208,7 +226,6 @@ class LivelineView @JvmOverloads constructor(
 
         val padL = dp(8f); val padR = dp(64f); val padT = if (showValue) dp(40f) else dp(12f); val padB = dp(30f)
         val chartW = w - padL - padR; val chartH = h - padT - padB
-        if (buffer.size < 2) return
 
         // Freeze `now` while paused so the line stops scrolling.
         val realNow = System.currentTimeMillis() / 1000.0
@@ -216,6 +233,12 @@ class LivelineView @JvmOverloads constructor(
         val now = if (paused) pauseNow else realNow
         val rightEdge = now + span * 0.05
         val leftEdge = rightEdge - span
+
+        if (mode == LivelineMode.CANDLE && (candles.isNotEmpty() || liveCandle != null)) {
+            drawCandleFrame(canvas, w, padL, padR, padT, chartH, span, now, leftEdge, rightEdge, nowMs, dt)
+            return
+        }
+        if (buffer.size < 2) return
 
         var startIdx = 0
         for (i in buffer.indices) if (buffer[i].time >= leftEdge) { startIdx = max(0, i - 1); break }
@@ -342,7 +365,7 @@ class LivelineView @JvmOverloads constructor(
         chevrons(-1f, arrowUp); chevrons(1f, arrowDown)
     }
 
-    private fun drawBadge(canvas: Canvas, endX: Float, endY: Float, w: Float, padR: Float, padT: Float, chartH: Float) {
+    private fun drawBadge(canvas: Canvas, endX: Float, endY: Float, w: Float, padR: Float, padT: Float, chartH: Float, overrideColor: Int? = null) {
         val label = fmt(displayValue)
         val textW = badgeTextPaint.measureText(label)
         val padX = dp(8f); val padY = dp(4f); val lineH = dp(16f)
@@ -377,7 +400,8 @@ class LivelineView @JvmOverloads constructor(
                 Rgba(red.r + (grn.r - red.r) * badgeGreen, red.g + (grn.g - red.g) * badgeGreen, red.b + (grn.b - red.b) * badgeGreen)
             }
         }
-        badgePaint.color = fillColor.toInt()
+        badgePaint.color = overrideColor ?: fillColor.toInt()
+        if (overrideColor != null) badgeTextPaint.color = palette.badgeText.toInt()
         canvas.drawPath(path, badgePaint)
         canvas.drawText(label, badgeLeft + tailLen + padX, badgeY + dp(4.5f), badgeTextPaint)
     }
@@ -426,6 +450,67 @@ class LivelineView @JvmOverloads constructor(
         tipPaint.color = palette.gridLabel.withAlpha(palette.gridLabel.a * op).toInt()
         canvas.drawText("  ·  $timeText", tx + vW, ty, tipPaint)
         tipPaint.color = save
+    }
+
+    // ── Candle mode ─────────────────────────────────────────────────────────────
+    private fun drawCandleFrame(canvas: Canvas, w: Float, padL: Float, padR: Float, padT: Float, chartH: Float, span: Double, now: Double, leftEdge: Double, rightEdge: Double, nowMs: Double, dt: Double) {
+        val liveT = liveCandle?.time
+        liveCandle?.let { liveBull = Clock.lerp(liveBull, if (it.close >= it.open) 1.0 else 0.0, 0.12, dt) }
+        val all = ArrayList(candles)
+        liveCandle?.let { lc -> if (all.none { it.time == lc.time }) all.add(lc) }
+        val visible = all.filter { it.time + candleWidth >= leftEdge && it.time <= rightEdge }.sortedBy { it.time }
+        if (visible.isEmpty()) return
+
+        domain.update(AutoRange.computeCandles(visible), 0.15, dt, chartH.toDouble())
+        val minV = domain.minVal; val maxV = domain.maxVal; val range = domain.valRange
+        val chartW = w - padL - padR
+        fun toX(t: Double) = padL + ((t - leftEdge) / (rightEdge - leftEdge)).toFloat() * chartW
+        fun toY(v: Double) = padT + ((maxV - v) / range).toFloat() * chartH
+
+        // Grid + value labels.
+        val pxPerUnit = chartH / range
+        gridInterval = Ticks.pickInterval(range, pxPerUnit.toDouble(), dp(36f).toDouble(), gridInterval)
+        if (gridInterval > 0) {
+            var g = ceil(minV / gridInterval) * gridInterval
+            labelPaint.textAlign = Paint.Align.LEFT
+            while (g <= maxV) { val y = toY(g); canvas.drawLine(padL, y, padL + chartW, y, gridPaint); canvas.drawText(String.format("%.${valueDecimals}f", g), padL + chartW + dp(6f), y + dp(4f), labelPaint); g += gridInterval }
+        }
+
+        // Candlesticks.
+        val pxPerSec = chartW / span.toFloat()
+        val bodyW = max(1f, candleWidth.toFloat() * pxPerSec * 0.7f)
+        val wickW = max(0.8f, min(2f, bodyW * 0.15f))
+        val radius = if (bodyW > 6) dp(1.5f) else 0f
+        val half = bodyW / 2
+        val livePulse = 0.12 + sin(nowMs * 0.004) * 0.08
+        for (c in visible) {
+            val cx = toX(c.time + candleWidth / 2)
+            val isLive = liveT != null && c.time == liveT
+            val color = if (isLive) blend(bear, bull, liveBull) else if (c.close >= c.open) bull else bear
+            val bodyTop = toY(max(c.open, c.close)); val bodyBottom = toY(min(c.open, c.close))
+            val bodyH = max(1f, bodyBottom - bodyTop)
+            candleStroke.color = color.toInt(); candleStroke.strokeWidth = wickW
+            if (bodyTop - toY(c.high) > 0.5f) canvas.drawLine(cx, bodyTop, cx, toY(c.high), candleStroke)
+            if (toY(c.low) - bodyBottom > 0.5f) canvas.drawLine(cx, bodyBottom, cx, toY(c.low), candleStroke)
+            candleFill.color = color.toInt()
+            val rect = RectF(cx - half, bodyTop, cx + half, bodyTop + bodyH)
+            if (radius > 0 && bodyH >= radius * 2) canvas.drawRoundRect(rect, radius, radius, candleFill) else canvas.drawRect(rect, candleFill)
+            if (isLive) { candleFill.color = color.withAlpha(color.a * livePulse).toInt(); if (radius > 0 && bodyH >= radius * 2) canvas.drawRoundRect(rect, radius, radius, candleFill) else canvas.drawRect(rect, candleFill) }
+        }
+
+        drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)
+
+        // Live close dot + badge (tinted by the live candle direction).
+        val liveClose = liveCandle?.close ?: visible.last().close
+        if (displayValue == 0.0) displayValue = liveClose
+        value = liveClose
+        val speed = Domain.adaptiveSpeed(value, displayValue, minV, maxV, 0.25)
+        displayValue = Clock.lerp(displayValue, liveClose, speed, dt)
+        val endX = toX(now); val endY = toY(displayValue).coerceIn(padT, padT + chartH)
+        val col = if ((liveCandle?.let { it.close >= it.open } ?: true)) bull else bear
+        dotOuter.alpha = 255; canvas.drawCircle(endX, endY, dp(6.5f), dotOuter)
+        dotInner.color = col.toInt(); canvas.drawCircle(endX, endY, dp(3.5f), dotInner)
+        drawBadge(canvas, endX, endY, w, padR, padT, chartH, col.toInt())
     }
 
     // ── Time axis ─────────────────────────────────────────────────────────────
