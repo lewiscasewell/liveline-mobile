@@ -1,0 +1,3 @@
+/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/android/.cxx/Debug/4b4u6i4u/x86/CMakeFiles/LivelineMobile.dir
+/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/android/.cxx/Debug/4b4u6i4u/x86/CMakeFiles/edit_cache.dir
+/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/android/.cxx/Debug/4b4u6i4u/x86/CMakeFiles/rebuild_cache.dir

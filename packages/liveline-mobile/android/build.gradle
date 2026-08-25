@@ -1,0 +1,49 @@
+apply plugin: "com.android.library"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+
+def safeExtGet(prop, fallback) {
+  rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+android {
+  namespace "com.liveline.mobile"
+  compileSdk safeExtGet("compileSdkVersion", 36)
+  ndkVersion safeExtGet("ndkVersion", "27.1.12297006")
+
+  defaultConfig {
+    minSdk safeExtGet("minSdkVersion", 24)
+    externalNativeBuild {
+      cmake {
+        cppFlags "-frtti -fexceptions -Wall -fstack-protector-all -std=c++20"
+        arguments "-DANDROID_STL=c++_shared"
+      }
+    }
+  }
+
+  externalNativeBuild {
+    cmake {
+      path "CMakeLists.txt"
+    }
+  }
+
+  buildFeatures {
+    prefab true
+    buildConfig true
+  }
+
+  // Pull in the shared Kotlin engine (com.liveline.core) for the probe renderer.
+  sourceSets {
+    main {
+      java.srcDirs += ["../../../android/liveline-core/src/main/kotlin"]
+    }
+  }
+}
+
+// Adds the Nitrogen-generated Kotlin sources.
+apply from: "../nitrogen/generated/android/LivelineMobile+autolinking.gradle"
+
+dependencies {
+  implementation "com.facebook.react:react-android"
+  implementation project(":react-native-nitro-modules")
+}

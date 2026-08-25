@@ -1,0 +1,6 @@
+/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/android/.cxx/Debug/4b4u6i4u/prefab/armeabi-v7a/prefab/lib/arm-linux-androideabi/cmake/ReactAndroid/ReactAndroidConfig.cmake
+/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/android/.cxx/Debug/4b4u6i4u/prefab/armeabi-v7a/prefab/lib/arm-linux-androideabi/cmake/ReactAndroid/ReactAndroidConfigVersion.cmake
+/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/android/.cxx/Debug/4b4u6i4u/prefab/armeabi-v7a/prefab/lib/arm-linux-androideabi/cmake/fbjni/fbjniConfig.cmake
+/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/android/.cxx/Debug/4b4u6i4u/prefab/armeabi-v7a/prefab/lib/arm-linux-androideabi/cmake/fbjni/fbjniConfigVersion.cmake
+/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/android/.cxx/Debug/4b4u6i4u/prefab/armeabi-v7a/prefab/lib/arm-linux-androideabi/cmake/react-native-nitro-modules/react-native-nitro-modulesConfig.cmake
+/Users/lewiscasewell/src/liveline-mobile/packages/liveline-mobile/android/CMakeLists.txt
