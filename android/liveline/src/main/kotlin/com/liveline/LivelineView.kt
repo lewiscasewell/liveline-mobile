@@ -75,6 +75,7 @@ class LivelineView @JvmOverloads constructor(
     var loading: Boolean = false
     var paused: Boolean = false
     var scrub: Boolean = true
+    var degen: Boolean = false
     var referenceLine: ReferenceLine? = null
     var valuePrefix: String = ""
     var valueSuffix: String = ""
@@ -106,6 +107,13 @@ class LivelineView @JvmOverloads constructor(
     private var obSpawnClock = 0.0
     private var orderbookLastTotal = -1.0
     private var orderbookChurn = 0.0
+
+    private class DegenParticle(var x: Double, var y: Double, var vx: Double, var vy: Double, var life: Double, val maxLife: Double)
+    private val degenParticles = ArrayList<DegenParticle>()
+    private var degenShake = 0.0
+    private var degenBaseline = 0.0
+    private var degenBaselineInit = false
+    private var degenArmed = true
 
     /** Sets the OHLC candles + the currently-forming live candle (candle mode). */
     fun setCandles(candles: List<LivelineCandle>, live: LivelineCandle?, width: Double) {
@@ -183,6 +191,7 @@ class LivelineView @JvmOverloads constructor(
     private val candleStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
     private val candleFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val obPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(11f); typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD); textAlign = Paint.Align.LEFT }
+    private val sparkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val bull = Theme.up
     private val bear = Theme.down
     private fun blend(a: Rgba, b: Rgba, t: Double) = Rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
@@ -246,6 +255,7 @@ class LivelineView @JvmOverloads constructor(
 
         loadingAlpha = Clock.lerp(loadingAlpha, if (loading) 1.0 else 0.0, 0.1, dt).coerceIn(0.0, 1.0)
         scrubAmount = Clock.lerp(scrubAmount, if (scrubbing) 1.0 else 0.0, 0.2, dt).coerceIn(0.0, 1.0)
+        degenAdvance(dt)
 
         val padL = dp(8f); val padR = dp(64f); val padT = if (showValue) dp(40f) else dp(12f); val padB = dp(30f)
         val chartW = w - padL - padR; val chartH = h - padT - padB
@@ -277,6 +287,13 @@ class LivelineView @JvmOverloads constructor(
         fun toX(t: Double) = padL + ((t - leftEdge) / (rightEdge - leftEdge)).toFloat() * chartW
         fun toY(v: Double) = padT + ((maxV - v) / range).toFloat() * chartH
 
+        // Degen: shake the whole frame (everything shakes together).
+        val degenShaken = degen
+        if (degenShaken) {
+            canvas.save()
+            if (degenShake > 0) canvas.translate(((Math.random() * 2 - 1) * degenShake).toFloat(), ((Math.random() * 2 - 1) * degenShake).toFloat())
+        }
+
         // 1. Reference line.
         referenceLine?.let { drawReferenceLine(canvas, it, padL, padR, padT, w, chartW, chartH) { v -> toY(v) } }
 
@@ -307,6 +324,7 @@ class LivelineView @JvmOverloads constructor(
         }
 
         val endX = toX(now); val endY = toY(displayValue)
+        if (degen) degenTrigger(endX, endY, displayValue, range, dt)
         val pts = ArrayList<Point>(visible.size)
         for (p in visible) pts.add(Point(toX(p.time).toDouble(), toY(p.value).toDouble()))
         pts[pts.size - 1] = Point(endX.toDouble(), endY.toDouble())
@@ -368,6 +386,10 @@ class LivelineView @JvmOverloads constructor(
 
         // 11. Crosshair (scrubbing).
         if (scrubAmount > 0.02) drawCrosshair(canvas, padL, padT, chartH, chartW, leftEdge, rightEdge, endX) { v -> toY(v) }
+
+        // 12. Degen sparks, then unwind the shake transform.
+        degenDrawParticles(canvas)
+        if (degenShaken) canvas.restore()
     }
 
     private fun drawArrows(canvas: Canvas, px: Float, py: Float, trend: Trend, dt: Double, nowMs: Double) {
@@ -525,6 +547,47 @@ class LivelineView @JvmOverloads constructor(
         s >= 1_000 -> String.format("%.1fk", s / 1_000)
         s >= 10 -> String.format("%.0f", s)
         else -> String.format("%.1f", s)
+    }
+
+    // ── Degen (shake + sparks) ──────────────────────────────────────────────────
+    /** Decays the shake and advances particles (no canvas ops). */
+    private fun degenAdvance(dt: Double) {
+        if (!degen) { if (degenParticles.isNotEmpty()) degenParticles.clear(); degenShake = 0.0; return }
+        degenShake *= Math.pow(0.86, dt / Clock.FRAME_MS)
+        if (degenShake < 0.2) degenShake = 0.0
+        val step = dt / 1000
+        for (p in degenParticles) { p.vy += 900 * step; p.x += p.vx * step; p.y += p.vy * step; p.life -= step }
+        degenParticles.removeAll { it.life <= 0 }
+    }
+
+    /** Fires a burst when the value pops above its slowly-trailing baseline. */
+    private fun degenTrigger(dotX: Float, dotY: Float, value: Double, range: Double, dt: Double) {
+        if (!degen) return
+        if (!degenBaselineInit) { degenBaseline = value; degenBaselineInit = true }
+        degenBaseline += (value - degenBaseline) * min(1.0, 0.035 * dt / Clock.FRAME_MS)
+        val rise = if (range > 0) (value - degenBaseline) / range else 0.0
+        if (rise > 0.06 && degenArmed) {
+            degenArmed = false
+            repeat(18) {
+                val angle = -PI * Math.random()
+                val speed = 120 + Math.random() * 220
+                val life = 0.5 + Math.random() * 0.45
+                degenParticles.add(DegenParticle(dotX.toDouble(), dotY.toDouble(), cos(angle) * speed, sin(angle) * speed, life, life))
+            }
+            if (degenParticles.size > 200) while (degenParticles.size > 200) degenParticles.removeAt(0)
+            degenShake = 7.0
+        } else if (rise < 0.02) degenArmed = true
+    }
+
+    private fun degenDrawParticles(canvas: Canvas) {
+        if (!degen || degenParticles.isEmpty()) return
+        val spark = palette.line
+        for (p in degenParticles) {
+            val t = max(0.0, p.life / p.maxLife)
+            val r = (linePaint.strokeWidth * (0.4 + 0.5 * t)).toFloat()
+            sparkPaint.color = spark.withAlpha(t * 0.9).toInt()
+            canvas.drawCircle(p.x.toFloat(), p.y.toFloat(), r, sparkPaint)
+        }
     }
 
     // ── Candle mode ─────────────────────────────────────────────────────────────

@@ -78,6 +78,10 @@ class MainActivity : AppCompatActivity() {
         Demo("Orderbook", "Bid/ask sizes stream up behind the line.", center = 62.0, vol = 0.8, kind = Kind.ORDERBOOK, window = 45.0) {
             it.valueSuffix = "¢"; it.valueDecimals = 0
         },
+        Demo("Degen", "Shake + sparks on strong up-moves.", center = 420.0, vol = 6.0) {
+            it.momentum = Momentum.AUTO; it.degen = true; it.badgeVariant = BadgeVariant.ACCENT
+            it.accent = Color.parseColor("#f0731a"); it.valueDecimals = 1
+        },
         Demo("Loading", "Breathing, then data.", kind = Kind.LOADING) {},
         Demo("Paused", "Freezes, then catches up.", center = 160.0, vol = 1.0, kind = Kind.PAUSED) {
             it.accent = Color.parseColor("#4aad66")
@@ -153,7 +157,7 @@ class MainActivity : AppCompatActivity() {
         chart.apply {
             momentum = Momentum.AUTO; badgeVariant = BadgeVariant.DEFAULT
             showValue = false; valueMomentumColor = false; exaggerate = false
-            loading = false; paused = false; referenceLine = null
+            loading = false; paused = false; referenceLine = null; degen = false
             valuePrefix = ""; valueSuffix = ""; valueDecimals = 2
             accent = Color.parseColor("#3b82f6"); windowSeconds = demo.window
             mode = LivelineMode.LINE; setCandles(emptyList(), null, 1.0); orderbook = null
