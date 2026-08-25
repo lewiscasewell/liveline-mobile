@@ -258,6 +258,24 @@ abstract class HybridLivelineSpec: HybridView() {
   @set:DoNotStrip
   @set:Keep
   abstract var valueDecimals: Double?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var currency: String?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var locale: String?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var useGrouping: Boolean?
 
   // Methods
   @DoNotStrip

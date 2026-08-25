@@ -53,6 +53,7 @@ public struct Liveline: View {
     private var lerpSpeed: Double = 0.08
     private var formatValue: ((Double) -> String)?
     private var formatTime: ((Double) -> String)?
+    private var formattingLocale: Locale = .current
 
     // Candle mode.
     private var mode: LivelineMode = .line
@@ -153,6 +154,8 @@ public struct Liveline: View {
     public func formatValue(_ v: @escaping (Double) -> String) -> Self { with { $0.formatValue = v } }
     /// Sets a custom time formatter.
     public func formatTime(_ v: @escaping (Double) -> String) -> Self { with { $0.formatTime = v } }
+    /// Locale for the built-in time axis/crosshair formatting. Default `.current`.
+    public func locale(_ v: Locale) -> Self { with { $0.formattingLocale = v } }
     /// Sets the chart type (`.line` or `.candle`).
     public func mode(_ v: LivelineMode) -> Self { with { $0.mode = v } }
     /// Sets the OHLC candles (used when `mode == .candle`).
@@ -214,6 +217,7 @@ public struct Liveline: View {
             view.lerpSpeed = c.lerpSpeed
             if let f = c.formatValue { view.formatValue = f }
             if let f = c.formatTime { view.formatTime = f }
+            view.formattingLocale = c.formattingLocale
 
             view.mode = c.mode
             view.candleWidth = c.candleWidth

@@ -86,6 +86,12 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridSetter("valueSuffix", &HybridLivelineSpec::setValueSuffix);
       prototype.registerHybridGetter("valueDecimals", &HybridLivelineSpec::getValueDecimals);
       prototype.registerHybridSetter("valueDecimals", &HybridLivelineSpec::setValueDecimals);
+      prototype.registerHybridGetter("currency", &HybridLivelineSpec::getCurrency);
+      prototype.registerHybridSetter("currency", &HybridLivelineSpec::setCurrency);
+      prototype.registerHybridGetter("locale", &HybridLivelineSpec::getLocale);
+      prototype.registerHybridSetter("locale", &HybridLivelineSpec::setLocale);
+      prototype.registerHybridGetter("useGrouping", &HybridLivelineSpec::getUseGrouping);
+      prototype.registerHybridSetter("useGrouping", &HybridLivelineSpec::setUseGrouping);
       prototype.registerHybridMethod("push", &HybridLivelineSpec::push);
     });
   }

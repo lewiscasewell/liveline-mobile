@@ -314,6 +314,24 @@ using namespace margelo::nitro::liveline::views;
           : !newViewProps.valueDecimals.hasSameValue(oldViewProps->valueDecimals)) {
       swiftPart.setValueDecimals(newViewProps.valueDecimals.get());
     }
+    // currency: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.currency.isProvided()
+          : !newViewProps.currency.hasSameValue(oldViewProps->currency)) {
+      swiftPart.setCurrency(newViewProps.currency.get());
+    }
+    // locale: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.locale.isProvided()
+          : !newViewProps.locale.hasSameValue(oldViewProps->locale)) {
+      swiftPart.setLocale(newViewProps.locale.get());
+    }
+    // useGrouping: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.useGrouping.isProvided()
+          : !newViewProps.useGrouping.hasSameValue(oldViewProps->useGrouping)) {
+      swiftPart.setUseGrouping(newViewProps.useGrouping.get());
+    }
 
     // Update hybridRef if it changed
     if (oldViewProps == nullptr

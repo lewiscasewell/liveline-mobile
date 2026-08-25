@@ -476,6 +476,33 @@ namespace margelo::nitro::liveline {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JDouble> /* valueDecimals */)>("setValueDecimals");
     method(_javaPart, valueDecimals.has_value() ? jni::JDouble::valueOf(valueDecimals.value()) : nullptr);
   }
+  std::optional<std::string> JHybridLivelineSpec::getCurrency() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JString>()>("getCurrency");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(__result->toStdString()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setCurrency(const std::optional<std::string>& currency) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JString> /* currency */)>("setCurrency");
+    method(_javaPart, currency.has_value() ? jni::make_jstring(currency.value()) : nullptr);
+  }
+  std::optional<std::string> JHybridLivelineSpec::getLocale() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JString>()>("getLocale");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(__result->toStdString()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setLocale(const std::optional<std::string>& locale) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JString> /* locale */)>("setLocale");
+    method(_javaPart, locale.has_value() ? jni::make_jstring(locale.value()) : nullptr);
+  }
+  std::optional<bool> JHybridLivelineSpec::getUseGrouping() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JBoolean>()>("getUseGrouping");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(static_cast<bool>(__result->value())) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setUseGrouping(std::optional<bool> useGrouping) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* useGrouping */)>("setUseGrouping");
+    method(_javaPart, useGrouping.has_value() ? jni::JBoolean::valueOf(useGrouping.value()) : nullptr);
+  }
 
   // Methods
   void JHybridLivelineSpec::push(const LivelinePoint& point) {

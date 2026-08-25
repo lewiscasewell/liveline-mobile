@@ -83,6 +83,16 @@ public final class LivelineView: UIView {
     /// chart reads sensibly from a 30-second window out to a 4-year one. Set a
     /// closure to take full control.
     public var formatTime: ((Double) -> String)?
+    /// Locale used by the built-in time axis/crosshair formatting (field order,
+    /// month names, 12/24-hour). Default `.current`. Ignored when ``formatTime``
+    /// is set. (Value formatting is controlled via ``formatValue``.)
+    public var formattingLocale: Locale = .current {
+        didSet {
+            guard formattingLocale != oldValue else { return }
+            timeFormatterCache.removeAll()
+            setNeedsDisplay()
+        }
+    }
     /// Base easing speed per 60 fps frame. Default 0.08.
     public var lerpSpeed: Double = 0.08
     /// Show the live value as a large text overlay above the chart, updated
@@ -260,28 +270,47 @@ public final class LivelineView: UIView {
     static let momentumRedComponents = (239.0, 68.0, 68.0)
 
     /// Default value formatter — two decimal places, matching web liveline.
-    public static func defaultFormatValue(_ v: Double) -> String { String(format: "%.2f", v) }
-
-    private static let timeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm:ss"
+    /// Default value formatter — the device locale's decimal style (correct
+    /// decimal/grouping separators), 2 fraction digits. Main-thread only.
+    private static let defaultNumberFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.locale = .current
+        f.minimumFractionDigits = 2
+        f.maximumFractionDigits = 2
         return f
     }()
 
-    /// Default time formatter — `HH:mm:ss` in the local time zone.
+    public static func defaultFormatValue(_ v: Double) -> String {
+        defaultNumberFormatter.string(from: NSNumber(value: v)) ?? String(format: "%.2f", v)
+    }
+
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = .current
+        f.setLocalizedDateFormatFromTemplate("jmmss")
+        return f
+    }()
+
+    /// Default time formatter — a locale-appropriate time (honours the device's
+    /// 12/24-hour setting) in the local time zone.
     public static func defaultFormatTime(_ t: Double) -> String {
         timeFormatter.string(from: Date(timeIntervalSince1970: t))
     }
 
-    /// Reusable `DateFormatter`s keyed by format string, so auto-formatting the
-    /// axis every frame never allocates. Main-thread only (the render loop).
+    /// Reusable `DateFormatter`s keyed by template, so auto-formatting the axis
+    /// every frame never allocates. Each is built with
+    /// `setLocalizedDateFormatFromTemplate` in the current locale, so field
+    /// order, separators, month names and 12/24-hour all localize.
+    /// Main-thread only (the render loop).
     private var timeFormatterCache: [String: DateFormatter] = [:]
 
-    private func timeFormatter(_ format: String) -> DateFormatter {
-        if let f = timeFormatterCache[format] { return f }
+    private func timeFormatter(_ template: String) -> DateFormatter {
+        if let f = timeFormatterCache[template] { return f }
         let f = DateFormatter()
-        f.dateFormat = format
-        timeFormatterCache[format] = f
+        f.locale = formattingLocale
+        f.setLocalizedDateFormatFromTemplate(template)
+        timeFormatterCache[template] = f
         return f
     }
 
@@ -290,13 +319,13 @@ public final class LivelineView: UIView {
     /// year, month ticks the month, day ticks the date, finer ticks the time.
     func axisTimeLabel(_ t: Double, interval: Double) -> String {
         if let formatTime { return formatTime(t) }
-        let format: String
-        if interval >= 31_536_000 { format = "yyyy" }        // ≥ 1 year
-        else if interval >= 2_592_000 { format = "MMM yyyy" }  // ≥ 1 month
-        else if interval >= 86_400 { format = "d MMM" }        // ≥ 1 day
-        else if interval >= 60 { format = "HH:mm" }            // ≥ 1 minute
-        else { format = "HH:mm:ss" }
-        return timeFormatter(format).string(from: Date(timeIntervalSince1970: t))
+        let template: String
+        if interval >= 31_536_000 { template = "yyyy" }        // ≥ 1 year
+        else if interval >= 2_592_000 { template = "MMMyyyy" }  // ≥ 1 month
+        else if interval >= 86_400 { template = "dMMM" }        // ≥ 1 day
+        else if interval >= 60 { template = "jmm" }            // ≥ 1 minute
+        else { template = "jmmss" }
+        return timeFormatter(template).string(from: Date(timeIntervalSince1970: t))
     }
 
     /// Crosshair label for a precise time `t`, scaled to the visible window so a
@@ -304,13 +333,13 @@ public final class LivelineView: UIView {
     func crosshairTimeLabel(_ t: Double) -> String {
         if let formatTime { return formatTime(t) }
         let w = windowSeconds
-        let format: String
-        if w >= 63_072_000 { format = "d MMM yyyy" }   // ≥ 2 years
-        else if w >= 2_592_000 { format = "d MMM" }    // ≥ 1 month
-        else if w >= 86_400 { format = "d MMM, HH:mm" } // ≥ 1 day
-        else if w >= 3_600 { format = "HH:mm" }        // ≥ 1 hour
-        else { format = "HH:mm:ss" }
-        return timeFormatter(format).string(from: Date(timeIntervalSince1970: t))
+        let template: String
+        if w >= 63_072_000 { template = "dMMMyyyy" }   // ≥ 2 years
+        else if w >= 2_592_000 { template = "dMMM" }   // ≥ 1 month
+        else if w >= 86_400 { template = "dMMMjmm" }   // ≥ 1 day
+        else if w >= 3_600 { template = "jmm" }        // ≥ 1 hour
+        else { template = "jmmss" }
+        return timeFormatter(template).string(from: Date(timeIntervalSince1970: t))
     }
 
     // MARK: Init

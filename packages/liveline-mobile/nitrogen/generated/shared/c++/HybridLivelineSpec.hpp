@@ -145,6 +145,12 @@ namespace margelo::nitro::liveline {
       virtual void setValueSuffix(const std::optional<std::string>& valueSuffix) = 0;
       virtual std::optional<double> getValueDecimals() = 0;
       virtual void setValueDecimals(std::optional<double> valueDecimals) = 0;
+      virtual std::optional<std::string> getCurrency() = 0;
+      virtual void setCurrency(const std::optional<std::string>& currency) = 0;
+      virtual std::optional<std::string> getLocale() = 0;
+      virtual void setLocale(const std::optional<std::string>& locale) = 0;
+      virtual std::optional<bool> getUseGrouping() = 0;
+      virtual void setUseGrouping(std::optional<bool> useGrouping) = 0;
 
     public:
       // Methods

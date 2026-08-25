@@ -233,6 +233,21 @@ void JHybridLivelineStateUpdater::updateViewProps(jni::alias_ref<jni::JClass> /*
         : !newProps->valueDecimals.hasSameValue(oldProps->valueDecimals)) {
     hybridView->setValueDecimals(newProps->valueDecimals.get());
   }
+  if (oldProps == nullptr
+        ? newProps->currency.isProvided()
+        : !newProps->currency.hasSameValue(oldProps->currency)) {
+    hybridView->setCurrency(newProps->currency.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->locale.isProvided()
+        : !newProps->locale.hasSameValue(oldProps->locale)) {
+    hybridView->setLocale(newProps->locale.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->useGrouping.isProvided()
+        : !newProps->useGrouping.hasSameValue(oldProps->useGrouping)) {
+    hybridView->setUseGrouping(newProps->useGrouping.get());
+  }
 
   // Update hybridRef if it changed
   if (oldProps == nullptr

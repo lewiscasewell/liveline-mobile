@@ -2,6 +2,7 @@ import * as React from 'react'
 import { callback, getHostComponent } from 'react-native-nitro-modules'
 
 import LivelineConfig from '../nitrogen/generated/shared/json/LivelineConfig.json'
+import type { LivelineCurrency } from './currencies'
 import type { LivelineMethods, LivelineMode, LivelinePoint, LivelineProps } from './Liveline.nitro'
 
 const NativeLiveline = getHostComponent<LivelineProps, LivelineMethods>(
@@ -22,7 +23,16 @@ const NativeLiveline = getHostComponent<LivelineProps, LivelineMethods>(
  * Genuinely data-shaped props (`data`, `value`, `candles`, `liveCandle`,
  * `referenceLine`) are intentionally not defaulted.
  */
-const defaults: Partial<LivelineProps> = {
+// Required for every prop the native side reads as a scalar/enum: Fabric sends
+// `null` for any omitted attribute, and Nitro's view-prop bridge rejects null
+// for these. Typing it as `Required<Omit<…, dataProps>>` makes a missing default
+// a COMPILE error instead of a runtime crash. The excluded props are data-shaped
+// (coalesced to sentinels below) or callbacks (wrapped separately).
+type DefaultableProps = Omit<
+  LivelineProps,
+  'data' | 'value' | 'candles' | 'liveCandle' | 'referenceLine' | 'windows' | 'onWindowChange' | 'onModeChange'
+>
+const defaults: Required<DefaultableProps> = {
   color: '#3b82f6',
   theme: 'dark',
   mode: 'line',
@@ -42,6 +52,7 @@ const defaults: Partial<LivelineProps> = {
   haptics: false,
   degen: false,
   window: 30,
+  windowStyle: 'default',
   lineWidth: 2,
   lerpSpeed: 0.08,
   candleWidth: 1,
@@ -50,6 +61,9 @@ const defaults: Partial<LivelineProps> = {
   valuePrefix: '',
   valueSuffix: '',
   valueDecimals: 2,
+  currency: '',
+  locale: '',
+  useGrouping: true,
 }
 
 // The native props now include the window bar (`windows`/`windowStyle`/
@@ -64,10 +78,12 @@ type LivelineComponentProps = React.ComponentProps<typeof NativeLiveline>
  */
 export type LivelineComponentPropsPublic = Omit<
   LivelineComponentProps,
-  'onWindowChange' | 'onModeChange'
+  'onWindowChange' | 'onModeChange' | 'currency'
 > & {
   onWindowChange?: (secs: number) => void
   onModeChange?: (mode: LivelineMode) => void
+  // Native side takes any string; narrow the public API to valid ISO 4217 codes.
+  currency?: LivelineCurrency
 }
 
 declare const __DEV__: boolean | undefined
@@ -184,6 +200,7 @@ export function Liveline(props: LivelineComponentPropsPublic): React.ReactElemen
   if (merged.referenceLine == null) merged.referenceLine = { value: Number.NaN }
   if (merged.data == null) merged.data = []
   if (merged.candles == null) merged.candles = []
+  if (merged.windows == null) merged.windows = []
   if (merged.hybridRef == null && autoHybridRef) merged.hybridRef = autoHybridRef
   // Wrap the callbacks for Nitro (like hybridRef).
   if (onWindowChange) merged.onWindowChange = callback(onWindowChange)
@@ -204,3 +221,4 @@ export type {
   LivelineMomentum,
   LivelineBadgeVariant,
 } from './Liveline.nitro'
+export type { LivelineCurrency } from './currencies'

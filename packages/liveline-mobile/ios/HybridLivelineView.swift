@@ -239,12 +239,35 @@ final class HybridLivelineView: HybridLivelineSpec {
     var valuePrefix: String? { didSet { rebuildFormatter() } }
     var valueSuffix: String? { didSet { rebuildFormatter() } }
     var valueDecimals: Double? { didSet { rebuildFormatter() } }
+    var currency: String? { didSet { rebuildFormatter() } }
+    var locale: String? {
+        didSet {
+            chart.formattingLocale = locale.flatMap { $0.isEmpty ? nil : Locale(identifier: $0) } ?? .current
+            rebuildFormatter()
+        }
+    }
+    var useGrouping: Bool? { didSet { rebuildFormatter() } }
 
     private func rebuildFormatter() {
-        let prefix = valuePrefix ?? ""
-        let suffix = valueSuffix ?? ""
-        let decimals = Int(valueDecimals ?? 2)
-        chart.formatValue = { v in prefix + String(format: "%.\(decimals)f", v) + suffix }
+        let nf = NumberFormatter()
+        nf.locale = locale.flatMap { $0.isEmpty ? nil : Locale(identifier: $0) } ?? .current
+        nf.usesGroupingSeparator = useGrouping ?? true
+        if let currency, !currency.isEmpty {
+            // Currency style provides the symbol, its placement and the currency's
+            // own default fraction digits (0 for JPY, 2 for USD, …); `valuePrefix`/
+            // `valueSuffix`/`valueDecimals` don't apply here.
+            nf.numberStyle = .currency
+            nf.currencyCode = currency
+            chart.formatValue = { nf.string(from: NSNumber(value: $0)) ?? "\($0)" }
+        } else {
+            nf.numberStyle = .decimal
+            let decimals = Int(valueDecimals ?? 2)
+            nf.minimumFractionDigits = decimals
+            nf.maximumFractionDigits = decimals
+            let prefix = valuePrefix ?? ""
+            let suffix = valueSuffix ?? ""
+            chart.formatValue = { prefix + (nf.string(from: NSNumber(value: $0)) ?? "\($0)") + suffix }
+        }
     }
 
     // MARK: Methods

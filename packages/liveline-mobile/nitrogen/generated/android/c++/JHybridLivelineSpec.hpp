@@ -122,6 +122,12 @@ namespace margelo::nitro::liveline {
     void setValueSuffix(const std::optional<std::string>& valueSuffix) override;
     std::optional<double> getValueDecimals() override;
     void setValueDecimals(std::optional<double> valueDecimals) override;
+    std::optional<std::string> getCurrency() override;
+    void setCurrency(const std::optional<std::string>& currency) override;
+    std::optional<std::string> getLocale() override;
+    void setLocale(const std::optional<std::string>& locale) override;
+    std::optional<bool> getUseGrouping() override;
+    void setUseGrouping(std::optional<bool> useGrouping) override;
 
   public:
     // Methods

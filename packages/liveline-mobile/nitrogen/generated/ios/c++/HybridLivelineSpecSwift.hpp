@@ -343,6 +343,27 @@ namespace margelo::nitro::liveline {
     inline void setValueDecimals(std::optional<double> valueDecimals) noexcept override {
       _swiftPart.setValueDecimals(valueDecimals);
     }
+    inline std::optional<std::string> getCurrency() noexcept override {
+      auto __result = _swiftPart.getCurrency();
+      return __result;
+    }
+    inline void setCurrency(const std::optional<std::string>& currency) noexcept override {
+      _swiftPart.setCurrency(currency);
+    }
+    inline std::optional<std::string> getLocale() noexcept override {
+      auto __result = _swiftPart.getLocale();
+      return __result;
+    }
+    inline void setLocale(const std::optional<std::string>& locale) noexcept override {
+      _swiftPart.setLocale(locale);
+    }
+    inline std::optional<bool> getUseGrouping() noexcept override {
+      auto __result = _swiftPart.getUseGrouping();
+      return __result;
+    }
+    inline void setUseGrouping(std::optional<bool> useGrouping) noexcept override {
+      _swiftPart.setUseGrouping(useGrouping);
+    }
 
   public:
     // Methods

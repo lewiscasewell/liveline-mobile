@@ -40,6 +40,9 @@
     "valuePrefix": true,
     "valueSuffix": true,
     "valueDecimals": true,
+    "currency": true,
+    "locale": true,
+    "useGrouping": true,
     "hybridRef": true
   }
 }

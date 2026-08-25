@@ -174,12 +174,26 @@ export interface LivelineProps extends HybridViewProps {
   /** A horizontal reference line at a fixed value. Omit to remove it. */
   referenceLine?: LivelineReference
 
-  /** Prepended to every formatted value (e.g. `'$'`). */
+  /** Prepended to every formatted value (e.g. `'$'`). Ignored when `currency` is set. */
   valuePrefix?: string
-  /** Appended to every formatted value (e.g. `' bpm'`). */
+  /** Appended to every formatted value (e.g. `' bpm'`). Ignored when `currency` is set. */
   valueSuffix?: string
-  /** Decimal places for formatted values. Default `2`. */
+  /** Decimal places for formatted values. Default `2` (or the currency's default). */
   valueDecimals?: number
+  /**
+   * ISO 4217 currency code (e.g. `'USD'`, `'EUR'`, `'JPY'`). Formats values as
+   * localized currency — symbol, its placement and the default decimals all
+   * follow `locale`. Overrides `valuePrefix`/`valueSuffix`.
+   */
+  currency?: string
+  /**
+   * BCP-47 locale (e.g. `'de-DE'`) for number *and* time formatting — decimal /
+   * grouping separators, month names, field order, 12/24-hour. Defaults to the
+   * device locale.
+   */
+  locale?: string
+  /** Thousands separators. Default: off for plain values, on for currency. */
+  useGrouping?: boolean
 }
 
 /** Imperative methods, reached via `hybridRef`. */

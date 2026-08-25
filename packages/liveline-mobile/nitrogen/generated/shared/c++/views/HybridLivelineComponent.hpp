@@ -89,6 +89,9 @@ namespace margelo::nitro::liveline::views {
     nitro::ReactProp<std::optional<std::string>> valuePrefix;
     nitro::ReactProp<std::optional<std::string>> valueSuffix;
     nitro::ReactProp<std::optional<double>> valueDecimals;
+    nitro::ReactProp<std::optional<std::string>> currency;
+    nitro::ReactProp<std::optional<std::string>> locale;
+    nitro::ReactProp<std::optional<bool>> useGrouping;
     nitro::ReactProp<std::optional<std::function<void(const std::shared_ptr<HybridLivelineSpec>& /* ref */)>>> hybridRef;
 
     [[nodiscard]]
@@ -129,6 +132,9 @@ namespace margelo::nitro::liveline::views {
              valuePrefix.hasSameValue(other.valuePrefix) &&
              valueSuffix.hasSameValue(other.valueSuffix) &&
              valueDecimals.hasSameValue(other.valueDecimals) &&
+             currency.hasSameValue(other.currency) &&
+             locale.hasSameValue(other.locale) &&
+             useGrouping.hasSameValue(other.useGrouping) &&
              hybridRef.hasSameValue(other.hybridRef);
     }
 
@@ -170,6 +176,9 @@ namespace margelo::nitro::liveline::views {
              valuePrefix.isProvided() ||
              valueSuffix.isProvided() ||
              valueDecimals.isProvided() ||
+             currency.isProvided() ||
+             locale.isProvided() ||
+             useGrouping.isProvided() ||
              hybridRef.isProvided();
     }
 
