@@ -174,6 +174,16 @@ public final class LivelineView: UIView {
     var series: [Series] = []
     var isMultiSeries: Bool { !series.isEmpty }
 
+    /// The current order book, if any. Its resting sizes float upward behind the
+    /// price line (see ``LivelineView/advanceAndDrawOrderbook(_:layout:dt:momentumMag:groupAlpha:)``).
+    var orderbook: OrderbookData?
+    var orderbookLabels: [OrderbookFloatLabel] = []
+    var orderbookSpawnClock: Double = 0
+    /// Previous total depth + eased churn (how fast the book is changing), which
+    /// — with price momentum — drives the stream speed.
+    var orderbookLastTotal: Double = -1
+    var orderbookChurn: Double = 0
+
     // MARK: Easing state (persist across frames)
 
     private var displayValue: Double = 0
@@ -854,6 +864,13 @@ public final class LivelineView: UIView {
         if grid {
             let a = reveal < 1 ? revealRamp(0.15, 0.7) : 1
             if a > 0.01 { drawGrid(ctx, layout: layout, dt: dt, groupAlpha: a) }
+        }
+
+        // 2.5 Orderbook: resting sizes float upward behind the price line.
+        if hasOrderbook {
+            let a = reveal < 1 ? revealRamp(0.15, 0.7) : 1
+            let mMag = min(1, abs(value - smoothValue) / max(domain.valRange * 0.15, 1e-9))
+            advanceAndDrawOrderbook(ctx, layout: layout, dt: dt, momentumMag: mMag, groupAlpha: a)
         }
 
         // 3. Line + fill + dashed baseline.

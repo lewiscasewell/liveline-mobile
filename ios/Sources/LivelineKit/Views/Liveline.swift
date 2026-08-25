@@ -25,6 +25,7 @@ public struct Liveline: View {
     private var value: Double?
     private var series: [LivelineView.SeriesInput] = []
     private var seriesValues: [String: Double] = [:]
+    private var orderbook: OrderbookData?
 
     // Configuration (defaults mirror web liveline).
     private var color: Color = Color(red: 59 / 255, green: 130 / 255, blue: 246 / 255)
@@ -169,6 +170,10 @@ public struct Liveline: View {
     /// The latest value for each series id (multi-series live feed). Each changed
     /// value is appended to its series, mirroring the single-series `value` path.
     public func seriesValues(_ v: [String: Double]) -> Self { with { $0.seriesValues = v } }
+    /// Order-book depth (`{ bids, asks }`). Resting sizes float upward behind the
+    /// price line — bids in the up-colour, asks in the down-colour — with a drift
+    /// speed that reacts to price momentum. Pair with `value` for the price line.
+    public func orderbook(_ v: OrderbookData?) -> Self { with { $0.orderbook = v } }
     /// Sets the chart type (`.line` or `.candle`).
     public func mode(_ v: LivelineMode) -> Self { with { $0.mode = v } }
     /// Sets the OHLC candles (used when `mode == .candle`).
@@ -257,6 +262,8 @@ public struct Liveline: View {
             if let f = c.formatTime { view.formatTime = f }
             view.formattingLocale = c.formattingLocale
             view.fontFamily = c.fontFamily
+
+            view.setOrderbook(c.orderbook)
 
             view.mode = c.mode
             view.candleWidth = c.candleWidth

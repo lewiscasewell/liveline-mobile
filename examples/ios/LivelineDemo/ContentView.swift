@@ -19,6 +19,7 @@ struct ContentView: View {
         case timeWindows = "Time windows"
         case candlestick = "Candlestick"
         case prediction = "Prediction market"
+        case orderbook = "Orderbook stream"
         case degen = "Degen"
         case states = "States (loading)"
         case paused = "Paused"
@@ -84,6 +85,7 @@ struct ContentView: View {
         case .timeWindows: TimeWindowsCard()
         case .candlestick: CandlestickCard()
         case .prediction: PredictionCard()
+        case .orderbook: OrderbookCard()
         case .degen: DegenCard()
         case .states: StatesCard()
         case .paused: PausedCard()
@@ -716,6 +718,68 @@ private struct PredictionCard: View {
                 .seriesValues(model.values)
                 .window(45)
                 .formatValue { String(format: "%.0f%%", $0) }
+                .theme(livelineTheme(scheme))
+        }
+    }
+}
+
+// MARK: - Orderbook stream
+
+/// A price line plus a synthetic order book (six levels each side, sizes
+/// jittering each tick). The chart floats the resting sizes upward behind the
+/// line — bids green, asks red — faster when the price is moving.
+final class OrderbookFeed: ObservableObject {
+    @Published var value: Double
+    @Published var book: OrderbookData
+    let seed: [LivelinePoint]
+    private var price: Double
+    private var timer: Timer?
+
+    init() {
+        let (pts, last) = seedSeries(center: 62, vol: 0.7)
+        seed = pts
+        price = last
+        value = last
+        book = OrderbookFeed.makeBook(price: last)
+        timer = Timer.scheduledTimer(withTimeInterval: 0.12, repeats: true) { [weak self] _ in
+            self?.step()
+        }
+    }
+
+    private func step() {
+        price += (62 - price) * 0.008 + Double.random(in: -0.8...0.8)
+        value = price
+        book = OrderbookFeed.makeBook(price: price)
+    }
+
+    static func makeBook(price: Double) -> OrderbookData {
+        var bids = [OrderbookLevel]()
+        var asks = [OrderbookLevel]()
+        for i in 0..<6 {
+            let d = Double(i) * 0.12 + 0.08
+            // Dollar-ish order sizes: mostly small, the occasional whale.
+            let bid = Double.random(in: 0...1) > 0.9 ? Double.random(in: 80...260) : Double.random(in: 4...70)
+            let ask = Double.random(in: 0...1) > 0.9 ? Double.random(in: 80...260) : Double.random(in: 4...70)
+            bids.append(OrderbookLevel(price: price - d, size: bid))
+            asks.append(OrderbookLevel(price: price + d, size: ask))
+        }
+        return OrderbookData(bids: bids, asks: asks)
+    }
+
+    deinit { timer?.invalidate() }
+}
+
+private struct OrderbookCard: View {
+    @StateObject private var feed = OrderbookFeed()
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        Card(
+            title: "Orderbook stream",
+            subtitle: "Bid/ask sizes float up behind the price line — green bids, red asks, faster with momentum."
+        ) {
+            Liveline(data: feed.seed, value: feed.value)
+                .orderbook(feed.book)
+                .formatValue { String(format: "%.0f¢", $0) }
                 .theme(livelineTheme(scheme))
         }
     }
