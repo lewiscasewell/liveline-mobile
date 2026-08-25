@@ -663,6 +663,15 @@ extension LivelineView {
 
     // MARK: Loading / empty
 
+    /// The no-data / loading waveform (unit amplitude): a few low-frequency sines
+    /// summed and drifting, for a smooth, flowing line rather than a busy squiggle.
+    /// Shared by the loading state and the reveal-morph so they match.
+    func loadingWave(_ t: Double, _ scroll: Double) -> Double {
+        sin(t * 3.1 + scroll) * 0.6
+            + sin(t * 6.3 + scroll * 1.25) * 0.28
+            + sin(t * 1.7 + scroll * 0.6) * 0.16
+    }
+
     func drawLoading(
         _ ctx: CGContext, w: CGFloat, h: CGFloat,
         pad: (top: CGFloat, right: CGFloat, bottom: CGFloat, left: CGFloat), nowMs: Double, alpha: Double
@@ -695,13 +704,27 @@ extension LivelineView {
 
     func drawEmpty(
         _ ctx: CGContext, w: CGFloat, h: CGFloat,
-        pad: (top: CGFloat, right: CGFloat, bottom: CGFloat, left: CGFloat), alpha: Double
+        pad: (top: CGFloat, right: CGFloat, bottom: CGFloat, left: CGFloat), nowMs: Double, alpha: Double
     ) {
-        let centerY = pad.top + (h - pad.top - pad.bottom) / 2
+        let chartH = h - pad.top - pad.bottom
+        let centerY = pad.top + chartH / 2
+        // A gentle, slowly drifting wave rather than a dead-flat line.
+        let amplitude = Double(chartH) * 0.05
+        let scroll = nowMs * 0.0006
+        let left = pad.left
+        let right = w - pad.right
+        var pts = [CGPoint]()
+        let steps = 48
+        for i in 0...steps {
+            let t = Double(i) / Double(steps)
+            let x = left + CGFloat(t) * (right - left)
+            pts.append(CGPoint(x: x, y: CGFloat(centerY + amplitude * loadingWave(t, scroll))))
+        }
+        ctx.addPath(splinePath(pts))
         ctx.setStrokeColor(UIColor(rgba: palette.gridLine.withAlpha(palette.gridLine.a * alpha)).cgColor)
         ctx.setLineWidth(1)
-        ctx.move(to: CGPoint(x: pad.left, y: centerY))
-        ctx.addLine(to: CGPoint(x: w - pad.right, y: centerY))
+        ctx.setLineJoin(.round)
+        ctx.setLineCap(.round)
         ctx.strokePath()
         drawText(
             emptyText, x: w / 2, centerY: centerY - 16, font: labelFont(),

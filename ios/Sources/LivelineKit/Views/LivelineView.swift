@@ -606,7 +606,9 @@ public final class LivelineView: UIView {
             if loadingAlpha > 0.01 {
                 drawLoading(ctx, w: w, h: h, pad: pad, nowMs: nowMs, alpha: loadingAlpha)
             }
-            if (1 - loadingAlpha) > 0.01 { drawEmpty(ctx, w: w, h: h, pad: pad, alpha: 1 - loadingAlpha) }
+            if (1 - loadingAlpha) > 0.01 {
+                drawEmpty(ctx, w: w, h: h, pad: pad, nowMs: nowMs, alpha: 1 - loadingAlpha)
+            }
             drawLeftEdgeFade(ctx, w: w, h: h, padLeft: pad.left)
             updateValueLabel(value: displayValue, trend: .flat, pad: pad)
             return
