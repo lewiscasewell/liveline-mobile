@@ -40,20 +40,22 @@ export default function App() {
   useEffect(() => {
     if (isLoading || !data || data.length === 0) return
     const v0 = data[data.length - 1]!.value
+    // Scale volatility to the window. The chart commits one live point per
+    // `window / 300` seconds, so a fixed per-tick step swings a lot within each
+    // bucket on a wide window and paints as a near-vertical scribble. Shrinking
+    // the step for wider windows keeps the live tail as calm as the (resampled)
+    // history, while Live stays lively.
+    const vol = 0.2 * Math.pow(30 / Math.max(interval.seconds, 30), 0.35)
     let v = v0
     let timer: ReturnType<typeof setTimeout>
     const tick = () => {
-      // Small, mean-reverting steps so the live value stays near the historical
-      // scale — otherwise it drifts far and, on a wide window where seconds are
-      // sub-pixel, renders as a harsh vertical spike. The Live view still looks
-      // lively because auto-range fills the frame with whatever movement there is.
-      v += (Math.random() - 0.5) * 0.2 + (v0 - v) * 0.008
+      v += (Math.random() - 0.5) * vol + (v0 - v) * 0.008
       push({ time: Date.now() / 1000, value: v })
-      timer = setTimeout(tick, 200 + Math.random() * 2000)
+      timer = setTimeout(tick, 200 + Math.random() * 4000)
     }
     tick()
     return () => clearTimeout(timer)
-  }, [isLoading, data, push])
+  }, [isLoading, data, push, interval.seconds])
 
   return (
     <SafeAreaView style={styles.root}>
