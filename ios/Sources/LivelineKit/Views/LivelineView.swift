@@ -548,7 +548,6 @@ public final class LivelineView: UIView {
         let h = bounds.height
         guard w > 0, h > 0 else { return }
 
-        // Background
         ctx.setFillColor(UIColor(rgba: palette.background).cgColor)
         ctx.fill(bounds)
 

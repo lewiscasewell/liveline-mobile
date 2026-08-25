@@ -243,18 +243,13 @@ private struct WindowBar: View {
     @Environment(\.colorScheme) private var colorScheme
     private var dark: Bool { colorScheme == .dark }
 
-    private var activeColor: Color {
-        dark ? Color.white.opacity(0.7) : Color.black.opacity(0.55)
-    }
-    private var inactiveColor: Color {
-        dark ? Color.white.opacity(0.25) : Color.black.opacity(0.22)
-    }
+    private func gray(_ alpha: Double) -> Color { (dark ? Color.white : Color.black).opacity(alpha) }
+    private var activeColor: Color { gray(WindowBarTokens.activeAlpha(isDark: dark)) }
+    private var inactiveColor: Color { gray(WindowBarTokens.inactiveAlpha(isDark: dark)) }
     private var trackColor: Color {
-        style == .text ? .clear : (dark ? Color.white.opacity(0.03) : Color.black.opacity(0.02))
+        style == .text ? .clear : gray(WindowBarTokens.trackAlpha(isDark: dark))
     }
-    private var indicatorColor: Color {
-        dark ? Color.white.opacity(0.06) : Color.black.opacity(0.035)
-    }
+    private var indicatorColor: Color { gray(WindowBarTokens.indicatorAlpha(isDark: dark)) }
     private var corner: CGFloat { style == .rounded ? 999 : 6 }
     private var innerCorner: CGFloat { style == .rounded ? 999 : 4 }
 
@@ -266,7 +261,7 @@ private struct WindowBar: View {
                     onSelect(w.secs)
                 } label: {
                     Text(w.label)
-                        .font(.system(size: 11, weight: isActive ? .semibold : .regular))
+                        .font(.system(size: WindowBarTokens.fontSize, weight: isActive ? .semibold : .regular))
                         .foregroundColor(isActive ? activeColor : inactiveColor)
                         .padding(.horizontal, style == .text ? 6 : 10)
                         .padding(.vertical, style == .text ? 2 : 3)

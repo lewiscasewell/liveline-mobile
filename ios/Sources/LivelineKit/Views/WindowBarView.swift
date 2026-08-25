@@ -51,7 +51,7 @@
 
         private var isText: Bool { style == .text }
         private var pad: CGFloat { isText ? 0 : (style == .rounded ? 3 : 2) }
-        private func gray(_ alpha: CGFloat) -> UIColor { UIColor(white: isDark ? 1 : 0, alpha: alpha) }
+        private func gray(_ alpha: Double) -> UIColor { UIColor(white: isDark ? 1 : 0, alpha: CGFloat(alpha)) }
 
         private func rebuild() {
             buttons.forEach { $0.button.removeFromSuperview() }
@@ -94,17 +94,17 @@
         }
 
         private func updateColors() {
-            let containerBg = isText ? UIColor.clear : gray(isDark ? 0.03 : 0.02)
+            let containerBg = isText ? UIColor.clear : gray(WindowBarTokens.trackAlpha(isDark: isDark))
             intervalBar.backgroundColor = containerBg
             modeBar.backgroundColor = containerBg
-            let indicator = gray(isDark ? 0.06 : 0.035)
-            let active = gray(isDark ? 0.7 : 0.55)
-            let inactive = gray(isDark ? 0.25 : 0.22)
+            let indicator = gray(WindowBarTokens.indicatorAlpha(isDark: isDark))
+            let active = gray(WindowBarTokens.activeAlpha(isDark: isDark))
+            let inactive = gray(WindowBarTokens.inactiveAlpha(isDark: isDark))
 
             for (secs, b) in buttons {
                 let on = secs == activeSecs
                 b.setTitleColor(on ? active : inactive, for: .normal)
-                b.titleLabel?.font = .systemFont(ofSize: 11, weight: on ? .semibold : .regular)
+                b.titleLabel?.font = .systemFont(ofSize: CGFloat(WindowBarTokens.fontSize), weight: on ? .semibold : .regular)
                 b.backgroundColor = (on && !isText) ? indicator : .clear
             }
             for (candle, b) in modeButtons {
@@ -120,7 +120,7 @@
             let spacing: CGFloat = isText ? 4 : 2
             let padX: CGFloat = isText ? 6 : 10
             let btnH = barHeight - pad * 2
-            let sizingFont = UIFont.systemFont(ofSize: 11, weight: .semibold)
+            let sizingFont = UIFont.systemFont(ofSize: CGFloat(WindowBarTokens.fontSize), weight: .semibold)
             var x = pad
             for b in items {
                 // Icons get a fixed width; titles are sized to their semibold width so
