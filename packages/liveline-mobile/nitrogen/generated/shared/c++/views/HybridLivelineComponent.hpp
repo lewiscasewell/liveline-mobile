@@ -92,6 +92,7 @@ namespace margelo::nitro::liveline::views {
     nitro::ReactProp<std::optional<std::string>> currency;
     nitro::ReactProp<std::optional<std::string>> locale;
     nitro::ReactProp<std::optional<bool>> useGrouping;
+    nitro::ReactProp<std::optional<std::string>> fontFamily;
     nitro::ReactProp<std::optional<std::function<void(const std::shared_ptr<HybridLivelineSpec>& /* ref */)>>> hybridRef;
 
     [[nodiscard]]
@@ -135,6 +136,7 @@ namespace margelo::nitro::liveline::views {
              currency.hasSameValue(other.currency) &&
              locale.hasSameValue(other.locale) &&
              useGrouping.hasSameValue(other.useGrouping) &&
+             fontFamily.hasSameValue(other.fontFamily) &&
              hybridRef.hasSameValue(other.hybridRef);
     }
 
@@ -179,6 +181,7 @@ namespace margelo::nitro::liveline::views {
              currency.isProvided() ||
              locale.isProvided() ||
              useGrouping.isProvided() ||
+             fontFamily.isProvided() ||
              hybridRef.isProvided();
     }
 

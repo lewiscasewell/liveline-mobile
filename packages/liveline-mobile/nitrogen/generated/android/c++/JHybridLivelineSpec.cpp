@@ -503,6 +503,15 @@ namespace margelo::nitro::liveline {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* useGrouping */)>("setUseGrouping");
     method(_javaPart, useGrouping.has_value() ? jni::JBoolean::valueOf(useGrouping.value()) : nullptr);
   }
+  std::optional<std::string> JHybridLivelineSpec::getFontFamily() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JString>()>("getFontFamily");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(__result->toStdString()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setFontFamily(const std::optional<std::string>& fontFamily) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JString> /* fontFamily */)>("setFontFamily");
+    method(_javaPart, fontFamily.has_value() ? jni::make_jstring(fontFamily.value()) : nullptr);
+  }
 
   // Methods
   void JHybridLivelineSpec::push(const LivelinePoint& point) {

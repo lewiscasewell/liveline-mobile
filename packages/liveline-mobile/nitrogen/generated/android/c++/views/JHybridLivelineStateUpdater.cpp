@@ -248,6 +248,11 @@ void JHybridLivelineStateUpdater::updateViewProps(jni::alias_ref<jni::JClass> /*
         : !newProps->useGrouping.hasSameValue(oldProps->useGrouping)) {
     hybridView->setUseGrouping(newProps->useGrouping.get());
   }
+  if (oldProps == nullptr
+        ? newProps->fontFamily.isProvided()
+        : !newProps->fontFamily.hasSameValue(oldProps->fontFamily)) {
+    hybridView->setFontFamily(newProps->fontFamily.get());
+  }
 
   // Update hybridRef if it changed
   if (oldProps == nullptr

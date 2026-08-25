@@ -276,6 +276,12 @@ abstract class HybridLivelineSpec: HybridView() {
   @set:DoNotStrip
   @set:Keep
   abstract var useGrouping: Boolean?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var fontFamily: String?
 
   // Methods
   @DoNotStrip

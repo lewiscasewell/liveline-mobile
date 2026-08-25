@@ -43,6 +43,7 @@
     "currency": true,
     "locale": true,
     "useGrouping": true,
+    "fontFamily": true,
     "hybridRef": true
   }
 }

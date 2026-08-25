@@ -151,6 +151,8 @@ namespace margelo::nitro::liveline {
       virtual void setLocale(const std::optional<std::string>& locale) = 0;
       virtual std::optional<bool> getUseGrouping() = 0;
       virtual void setUseGrouping(std::optional<bool> useGrouping) = 0;
+      virtual std::optional<std::string> getFontFamily() = 0;
+      virtual void setFontFamily(const std::optional<std::string>& fontFamily) = 0;
 
     public:
       // Methods

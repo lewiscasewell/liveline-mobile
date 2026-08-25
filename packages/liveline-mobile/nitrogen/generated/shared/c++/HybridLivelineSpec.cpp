@@ -92,6 +92,8 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridSetter("locale", &HybridLivelineSpec::setLocale);
       prototype.registerHybridGetter("useGrouping", &HybridLivelineSpec::getUseGrouping);
       prototype.registerHybridSetter("useGrouping", &HybridLivelineSpec::setUseGrouping);
+      prototype.registerHybridGetter("fontFamily", &HybridLivelineSpec::getFontFamily);
+      prototype.registerHybridSetter("fontFamily", &HybridLivelineSpec::setFontFamily);
       prototype.registerHybridMethod("push", &HybridLivelineSpec::push);
     });
   }

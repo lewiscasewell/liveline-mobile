@@ -194,6 +194,13 @@ export interface LivelineProps extends HybridViewProps {
   locale?: string
   /** Thousands separators. Default: off for plain values, on for currency. */
   useGrouping?: boolean
+  /**
+   * Font family for all chart text. The family must be registered by the host
+   * app (bundled + linked, e.g. via `expo-font`); an unregistered name falls
+   * back to the system font. Numeric labels always keep monospaced digits.
+   * Default: the system monospaced font.
+   */
+  fontFamily?: string
 }
 
 /** Imperative methods, reached via `hybridRef`. */

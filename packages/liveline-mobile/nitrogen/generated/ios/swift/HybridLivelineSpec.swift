@@ -49,6 +49,7 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
   var currency: String? { get set }
   var locale: String? { get set }
   var useGrouping: Bool? { get set }
+  var fontFamily: String? { get set }
 
   // Methods
   func push(point: LivelinePoint) throws -> Void

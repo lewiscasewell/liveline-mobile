@@ -22,6 +22,7 @@
         public var isDark: Bool = false { didSet { applyAppearance() } }
         public var showModeToggle: Bool = false { didSet { rebuildMode() } }
         public var isCandle: Bool = false { didSet { syncMode() } }
+        public var fontFamily: String? { didSet { applyAppearance() } }
 
         private let scroll = UIScrollView()
         private let intervalControl = UISegmentedControl()
@@ -93,17 +94,25 @@
             }
         }
 
+        private func barFont(_ weight: UIFont.Weight) -> UIFont {
+            guard let f = fontFamily, !f.isEmpty, UIFont.familyNames.contains(f) else {
+                return .systemFont(ofSize: 12, weight: weight)
+            }
+            return UIFont(
+                descriptor: UIFontDescriptor(fontAttributes: [.family: f])
+                    .addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]]),
+                size: 12)
+        }
+
         private func applyAppearance() {
             let ui: UIUserInterfaceStyle = isDark ? .dark : .light
             intervalControl.overrideUserInterfaceStyle = ui
             modeControl.overrideUserInterfaceStyle = ui
             // Smaller and lighter than the native default — closer to the old bar.
             intervalControl.setTitleTextAttributes(
-                [.font: UIFont.systemFont(ofSize: 12, weight: .regular), .foregroundColor: UIColor.secondaryLabel],
-                for: .normal)
+                [.font: barFont(.regular), .foregroundColor: UIColor.secondaryLabel], for: .normal)
             intervalControl.setTitleTextAttributes(
-                [.font: UIFont.systemFont(ofSize: 12, weight: .medium), .foregroundColor: UIColor.label],
-                for: .selected)
+                [.font: barFont(.medium), .foregroundColor: UIColor.label], for: .selected)
         }
 
         @objc private func intervalChanged() {

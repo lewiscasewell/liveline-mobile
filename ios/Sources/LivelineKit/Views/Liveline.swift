@@ -54,6 +54,7 @@ public struct Liveline: View {
     private var formatValue: ((Double) -> String)?
     private var formatTime: ((Double) -> String)?
     private var formattingLocale: Locale = .current
+    private var fontFamily: String?
 
     // Candle mode.
     private var mode: LivelineMode = .line
@@ -156,6 +157,8 @@ public struct Liveline: View {
     public func formatTime(_ v: @escaping (Double) -> String) -> Self { with { $0.formatTime = v } }
     /// Locale for the built-in time axis/crosshair formatting. Default `.current`.
     public func locale(_ v: Locale) -> Self { with { $0.formattingLocale = v } }
+    /// Font family for all chart text (registered by the app). Default: system mono.
+    public func fontFamily(_ v: String?) -> Self { with { $0.fontFamily = v } }
     /// Sets the chart type (`.line` or `.candle`).
     public func mode(_ v: LivelineMode) -> Self { with { $0.mode = v } }
     /// Sets the OHLC candles (used when `mode == .candle`).
@@ -218,6 +221,7 @@ public struct Liveline: View {
             if let f = c.formatValue { view.formatValue = f }
             if let f = c.formatTime { view.formatTime = f }
             view.formattingLocale = c.formattingLocale
+            view.fontFamily = c.fontFamily
 
             view.mode = c.mode
             view.candleWidth = c.candleWidth

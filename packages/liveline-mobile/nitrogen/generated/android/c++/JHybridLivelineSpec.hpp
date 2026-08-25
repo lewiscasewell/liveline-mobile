@@ -128,6 +128,8 @@ namespace margelo::nitro::liveline {
     void setLocale(const std::optional<std::string>& locale) override;
     std::optional<bool> getUseGrouping() override;
     void setUseGrouping(std::optional<bool> useGrouping) override;
+    std::optional<std::string> getFontFamily() override;
+    void setFontFamily(const std::optional<std::string>& fontFamily) override;
 
   public:
     // Methods

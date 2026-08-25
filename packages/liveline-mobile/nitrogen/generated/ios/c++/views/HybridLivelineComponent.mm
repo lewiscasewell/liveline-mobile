@@ -332,6 +332,12 @@ using namespace margelo::nitro::liveline::views;
           : !newViewProps.useGrouping.hasSameValue(oldViewProps->useGrouping)) {
       swiftPart.setUseGrouping(newViewProps.useGrouping.get());
     }
+    // fontFamily: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.fontFamily.isProvided()
+          : !newViewProps.fontFamily.hasSameValue(oldViewProps->fontFamily)) {
+      swiftPart.setFontFamily(newViewProps.fontFamily.get());
+    }
 
     // Update hybridRef if it changed
     if (oldViewProps == nullptr

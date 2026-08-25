@@ -364,6 +364,13 @@ namespace margelo::nitro::liveline {
     inline void setUseGrouping(std::optional<bool> useGrouping) noexcept override {
       _swiftPart.setUseGrouping(useGrouping);
     }
+    inline std::optional<std::string> getFontFamily() noexcept override {
+      auto __result = _swiftPart.getFontFamily();
+      return __result;
+    }
+    inline void setFontFamily(const std::optional<std::string>& fontFamily) noexcept override {
+      _swiftPart.setFontFamily(fontFamily);
+    }
 
   public:
     // Methods

@@ -247,6 +247,13 @@ final class HybridLivelineView: HybridLivelineSpec {
         }
     }
     var useGrouping: Bool? { didSet { rebuildFormatter() } }
+    var fontFamily: String? {
+        didSet {
+            let f = (fontFamily?.isEmpty ?? true) ? nil : fontFamily
+            chart.fontFamily = f
+            bar.fontFamily = f
+        }
+    }
 
     private func rebuildFormatter() {
         let nf = NumberFormatter()

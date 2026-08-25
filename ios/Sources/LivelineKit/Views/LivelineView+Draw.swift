@@ -1,5 +1,6 @@
 #if canImport(UIKit)
 import CoreGraphics
+import CoreText
 import UIKit
 
 @MainActor
@@ -35,9 +36,30 @@ extension LivelineView {
         ns.draw(at: point, withAttributes: attrs)
     }
 
-    func labelFont() -> UIFont { .monospacedSystemFont(ofSize: 11, weight: .regular) }
-    func valueFont() -> UIFont { .monospacedSystemFont(ofSize: 11, weight: .medium) }
-    func crosshairFont() -> UIFont { .monospacedSystemFont(ofSize: 13, weight: .regular) }
+    func labelFont() -> UIFont { chartFont(size: 11, weight: .regular) }
+    func valueFont() -> UIFont { chartFont(size: 11, weight: .medium) }
+    func crosshairFont() -> UIFont { chartFont(size: 13, weight: .regular) }
+    func tickerFont() -> UIFont { chartFont(size: 20, weight: .medium) }
+
+    /// Resolves a chart font. Defaults to the system monospaced font; with a
+    /// custom ``fontFamily`` it resolves that family at `weight` and applies
+    /// monospaced digits (so ticking numbers stay tabular). An unregistered
+    /// family falls back to the system monospaced font.
+    func chartFont(size: CGFloat, weight: UIFont.Weight) -> UIFont {
+        guard let family = fontFamily, !family.isEmpty, UIFont.familyNames.contains(family) else {
+            return .monospacedSystemFont(ofSize: size, weight: weight)
+        }
+        let base = UIFontDescriptor(fontAttributes: [.family: family])
+            .addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
+        // Request the monospaced-numbers OpenType feature; ignored if unsupported.
+        let mono = base.addingAttributes([
+            .featureSettings: [[
+                UIFontDescriptor.FeatureKey.type: kNumberSpacingType,
+                UIFontDescriptor.FeatureKey.selector: kMonospacedNumbersSelector,
+            ]]
+        ])
+        return UIFont(descriptor: mono, size: size)
+    }
 
     // MARK: Spline path
 

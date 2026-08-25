@@ -64,6 +64,7 @@ const defaults: Required<DefaultableProps> = {
   currency: '',
   locale: '',
   useGrouping: true,
+  fontFamily: '',
 }
 
 // The native props now include the window bar (`windows`/`windowStyle`/

@@ -93,6 +93,17 @@ public final class LivelineView: UIView {
             setNeedsDisplay()
         }
     }
+    /// Font family for all chart text. `nil`/empty uses the system monospaced
+    /// font. The family must be registered by the host app (bundled + Info.plist,
+    /// or `expo-font`); an unknown family falls back to the system font. Numeric
+    /// labels always get monospaced digits so ticking values stay tabular.
+    public var fontFamily: String? {
+        didSet {
+            guard fontFamily != oldValue else { return }
+            valueLabel.font = tickerFont()
+            setNeedsDisplay()
+        }
+    }
     /// Base easing speed per 60 fps frame. Default 0.08.
     public var lerpSpeed: Double = 0.08
     /// Show the live value as a large text overlay above the chart, updated

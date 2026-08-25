@@ -59,6 +59,7 @@ namespace margelo::nitro::liveline::views {
     currency(nitro::ReactProp<std::optional<std::string>>::fromRawValue("Liveline", "currency", rawProps, sourceProps.currency)),
     locale(nitro::ReactProp<std::optional<std::string>>::fromRawValue("Liveline", "locale", rawProps, sourceProps.locale)),
     useGrouping(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "useGrouping", rawProps, sourceProps.useGrouping)),
+    fontFamily(nitro::ReactProp<std::optional<std::string>>::fromRawValue("Liveline", "fontFamily", rawProps, sourceProps.fontFamily)),
     hybridRef(nitro::ReactProp<std::optional<std::function<void(const std::shared_ptr<HybridLivelineSpec>& /* ref */)>>>::fromRawValue("Liveline", "hybridRef", rawProps, sourceProps.hybridRef)) { }
 
   bool HybridLivelineProps::filterObjectKeys(const std::string& propName) {
@@ -102,6 +103,7 @@ namespace margelo::nitro::liveline::views {
       case hashString("currency"): return true;
       case hashString("locale"): return true;
       case hashString("useGrouping"): return true;
+      case hashString("fontFamily"): return true;
       case hashString("hybridRef"): return true;
       default: return false;
     }
