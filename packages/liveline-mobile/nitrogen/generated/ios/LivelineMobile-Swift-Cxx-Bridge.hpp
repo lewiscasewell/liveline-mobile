@@ -22,6 +22,8 @@ namespace margelo::nitro::liveline { enum class LivelineMomentum; }
 namespace margelo::nitro::liveline { struct LivelinePoint; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineReference; }
+// Forward declaration of `LivelineSeries` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineSeries; }
 // Forward declaration of `LivelineTheme` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineTheme; }
 // Forward declaration of `LivelineWindowStyle` to properly resolve imports.
@@ -41,6 +43,7 @@ namespace LivelineMobile { class HybridLivelineSpec_cxx; }
 #include "LivelineMomentum.hpp"
 #include "LivelinePoint.hpp"
 #include "LivelineReference.hpp"
+#include "LivelineSeries.hpp"
 #include "LivelineTheme.hpp"
 #include "LivelineWindowStyle.hpp"
 #include "WindowOption.hpp"
@@ -81,6 +84,47 @@ namespace margelo::nitro::liveline::bridge::swift {
     return optional.has_value();
   }
   inline std::vector<LivelinePoint> get_std__optional_std__vector_LivelinePoint__(const std::optional<std::vector<LivelinePoint>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<std::string>
+  /**
+   * Specialized version of `std::optional<std::string>`.
+   */
+  using std__optional_std__string_ = std::optional<std::string>;
+  inline std::optional<std::string> create_std__optional_std__string_(const std::string& value) noexcept {
+    return std::optional<std::string>(value);
+  }
+  inline bool has_value_std__optional_std__string_(const std::optional<std::string>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::string get_std__optional_std__string_(const std::optional<std::string>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::vector<LivelineSeries>
+  /**
+   * Specialized version of `std::vector<LivelineSeries>`.
+   */
+  using std__vector_LivelineSeries_ = std::vector<LivelineSeries>;
+  inline std::vector<LivelineSeries> create_std__vector_LivelineSeries_(size_t size) noexcept {
+    std::vector<LivelineSeries> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::optional<std::vector<LivelineSeries>>
+  /**
+   * Specialized version of `std::optional<std::vector<LivelineSeries>>`.
+   */
+  using std__optional_std__vector_LivelineSeries__ = std::optional<std::vector<LivelineSeries>>;
+  inline std::optional<std::vector<LivelineSeries>> create_std__optional_std__vector_LivelineSeries__(const std::vector<LivelineSeries>& value) noexcept {
+    return std::optional<std::vector<LivelineSeries>>(value);
+  }
+  inline bool has_value_std__optional_std__vector_LivelineSeries__(const std::optional<std::vector<LivelineSeries>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::vector<LivelineSeries> get_std__optional_std__vector_LivelineSeries__(const std::optional<std::vector<LivelineSeries>>& optional) noexcept {
     return optional.value();
   }
   
@@ -152,21 +196,6 @@ namespace margelo::nitro::liveline::bridge::swift {
     return optional.has_value();
   }
   inline CandlePoint get_std__optional_CandlePoint_(const std::optional<CandlePoint>& optional) noexcept {
-    return optional.value();
-  }
-  
-  // pragma MARK: std::optional<std::string>
-  /**
-   * Specialized version of `std::optional<std::string>`.
-   */
-  using std__optional_std__string_ = std::optional<std::string>;
-  inline std::optional<std::string> create_std__optional_std__string_(const std::string& value) noexcept {
-    return std::optional<std::string>(value);
-  }
-  inline bool has_value_std__optional_std__string_(const std::optional<std::string>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline std::string get_std__optional_std__string_(const std::optional<std::string>& optional) noexcept {
     return optional.value();
   }
   

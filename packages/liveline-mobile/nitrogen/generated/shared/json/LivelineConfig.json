@@ -5,6 +5,7 @@
   "directEventTypes": {},
   "validAttributes": {
     "data": true,
+    "series": true,
     "value": true,
     "mode": true,
     "candles": true,

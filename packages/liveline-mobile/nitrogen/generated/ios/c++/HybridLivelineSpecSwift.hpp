@@ -14,6 +14,8 @@ namespace LivelineMobile { class HybridLivelineSpec_cxx; }
 
 // Forward declaration of `LivelinePoint` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelinePoint; }
+// Forward declaration of `LivelineSeries` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineSeries; }
 // Forward declaration of `LivelineMode` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineMode; }
 // Forward declaration of `CandlePoint` to properly resolve imports.
@@ -34,9 +36,10 @@ namespace margelo::nitro::liveline { struct LivelineReference; }
 #include "LivelinePoint.hpp"
 #include <vector>
 #include <optional>
+#include "LivelineSeries.hpp"
+#include <string>
 #include "LivelineMode.hpp"
 #include "CandlePoint.hpp"
-#include <string>
 #include "LivelineTheme.hpp"
 #include "WindowOption.hpp"
 #include "LivelineWindowStyle.hpp"
@@ -97,6 +100,13 @@ namespace margelo::nitro::liveline {
     }
     inline void setData(const std::optional<std::vector<LivelinePoint>>& data) noexcept override {
       _swiftPart.setData(data);
+    }
+    inline std::optional<std::vector<LivelineSeries>> getSeries() noexcept override {
+      auto __result = _swiftPart.getSeries();
+      return __result;
+    }
+    inline void setSeries(const std::optional<std::vector<LivelineSeries>>& series) noexcept override {
+      _swiftPart.setSeries(series);
     }
     inline std::optional<double> getValue() noexcept override {
       auto __result = _swiftPart.getValue();
@@ -374,8 +384,8 @@ namespace margelo::nitro::liveline {
 
   public:
     // Methods
-    inline void push(const LivelinePoint& point) override {
-      auto __result = _swiftPart.push(std::forward<decltype(point)>(point));
+    inline void push(const LivelinePoint& point, const std::optional<std::string>& seriesId) override {
+      auto __result = _swiftPart.push(std::forward<decltype(point)>(point), seriesId);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

@@ -20,6 +20,7 @@
 #include "LivelinePoint.hpp"
 #include <vector>
 #include <optional>
+#include "LivelineSeries.hpp"
 #include "LivelineMode.hpp"
 #include "CandlePoint.hpp"
 #include <string>
@@ -54,6 +55,7 @@ namespace margelo::nitro::liveline::views {
 
   public:
     nitro::ReactProp<std::optional<std::vector<LivelinePoint>>> data;
+    nitro::ReactProp<std::optional<std::vector<LivelineSeries>>> series;
     nitro::ReactProp<std::optional<double>> value;
     nitro::ReactProp<std::optional<LivelineMode>> mode;
     nitro::ReactProp<std::optional<std::vector<CandlePoint>>> candles;
@@ -98,6 +100,7 @@ namespace margelo::nitro::liveline::views {
     [[nodiscard]]
     bool hasSameProps(const HybridLivelineProps& other) const noexcept {
       return data.hasSameValue(other.data) &&
+             series.hasSameValue(other.series) &&
              value.hasSameValue(other.value) &&
              mode.hasSameValue(other.mode) &&
              candles.hasSameValue(other.candles) &&
@@ -143,6 +146,7 @@ namespace margelo::nitro::liveline::views {
     [[nodiscard]]
     bool hasAnyProvidedProps() const noexcept {
       return data.isProvided() ||
+             series.isProvided() ||
              value.isProvided() ||
              mode.isProvided() ||
              candles.isProvided() ||

@@ -21,6 +21,7 @@ namespace margelo::nitro::liveline::views {
                                            const react::RawProps& rawProps):
     react::ViewProps(context, sourceProps, rawProps, filterObjectKeys),
     data(nitro::ReactProp<std::optional<std::vector<LivelinePoint>>>::fromRawValue("Liveline", "data", rawProps, sourceProps.data)),
+    series(nitro::ReactProp<std::optional<std::vector<LivelineSeries>>>::fromRawValue("Liveline", "series", rawProps, sourceProps.series)),
     value(nitro::ReactProp<std::optional<double>>::fromRawValue("Liveline", "value", rawProps, sourceProps.value)),
     mode(nitro::ReactProp<std::optional<LivelineMode>>::fromRawValue("Liveline", "mode", rawProps, sourceProps.mode)),
     candles(nitro::ReactProp<std::optional<std::vector<CandlePoint>>>::fromRawValue("Liveline", "candles", rawProps, sourceProps.candles)),
@@ -65,6 +66,7 @@ namespace margelo::nitro::liveline::views {
   bool HybridLivelineProps::filterObjectKeys(const std::string& propName) {
     switch (hashString(propName)) {
       case hashString("data"): return true;
+      case hashString("series"): return true;
       case hashString("value"): return true;
       case hashString("mode"): return true;
       case hashString("candles"): return true;

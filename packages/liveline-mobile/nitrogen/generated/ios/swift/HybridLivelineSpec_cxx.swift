@@ -151,6 +151,36 @@ open class HybridLivelineSpec_cxx {
     }
   }
   
+  public final var series: bridge.std__optional_std__vector_LivelineSeries__ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_std__vector_LivelineSeries__ in
+        if let __unwrappedValue = self.__implementation.series {
+          return bridge.create_std__optional_std__vector_LivelineSeries__({ () -> bridge.std__vector_LivelineSeries_ in
+            var __vector = bridge.create_std__vector_LivelineSeries_(__unwrappedValue.count)
+            for __item in __unwrappedValue {
+              __vector.push_back(__item)
+            }
+            return __vector
+          }())
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.series = { () -> [LivelineSeries]? in
+        if bridge.has_value_std__optional_std__vector_LivelineSeries__(newValue) {
+          let __unwrapped = bridge.get_std__optional_std__vector_LivelineSeries__(newValue)
+          return __unwrapped.map({ __item in __item })
+        } else {
+          return nil
+        }
+      }()
+    }
+  }
+  
   public final var value: bridge.std__optional_double_ {
     @inline(__always)
     get {
@@ -1068,9 +1098,16 @@ open class HybridLivelineSpec_cxx {
 
   // Methods
   @inline(__always)
-  public final func push(point: LivelinePoint) -> bridge.Result_void_ {
+  public final func push(point: LivelinePoint, seriesId: bridge.std__optional_std__string_) -> bridge.Result_void_ {
     do {
-      try self.__implementation.push(point: point)
+      try self.__implementation.push(point: point, seriesId: { () -> String? in
+        if bridge.has_value_std__optional_std__string_(seriesId) {
+          let __unwrapped = bridge.get_std__optional_std__string_(seriesId)
+          return String(__unwrapped)
+        } else {
+          return nil
+        }
+      }())
       return bridge.create_Result_void_()
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()

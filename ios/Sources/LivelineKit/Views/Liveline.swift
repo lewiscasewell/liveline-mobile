@@ -23,6 +23,8 @@ import SwiftUI
 public struct Liveline: View {
     private var data: [LivelinePoint]
     private var value: Double?
+    private var series: [LivelineView.SeriesInput] = []
+    private var seriesValues: [String: Double] = [:]
 
     // Configuration (defaults mirror web liveline).
     private var color: Color = Color(red: 59 / 255, green: 130 / 255, blue: 246 / 255)
@@ -159,6 +161,14 @@ public struct Liveline: View {
     public func locale(_ v: Locale) -> Self { with { $0.formattingLocale = v } }
     /// Font family for all chart text (registered by the app). Default: system mono.
     public func fontFamily(_ v: String?) -> Self { with { $0.fontFamily = v } }
+    /// Multi-series mode: a set of equal-peer lines (each with its own colour,
+    /// endpoint dot, dashed baseline and label). A non-empty array replaces
+    /// `data`/`value` and renders a legend of toggle chips above the chart. Feed
+    /// live updates with ``seriesValues(_:)``.
+    public func series(_ v: [LivelineView.SeriesInput]) -> Self { with { $0.series = v } }
+    /// The latest value for each series id (multi-series live feed). Each changed
+    /// value is appended to its series, mirroring the single-series `value` path.
+    public func seriesValues(_ v: [String: Double]) -> Self { with { $0.seriesValues = v } }
     /// Sets the chart type (`.line` or `.candle`).
     public func mode(_ v: LivelineMode) -> Self { with { $0.mode = v } }
     /// Sets the OHLC candles (used when `mode == .candle`).
@@ -182,18 +192,43 @@ public struct Liveline: View {
 
         func makeCoordinator() -> Coordinator { Coordinator() }
 
-        func makeUIView(context: Context) -> LivelineView {
-            let view = LivelineView()
-            apply(to: view, context: context, initial: true)
-            return view
+        func makeUIView(context: Context) -> LegendChartContainer {
+            let container = LegendChartContainer()
+            apply(to: container, context: context, initial: true)
+            return container
         }
 
-        func updateUIView(_ view: LivelineView, context: Context) {
-            apply(to: view, context: context, initial: false)
+        func updateUIView(_ container: LegendChartContainer, context: Context) {
+            apply(to: container, context: context, initial: false)
         }
 
-        private func apply(to view: LivelineView, context: Context, initial: Bool) {
+        private func apply(to container: LegendChartContainer, context: Context, initial: Bool) {
             let c = config
+            let view = container.chart
+
+            // Multi-series legend (chips) sits above the chart.
+            if !c.series.isEmpty {
+                let signature = c.series.map { "\($0.id)|\($0.label ?? "")" }.joined(separator: ",")
+                if signature != context.coordinator.legendSignature {
+                    context.coordinator.legendSignature = signature
+                    container.legend.items = c.series.map {
+                        .init(id: $0.id, color: $0.color, label: $0.label ?? $0.id)
+                    }
+                    container.legend.onToggle = { [weak view] id in view?.toggleSeries(id) }
+                }
+                let isDark = c.theme != .light
+                if isDark != context.coordinator.legendIsDark {
+                    context.coordinator.legendIsDark = isDark
+                    container.legend.isDark = isDark
+                }
+                if container.legend.isHidden {
+                    container.legend.isHidden = false
+                    container.setNeedsLayout()
+                }
+            } else if !container.legend.isHidden {
+                container.legend.isHidden = true
+                container.setNeedsLayout()
+            }
             view.color = UIColor(c.color)
             view.theme = c.theme
             view.surfaceColor = c.surfaceColor.map { UIColor($0) }
@@ -230,17 +265,53 @@ public struct Liveline: View {
                 view.liveCandle = c.liveCandle
             }
 
-            if initial, !c.data.isEmpty {
-                view.setData(c.data)
+            if initial {
+                if !c.data.isEmpty { view.setData(c.data) }
+                if !c.series.isEmpty { view.setSeries(c.series) }
             }
             if let value = c.value, value != context.coordinator.lastValue {
                 context.coordinator.lastValue = value
                 view.push(LivelinePoint(time: Date().timeIntervalSince1970, value: value))
             }
+            // Multi-series live feed: push each changed per-series value.
+            if !c.seriesValues.isEmpty {
+                let now = Date().timeIntervalSince1970
+                for (id, v) in c.seriesValues where context.coordinator.lastSeriesValues[id] != v {
+                    context.coordinator.lastSeriesValues[id] = v
+                    view.push(LivelinePoint(time: now, value: v), seriesId: id)
+                }
+            }
         }
 
         final class Coordinator {
             var lastValue: Double?
+            var lastSeriesValues: [String: Double] = [:]
+            var legendSignature: String?
+            var legendIsDark: Bool?
+        }
+    }
+
+    /// Stacks the multi-series legend chips above the chart. In single-series
+    /// mode the legend is hidden and the chart fills the whole view.
+    final class LegendChartContainer: UIView {
+        let legend = SeriesLegendView()
+        let chart = LivelineView()
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            addSubview(chart)
+            addSubview(legend)
+            legend.isHidden = true
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) { fatalError("init(coder:) not supported") }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            let legendH = legend.isHidden ? 0 : legend.intrinsicContentSize.height
+            legend.frame = CGRect(x: 0, y: 0, width: bounds.width, height: legendH)
+            chart.frame = CGRect(x: 0, y: legendH, width: bounds.width, height: bounds.height - legendH)
         }
     }
 }

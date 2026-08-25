@@ -59,6 +59,11 @@ void JHybridLivelineStateUpdater::updateViewProps(jni::alias_ref<jni::JClass> /*
     hybridView->setData(newProps->data.get());
   }
   if (oldProps == nullptr
+        ? newProps->series.isProvided()
+        : !newProps->series.hasSameValue(oldProps->series)) {
+    hybridView->setSeries(newProps->series.get());
+  }
+  if (oldProps == nullptr
         ? newProps->value.isProvided()
         : !newProps->value.hasSameValue(oldProps->value)) {
     hybridView->setValue(newProps->value.get());

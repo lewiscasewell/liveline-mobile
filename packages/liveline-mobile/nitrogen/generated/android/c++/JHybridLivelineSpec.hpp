@@ -52,6 +52,8 @@ namespace margelo::nitro::liveline {
     // Properties
     std::optional<std::vector<LivelinePoint>> getData() override;
     void setData(const std::optional<std::vector<LivelinePoint>>& data) override;
+    std::optional<std::vector<LivelineSeries>> getSeries() override;
+    void setSeries(const std::optional<std::vector<LivelineSeries>>& series) override;
     std::optional<double> getValue() override;
     void setValue(std::optional<double> value) override;
     std::optional<LivelineMode> getMode() override;
@@ -133,7 +135,7 @@ namespace margelo::nitro::liveline {
 
   public:
     // Methods
-    void push(const LivelinePoint& point) override;
+    void push(const LivelinePoint& point, const std::optional<std::string>& seriesId) override;
 
   private:
     jni::global_ref<JHybridLivelineSpec::JavaPart> _javaPart;

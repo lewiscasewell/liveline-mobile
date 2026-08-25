@@ -22,6 +22,8 @@ namespace margelo::nitro::liveline { enum class LivelineMomentum; }
 namespace margelo::nitro::liveline { struct LivelinePoint; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineReference; }
+// Forward declaration of `LivelineSeries` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineSeries; }
 // Forward declaration of `LivelineTheme` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineTheme; }
 // Forward declaration of `LivelineWindowStyle` to properly resolve imports.
@@ -37,6 +39,7 @@ namespace margelo::nitro::liveline { struct WindowOption; }
 #include "LivelineMomentum.hpp"
 #include "LivelinePoint.hpp"
 #include "LivelineReference.hpp"
+#include "LivelineSeries.hpp"
 #include "LivelineTheme.hpp"
 #include "LivelineWindowStyle.hpp"
 #include "WindowOption.hpp"

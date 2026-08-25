@@ -157,6 +157,23 @@ public final class LivelineView: UIView {
     private var buffer: RingBuffer<LivelinePoint>
     private static let defaultCapacity = 8192
 
+    /// One line series. In multi-series mode (``series`` non-empty) all series
+    /// are equal peers — each with its own colour, endpoint dot, dashed baseline
+    /// and label — and there is no single-series badge/value/momentum.
+    struct Series {
+        let id: String
+        var color: RGBA
+        var label: String?
+        var buffer: RingBuffer<LivelinePoint>
+        var visible = true
+        var lastCommitTime: Double = -.infinity
+        var displayValue: Double = 0  // eased current value, for a smooth dot
+        var displayInited = false
+        var labelY: CGFloat = 0  // resolved (de-collided) endpoint-label y
+    }
+    var series: [Series] = []
+    var isMultiSeries: Bool { !series.isEmpty }
+
     // MARK: Easing state (persist across frames)
 
     private var displayValue: Double = 0
@@ -456,19 +473,78 @@ public final class LivelineView: UIView {
     /// (1W, 4Y) repaints the current point at the window's resolution instead of
     /// piling ticks onto "now", while a live/short window keeps every tick. Just
     /// call it once per data tick — no per-window bookkeeping needed.
-    public func push(_ point: LivelinePoint) {
-        let bucket = windowSeconds / LivelineView.liveResolution
-        if buffer.count == 0 || point.time - lastCommitTime >= bucket {
-            buffer.push(point)
-            lastCommitTime = point.time
-        } else {
-            buffer.replaceLast(point)
+    public func push(_ point: LivelinePoint, seriesId: String? = nil) {
+        if let seriesId, let idx = series.firstIndex(where: { $0.id == seriesId }) {
+            var s = series[idx]
+            commit(point, to: &s.buffer, lastCommit: &s.lastCommitTime)
+            if !s.displayInited {
+                s.displayValue = point.value
+                s.displayInited = true
+            }
+            series[idx] = s
+            setNeedsDisplay()
+            return
         }
+        commit(point, to: &buffer, lastCommit: &lastCommitTime)
         if !displayValueInited {
             displayValue = point.value
             displayValueInited = true
         }
         aggregateLiveCandle(point)
+        setNeedsDisplay()
+    }
+
+    /// Buckets a live sample into a buffer at the current window's resolution.
+    private func commit(
+        _ point: LivelinePoint, to buffer: inout RingBuffer<LivelinePoint>, lastCommit: inout Double
+    ) {
+        let bucket = windowSeconds / LivelineView.liveResolution
+        if buffer.count == 0 || point.time - lastCommit >= bucket {
+            buffer.push(point)
+            lastCommit = point.time
+        } else {
+            buffer.replaceLast(point)
+        }
+    }
+
+    /// One additional line series — a context line rendered behind the primary.
+    public struct SeriesInput {
+        public let id: String
+        public let color: UIColor
+        public let label: String?
+        public let data: [LivelinePoint]
+        public init(id: String, color: UIColor, label: String? = nil, data: [LivelinePoint]) {
+            self.id = id
+            self.color = color
+            self.label = label
+            self.data = data
+        }
+    }
+
+    /// Sets the line series. A non-empty array switches to multi-series mode
+    /// (`data`/`value` are ignored); empty restores single-series. Per-series
+    /// visibility (from the legend) is preserved across updates by `id`. Live
+    /// updates use ``push(_:seriesId:)``.
+    public func setSeries(_ input: [SeriesInput]) {
+        let wasVisible = Dictionary(series.map { ($0.id, $0.visible) }, uniquingKeysWith: { a, _ in a })
+        series = input.map { s in
+            var buf = RingBuffer<LivelinePoint>(capacity: LivelineView.defaultCapacity)
+            for p in s.data { buf.push(p) }
+            var next = Series(id: s.id, color: s.color.rgba, label: s.label, buffer: buf)
+            next.visible = wasVisible[s.id] ?? true
+            if let last = s.data.last {
+                next.displayValue = last.value
+                next.displayInited = true
+            }
+            return next
+        }
+        setNeedsDisplay()
+    }
+
+    /// Hides or shows a series (driven by the legend chips).
+    public func toggleSeries(_ id: String) {
+        guard let idx = series.firstIndex(where: { $0.id == id }) else { return }
+        series[idx].visible.toggle()
         setNeedsDisplay()
     }
 
@@ -654,7 +730,8 @@ public final class LivelineView: UIView {
 
         let isCandle = modeProgress > 0
         let hasCandle = !candles.isEmpty || liveCandle != nil || !liveCandles.isEmpty
-        let hasData = isCandle ? (hasCandle || buffer.count >= 2) : buffer.count >= 2
+        let hasSeriesData = isMultiSeries && series.contains { $0.visible && $0.buffer.count >= 2 }
+        let hasData = hasSeriesData || (isCandle ? (hasCandle || buffer.count >= 2) : buffer.count >= 2)
 
         // Loading + reveal crossfades.
         let loadingTarget = loading ? 1.0 : 0.0
@@ -672,6 +749,14 @@ public final class LivelineView: UIView {
 
         // now in data-time, anchored to real time, minus pause debt.
         let now = Date().timeIntervalSince1970 - timeDebt
+
+        // Multi-series mode replaces the single-series render entirely (no
+        // badge/value overlay/momentum — the per-series labels stand in).
+        if isMultiSeries {
+            if !valueLabel.isHidden { valueLabel.isHidden = true }
+            drawMultiSeries(ctx, w: w, h: h, pad: pad, now: now, dt: dt, nowMs: nowMs)
+            return
+        }
 
         if !hasData {
             if loadingAlpha > 0.01 {

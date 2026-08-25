@@ -9,6 +9,8 @@
 
 // Forward declaration of `LivelinePoint` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelinePoint; }
+// Forward declaration of `LivelineSeries` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineSeries; }
 // Forward declaration of `LivelineMode` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineMode; }
 // Forward declaration of `CandlePoint` to properly resolve imports.
@@ -30,11 +32,13 @@ namespace margelo::nitro::liveline { struct LivelineReference; }
 #include <vector>
 #include <optional>
 #include "JLivelinePoint.hpp"
+#include "LivelineSeries.hpp"
+#include "JLivelineSeries.hpp"
+#include <string>
 #include "LivelineMode.hpp"
 #include "JLivelineMode.hpp"
 #include "CandlePoint.hpp"
 #include "JCandlePoint.hpp"
-#include <string>
 #include "LivelineTheme.hpp"
 #include "JLivelineTheme.hpp"
 #include "WindowOption.hpp"
@@ -108,6 +112,33 @@ namespace margelo::nitro::liveline {
       }
       return __array;
     }(data.value()) : nullptr);
+  }
+  std::optional<std::vector<LivelineSeries>> JHybridLivelineSpec::getSeries() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JArrayClass<JLivelineSeries>>()>("getSeries");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional([&](auto&& __input) {
+      size_t __size = __input->size();
+      std::vector<LivelineSeries> __vector;
+      __vector.reserve(__size);
+      for (size_t __i = 0; __i < __size; __i++) {
+        auto __element = __input->getElement(__i);
+        __vector.push_back(__element->toCpp());
+      }
+      return __vector;
+    }(__result)) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setSeries(const std::optional<std::vector<LivelineSeries>>& series) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JArrayClass<JLivelineSeries>> /* series */)>("setSeries");
+    method(_javaPart, series.has_value() ? [&](auto&& __input) {
+      size_t __size = __input.size();
+      jni::local_ref<jni::JArrayClass<JLivelineSeries>> __array = jni::JArrayClass<JLivelineSeries>::newArray(__size);
+      for (size_t __i = 0; __i < __size; __i++) {
+        const auto& __element = __input[__i];
+        auto __elementJni = JLivelineSeries::fromCpp(__element);
+        __array->setElement(__i, *__elementJni);
+      }
+      return __array;
+    }(series.value()) : nullptr);
   }
   std::optional<double> JHybridLivelineSpec::getValue() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JDouble>()>("getValue");
@@ -514,9 +545,9 @@ namespace margelo::nitro::liveline {
   }
 
   // Methods
-  void JHybridLivelineSpec::push(const LivelinePoint& point) {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelinePoint> /* point */)>("push");
-    method(_javaPart, JLivelinePoint::fromCpp(point));
+  void JHybridLivelineSpec::push(const LivelinePoint& point, const std::optional<std::string>& seriesId) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelinePoint> /* point */, jni::alias_ref<jni::JString> /* seriesId */)>("push");
+    method(_javaPart, JLivelinePoint::fromCpp(point), seriesId.has_value() ? jni::make_jstring(seriesId.value()) : nullptr);
   }
 
 } // namespace margelo::nitro::liveline

@@ -15,6 +15,8 @@
 
 // Forward declaration of `LivelinePoint` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelinePoint; }
+// Forward declaration of `LivelineSeries` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineSeries; }
 // Forward declaration of `LivelineMode` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineMode; }
 // Forward declaration of `CandlePoint` to properly resolve imports.
@@ -35,6 +37,7 @@ namespace margelo::nitro::liveline { struct LivelineReference; }
 #include "LivelinePoint.hpp"
 #include <vector>
 #include <optional>
+#include "LivelineSeries.hpp"
 #include "LivelineMode.hpp"
 #include "CandlePoint.hpp"
 #include <string>
@@ -75,6 +78,8 @@ namespace margelo::nitro::liveline {
       // Properties
       virtual std::optional<std::vector<LivelinePoint>> getData() = 0;
       virtual void setData(const std::optional<std::vector<LivelinePoint>>& data) = 0;
+      virtual std::optional<std::vector<LivelineSeries>> getSeries() = 0;
+      virtual void setSeries(const std::optional<std::vector<LivelineSeries>>& series) = 0;
       virtual std::optional<double> getValue() = 0;
       virtual void setValue(std::optional<double> value) = 0;
       virtual std::optional<LivelineMode> getMode() = 0;
@@ -156,7 +161,7 @@ namespace margelo::nitro::liveline {
 
     public:
       // Methods
-      virtual void push(const LivelinePoint& point) = 0;
+      virtual void push(const LivelinePoint& point, const std::optional<std::string>& seriesId) = 0;
 
     protected:
       // Hybrid Setup

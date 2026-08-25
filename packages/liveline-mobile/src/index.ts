@@ -30,7 +30,7 @@ const NativeLiveline = getHostComponent<LivelineProps, LivelineMethods>(
 // (coalesced to sentinels below) or callbacks (wrapped separately).
 type DefaultableProps = Omit<
   LivelineProps,
-  'data' | 'value' | 'candles' | 'liveCandle' | 'referenceLine' | 'windows' | 'onWindowChange' | 'onModeChange'
+  'data' | 'value' | 'series' | 'candles' | 'liveCandle' | 'referenceLine' | 'windows' | 'onWindowChange' | 'onModeChange'
 >
 const defaults: Required<DefaultableProps> = {
   color: '#3b82f6',
@@ -170,7 +170,10 @@ export function useLiveline() {
     () => callback((r: LivelineHandle) => { ref.current = r }),
     [ref]
   )
-  const push = React.useCallback((point: LivelinePoint) => ref.current?.push(point), [ref])
+  const push = React.useCallback(
+    (point: LivelinePoint, seriesId?: string) => ref.current?.push(point, seriesId),
+    [ref]
+  )
   const attachHybridRef = React.useCallback(() => hybridRef, [hybridRef])
   return { push, hybridRef, attachHybridRef }
 }
@@ -200,6 +203,7 @@ export function Liveline(props: LivelineComponentPropsPublic): React.ReactElemen
   const merged = { ...defaults, ...defined(rest) } as Record<string, unknown>
   if (merged.referenceLine == null) merged.referenceLine = { value: Number.NaN }
   if (merged.data == null) merged.data = []
+  if (merged.series == null) merged.series = []
   if (merged.candles == null) merged.candles = []
   if (merged.windows == null) merged.windows = []
   if (merged.hybridRef == null && autoHybridRef) merged.hybridRef = autoHybridRef
@@ -217,6 +221,7 @@ export type {
   LivelinePoint,
   CandlePoint,
   LivelineReference,
+  LivelineSeries,
   LivelineMode,
   LivelineTheme,
   LivelineMomentum,

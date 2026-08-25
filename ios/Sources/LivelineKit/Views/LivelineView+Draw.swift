@@ -93,6 +93,197 @@ extension LivelineView {
         return path
     }
 
+    // MARK: Multi-series
+
+    /// Renders all visible series as equal peers: each gets a spline line, a
+    /// faded dashed baseline at its current value, an endpoint dot (its colour)
+    /// and an endpoint label. Shared window + Y-range; no fill/badge/momentum.
+    func drawMultiSeries(
+        _ ctx: CGContext, w: CGFloat, h: CGFloat,
+        pad: (top: CGFloat, right: CGFloat, bottom: CGFloat, left: CGFloat),
+        now: Double, dt: Double, nowMs: Double
+    ) {
+        let reveal = chartReveal
+        let chartH = h - pad.top - pad.bottom
+
+        // Ease each series' displayed value toward its latest, for a smooth dot.
+        for i in series.indices {
+            let cur = series[i].buffer.last?.value ?? series[i].displayValue
+            series[i].displayValue = Clock.lerp(
+                current: series[i].displayValue, target: cur, speed: lerpSpeed + 0.12, dt: dt)
+        }
+
+        let winBuffer = 0.1  // right-edge room for endpoint dots + labels
+        let rightEdge = now + displayWindow * winBuffer
+        let leftEdge = rightEdge - displayWindow
+
+        // Shared Y-range over every visible series' visible points.
+        var values = [Double]()
+        for s in series where s.visible {
+            for i in 0..<s.buffer.count {
+                let p = s.buffer[i]
+                if p.time >= leftEdge, p.time <= now { values.append(p.value) }
+            }
+            values.append(s.displayValue)
+        }
+        guard !values.isEmpty else { return }
+        let target = AutoRange.compute(
+            values: values, currentValue: values.last ?? 0, referenceValue: nil, exaggerate: exaggerate)
+        domain.update(target: target, speed: lerpSpeed + 0.15, dt: dt, chartH: Double(chartH))
+
+        let layout = Layout(
+            w: w, h: h, padTop: pad.top, padRight: pad.right, padBottom: pad.bottom, padLeft: pad.left,
+            chartW: w - pad.left - pad.right, chartH: chartH,
+            leftEdge: leftEdge, rightEdge: rightEdge,
+            minVal: domain.minVal, maxVal: domain.maxVal, valRange: domain.valRange)
+
+        // Grid + time axis (shared), fading in with the chart.
+        let gridAlpha = reveal < 1 ? reveal * reveal * (3 - 2 * reveal) : 1
+        if grid, gridAlpha > 0.01 { drawGrid(ctx, layout: layout, dt: dt, groupAlpha: gridAlpha) }
+        if gridAlpha > 0.01 { drawTimeAxis(ctx, layout: layout, dt: dt, groupAlpha: gridAlpha) }
+
+        // Non-overlapping endpoint-label positions.
+        resolveSeriesLabelYs(layout: layout)
+
+        for s in series where s.visible {
+            drawOneSeries(ctx, s, layout: layout, now: now, nowMs: nowMs, reveal: reveal)
+        }
+
+        drawLeftEdgeFade(ctx, w: w, h: h, padLeft: pad.left)
+
+        // Hover: crosshair + a dot on each line + a top row of per-series values.
+        scrubAmount += ((isHovering ? 1.0 : 0.0) - scrubAmount) * K.scrubLerp
+        if scrubAmount < 0.01 { scrubAmount = 0 }
+        if scrubAmount > 0.99 { scrubAmount = 1 }
+        if let hx = hoverX, scrubAmount > 0.01, reveal > 0.5 {
+            drawMultiSeriesHover(ctx, layout: layout, hoverX: hx, now: now, opacity: scrubAmount)
+        }
+    }
+
+    private func drawMultiSeriesHover(
+        _ ctx: CGContext, layout: Layout, hoverX: CGFloat, now: Double, opacity: Double
+    ) {
+        let maxX = layout.toX(now)
+        let clampedX = min(max(hoverX, layout.padLeft), maxX)
+        let t =
+            layout.leftEdge
+            + Double((clampedX - layout.padLeft) / layout.chartW) * (layout.rightEdge - layout.leftEdge)
+
+        // Crosshair.
+        ctx.saveGState()
+        ctx.setStrokeColor(
+            UIColor(rgba: palette.crosshairLine.withAlpha(palette.crosshairLine.a * opacity * 0.5)).cgColor)
+        ctx.setLineWidth(1)
+        ctx.move(to: CGPoint(x: clampedX, y: layout.padTop))
+        ctx.addLine(to: CGPoint(x: clampedX, y: layout.h - layout.padBottom))
+        ctx.strokePath()
+        ctx.restoreGState()
+
+        // A dot on each visible line + a segment for the top row.
+        let font = crosshairFont()
+        var segs: [(String, RGBA)] = [(crosshairTimeLabel(t), palette.gridLabel)]
+        for s in series where s.visible {
+            guard let v = Interpolate.atTime(s.buffer.elements, time: t) else { continue }
+            let y = layout.toY(v)
+            ctx.setFillColor(UIColor(rgba: s.color.withAlpha(s.color.a * opacity)).cgColor)
+            ctx.fillEllipse(in: CGRect(x: clampedX - 4, y: y - 4, width: 8, height: 8))
+            segs.append(("  " + (s.label ?? s.id) + " ", palette.gridLabel))
+            segs.append((formatValue(v), s.color))
+        }
+
+        // Top row, left-aligned and clamped to the width.
+        var widths = [CGFloat]()
+        var total: CGFloat = 0
+        for seg in segs {
+            let w = (seg.0 as NSString).size(withAttributes: [.font: font]).width
+            widths.append(w)
+            total += w
+        }
+        var tx = max(layout.padLeft + 4, min(clampedX - total / 2, layout.w - 12 - total))
+        tx = max(tx, layout.padLeft + 4)
+        let ty = layout.padTop + 12
+        var ox = tx
+        for (i, seg) in segs.enumerated() {
+            drawText(
+                seg.0, x: ox, centerY: ty, font: font, color: seg.1.withAlpha(seg.1.a * opacity),
+                align: .left, outline: palette.tooltipBg.withAlpha(palette.tooltipBg.a * opacity))
+            ox += widths[i]
+        }
+    }
+
+    /// Assigns each visible series a non-overlapping endpoint-label y (near its
+    /// dot), nudging apart when values are close (e.g. Yes/Maybe both near 20%).
+    private func resolveSeriesLabelYs(layout: Layout) {
+        let minGap: CGFloat = 15
+        let order = series.indices.filter { series[$0].visible }
+            .sorted { layout.toY(series[$0].displayValue) < layout.toY(series[$1].displayValue) }
+        var lastY = -CGFloat.greatestFiniteMagnitude
+        for idx in order {
+            var y = layout.toY(series[idx].displayValue)
+            if y - lastY < minGap { y = lastY + minGap }
+            series[idx].labelY = y
+            lastY = y
+        }
+    }
+
+    private func drawOneSeries(
+        _ ctx: CGContext, _ s: Series, layout: Layout, now: Double, nowMs: Double, reveal: Double
+    ) {
+        let endY = layout.toY(s.displayValue)
+        let alpha = min(reveal, 1)
+
+        // Dashed baseline at the current value.
+        ctx.saveGState()
+        ctx.setStrokeColor(UIColor(rgba: s.color.withAlpha(0.35 * alpha)).cgColor)
+        ctx.setLineWidth(1)
+        ctx.setLineDash(phase: 0, lengths: [3, 3])
+        ctx.move(to: CGPoint(x: layout.padLeft, y: endY))
+        ctx.addLine(to: CGPoint(x: layout.w - layout.padRight, y: endY))
+        ctx.strokePath()
+        ctx.restoreGState()
+
+        // Line — spline through the visible points, ending at the eased value.
+        var pts = [CGPoint]()
+        pts.reserveCapacity(s.buffer.count)
+        for i in 0..<s.buffer.count {
+            let p = s.buffer[i]
+            if p.time < layout.leftEdge - 2 { continue }
+            if p.time > now { break }
+            pts.append(CGPoint(x: layout.toX(p.time), y: layout.toY(p.value)))
+        }
+        if !pts.isEmpty { pts[pts.count - 1].y = endY }  // land the line on the dot
+        let dotX = pts.last?.x ?? layout.toX(now)
+        if pts.count >= 2 {
+            ctx.saveGState()
+            ctx.setAlpha(CGFloat(alpha))
+            ctx.setStrokeColor(UIColor(rgba: s.color).cgColor)
+            ctx.setLineWidth(lineWidth)
+            ctx.setLineJoin(.round)
+            ctx.setLineCap(.round)
+            ctx.addPath(splinePath(pts))
+            ctx.strokePath()
+            ctx.restoreGState()
+        }
+
+        // Endpoint dot (with pulse).
+        if reveal > 0.3 {
+            ctx.saveGState()
+            ctx.setAlpha(CGFloat((reveal - 0.3) / 0.7))
+            drawDot(
+                ctx, at: CGPoint(x: dotX, y: endY), showPulse: pulse && reveal > 0.6,
+                scrubDim: 0, nowMs: nowMs, color: s.color)
+            ctx.restoreGState()
+        }
+
+        // Endpoint label, to the right of the dot.
+        if let label = s.label, !label.isEmpty, reveal > 0.4 {
+            drawText(
+                label, x: dotX + 10, centerY: s.labelY, font: valueFont(),
+                color: s.color.withAlpha(s.color.a * min((reveal - 0.4) / 0.6, 1)),
+                align: .left)
+        }
+    }
+
     // MARK: Line + fill + dashed baseline
 
     /// Draws the fill, the stroked line, and the dashed current-value baseline.
@@ -418,7 +609,11 @@ extension LivelineView {
 
     // MARK: Live dot
 
-    func drawDot(_ ctx: CGContext, at p: CGPoint, showPulse: Bool, scrubDim: Double, nowMs: Double) {
+    func drawDot(
+        _ ctx: CGContext, at p: CGPoint, showPulse: Bool, scrubDim: Double, nowMs: Double,
+        color: RGBA? = nil
+    ) {
+        let dotColor = color ?? palette.line
         let dim = scrubDim * 0.7
 
         if showPulse, dim < 0.3 {
@@ -427,7 +622,7 @@ extension LivelineView {
                 let radius = 9 + t * 12
                 let pulseAlpha = 0.35 * (1 - t) * (1 - dim * 3)
                 ctx.saveGState()
-                ctx.setStrokeColor(UIColor(rgba: palette.line.withAlpha(palette.line.a * pulseAlpha)).cgColor)
+                ctx.setStrokeColor(UIColor(rgba: dotColor.withAlpha(dotColor.a * pulseAlpha)).cgColor)
                 ctx.setLineWidth(1.5)
                 ctx.addEllipse(
                     in: CGRect(x: p.x - radius, y: p.y - radius, width: radius * 2, height: radius * 2))
@@ -448,7 +643,7 @@ extension LivelineView {
         ctx.restoreGState()
 
         // Colored inner dot.
-        let inner: RGBA = dim > 0.01 ? blend(palette.line, palette.badgeOuterBg, dim) : palette.line
+        let inner: RGBA = dim > 0.01 ? blend(dotColor, palette.badgeOuterBg, dim) : dotColor
         ctx.setFillColor(UIColor(rgba: inner).cgColor)
         ctx.addEllipse(in: CGRect(x: p.x - 3.5, y: p.y - 3.5, width: 7, height: 7))
         ctx.fillPath()

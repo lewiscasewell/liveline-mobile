@@ -11,6 +11,7 @@ import NitroModules
 public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
   // Properties
   var data: [LivelinePoint]? { get set }
+  var series: [LivelineSeries]? { get set }
   var value: Double? { get set }
   var mode: LivelineMode? { get set }
   var candles: [CandlePoint]? { get set }
@@ -52,7 +53,7 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
   var fontFamily: String? { get set }
 
   // Methods
-  func push(point: LivelinePoint) throws -> Void
+  func push(point: LivelinePoint, seriesId: String?) throws -> Void
 }
 
 public extension HybridLivelineSpec_protocol {

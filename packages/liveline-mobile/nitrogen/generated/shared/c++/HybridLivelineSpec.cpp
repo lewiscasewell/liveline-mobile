@@ -16,6 +16,8 @@ namespace margelo::nitro::liveline {
     registerHybrids(this, [](Prototype& prototype) {
       prototype.registerHybridGetter("data", &HybridLivelineSpec::getData);
       prototype.registerHybridSetter("data", &HybridLivelineSpec::setData);
+      prototype.registerHybridGetter("series", &HybridLivelineSpec::getSeries);
+      prototype.registerHybridSetter("series", &HybridLivelineSpec::setSeries);
       prototype.registerHybridGetter("value", &HybridLivelineSpec::getValue);
       prototype.registerHybridSetter("value", &HybridLivelineSpec::setValue);
       prototype.registerHybridGetter("mode", &HybridLivelineSpec::getMode);

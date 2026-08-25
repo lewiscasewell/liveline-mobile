@@ -104,6 +104,12 @@ using namespace margelo::nitro::liveline::views;
           : !newViewProps.data.hasSameValue(oldViewProps->data)) {
       swiftPart.setData(newViewProps.data.get());
     }
+    // series: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.series.isProvided()
+          : !newViewProps.series.hasSameValue(oldViewProps->series)) {
+      swiftPart.setSeries(newViewProps.series.get());
+    }
     // value: optional
     if (oldViewProps == nullptr
           ? newViewProps.value.isProvided()

@@ -30,6 +30,18 @@ export interface LivelineReference {
   label?: string
 }
 
+/** An additional line series — a context line rendered behind the primary `data`. */
+export interface LivelineSeries {
+  /** Stable id, used to route live `push(point, id)` updates to this series. */
+  id: string
+  /** Line colour (any CSS hex). */
+  color: string
+  /** Optional label (for a legend). */
+  label?: string
+  /** The series' points (backfill; stream live updates via `push`). */
+  data: LivelinePoint[]
+}
+
 /** Chart type. */
 export type LivelineMode = 'line' | 'candle'
 /** Theme tone — sets the colour of the line, grid, labels, text and crosshair. */
@@ -76,6 +88,13 @@ export interface LivelineProps extends HybridViewProps {
    * thousand.
    */
   data?: LivelinePoint[]
+  /**
+   * Additional context line series, rendered behind the primary `data` (each
+   * its own colour) and sharing the window + Y auto-range. The primary keeps
+   * the dot/badge/value/momentum. Line mode only. Live-update a secondary series
+   * with `push(point, id)`.
+   */
+  series?: LivelineSeries[]
   /**
    * A single live value; each distinct value is appended as a new sample. A
    * convenience for low-frequency React-driven updates — prefer `push()` for
@@ -210,8 +229,11 @@ export interface LivelineMethods extends HybridViewMethods {
    * once per data tick, never per animation frame. It auto-adapts to the current
    * window: on a wide window a fast feed slides the current point in place; on a
    * live/short window it keeps every tick.
+   *
+   * Pass `seriesId` to route the tick to a secondary series (see `series`);
+   * omit it for the primary.
    */
-  push(point: LivelinePoint): void
+  push(point: LivelinePoint, seriesId?: string): void
 }
 
 export type Liveline = HybridView<LivelineProps, LivelineMethods>

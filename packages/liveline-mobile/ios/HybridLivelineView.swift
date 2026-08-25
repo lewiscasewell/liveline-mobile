@@ -18,6 +18,7 @@ import UIKit
 final class HybridLivelineView: HybridLivelineSpec {
     private let chart = LivelineKit.LivelineView()
     private let bar = LivelineKit.WindowBarView()
+    private let legend = LivelineKit.SeriesLegendView()
     private var lastValue: Double?
 
     /// Notifies JS when a window button is tapped (set by Nitro).
@@ -42,7 +43,9 @@ final class HybridLivelineView: HybridLivelineSpec {
             self.bar.isCandle = candle
             self.onModeChange?(candle ? .candle : .line)
         }
-        return LivelineContainerView(bar: bar, chart: chart)
+        legend.isHidden = true
+        legend.onToggle = { [weak self] id in self?.chart.toggleSeries(id) }
+        return LivelineContainerView(legend: legend, bar: bar, chart: chart)
     }()
 
     /// The UIView Nitro mounts into the RN view tree — the bar stacked above the chart.
@@ -75,6 +78,21 @@ final class HybridLivelineView: HybridLivelineSpec {
         didSet {
             guard let data else { return }
             chart.setData(data.map { LivelineKit.LivelinePoint(time: $0.time, value: $0.value) })
+        }
+    }
+    var series: [LivelineSeries]? {
+        didSet {
+            let list = series ?? []
+            chart.setSeries(
+                list.map { s in
+                    LivelineView.SeriesInput(
+                        id: s.id, color: UIColor(cssString: s.color), label: s.label,
+                        data: s.data.map { LivelineKit.LivelinePoint(time: $0.time, value: $0.value) })
+                })
+            legend.items = list.map {
+                .init(id: $0.id, color: UIColor(cssString: $0.color), label: $0.label ?? $0.id)
+            }
+            container.setNeedsLayout()
         }
     }
 
@@ -127,6 +145,7 @@ final class HybridLivelineView: HybridLivelineSpec {
         didSet {
             chart.theme = (theme == .light) ? .light : .dark
             bar.isDark = theme != .light
+            legend.isDark = theme != .light
         }
     }
 
@@ -279,15 +298,15 @@ final class HybridLivelineView: HybridLivelineSpec {
 
     // MARK: Methods
 
-    func push(point: LivelinePoint) throws {
+    func push(point: LivelinePoint, seriesId: String?) throws {
         // `push` is called from JS, which may not be the main thread. The chart
         // is UIKit/@MainActor and its render loop reads the buffer on main — so
         // hop to main to avoid a data race (intermittent SIGABRT deep in UIKit).
         let p = LivelineKit.LivelinePoint(time: point.time, value: point.value)
         if Thread.isMainThread {
-            chart.push(p)
+            chart.push(p, seriesId: seriesId)
         } else {
-            DispatchQueue.main.async { self.chart.push(p) }
+            DispatchQueue.main.async { self.chart.push(p, seriesId: seriesId) }
         }
     }
 }
@@ -316,15 +335,21 @@ extension UIColor {
 /// Stacks the interval bar above the chart. When there are no windows the bar is
 /// hidden and the chart fills the whole view.
 final class LivelineContainerView: UIView {
+    private let legend: LivelineKit.SeriesLegendView
     private let bar: LivelineKit.WindowBarView
     private let chart: LivelineKit.LivelineView
 
-    init(bar: LivelineKit.WindowBarView, chart: LivelineKit.LivelineView) {
+    init(
+        legend: LivelineKit.SeriesLegendView, bar: LivelineKit.WindowBarView,
+        chart: LivelineKit.LivelineView
+    ) {
+        self.legend = legend
         self.bar = bar
         self.chart = chart
         super.init(frame: .zero)
-        addSubview(bar)
         addSubview(chart)
+        addSubview(legend)  // multi-series legend at the top
+        addSubview(bar)  // interval bar at the bottom
     }
 
     @available(*, unavailable)
@@ -332,9 +357,11 @@ final class LivelineContainerView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        // Bar at the BOTTOM (mobile placement); the chart fills the space above.
+        // Legend on top, interval bar at the bottom, chart fills between.
+        let legendH = legend.isHidden ? 0 : legend.intrinsicContentSize.height
         let barH = bar.isHidden ? 0 : bar.intrinsicContentSize.height
-        chart.frame = CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height - barH)
+        legend.frame = CGRect(x: 0, y: 0, width: bounds.width, height: legendH)
+        chart.frame = CGRect(x: 0, y: legendH, width: bounds.width, height: bounds.height - legendH - barH)
         bar.frame = CGRect(x: 0, y: bounds.height - barH, width: bounds.width, height: barH)
     }
 }
