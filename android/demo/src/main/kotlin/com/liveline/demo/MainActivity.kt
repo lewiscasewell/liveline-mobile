@@ -16,10 +16,13 @@ import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sin
 import com.liveline.LivelineView
+import com.liveline.SeriesLegendView
 import com.liveline.WindowBarView
 import com.liveline.core.BadgeVariant
 import com.liveline.core.LivelineCandle
@@ -35,7 +38,7 @@ import kotlin.random.Random
 /** A native Android showcase mirroring the iOS ContentView demo menu. */
 class MainActivity : AppCompatActivity() {
 
-    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, PAUSED, CANDLE, ORDERBOOK }
+    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, PAUSED, CANDLE, ORDERBOOK, MULTI }
 
     private class Demo(
         val name: String,
@@ -82,6 +85,9 @@ class MainActivity : AppCompatActivity() {
             it.momentum = Momentum.AUTO; it.degen = true; it.badgeVariant = BadgeVariant.ACCENT
             it.accent = Color.parseColor("#f0731a"); it.valueDecimals = 1
         },
+        Demo("Prediction market", "Three outcomes → 100%. Tap a chip to toggle.", kind = Kind.MULTI, window = 45.0) {
+            it.valueSuffix = "%"; it.valueDecimals = 0
+        },
         Demo("Loading", "Breathing, then data.", kind = Kind.LOADING) {},
         Demo("Paused", "Freezes, then catches up.", center = 160.0, vol = 1.0, kind = Kind.PAUSED) {
             it.accent = Color.parseColor("#4aad66")
@@ -93,6 +99,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var subtitle: TextView
     private lateinit var root: LinearLayout
     private lateinit var windowBar: WindowBarView
+    private lateinit var legend: SeriesLegendView
     private val handler = Handler(Looper.getMainLooper())
     private var dark = true
     private var v = 100.0
@@ -127,8 +134,10 @@ class MainActivity : AppCompatActivity() {
         controls.addView(spinner, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         root.addView(controls, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(12) })
 
+        legend = SeriesLegendView(this).apply { visibility = View.GONE; onToggle = { chart.toggleSeries(it) } }
+        root.addView(legend, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(16); gravity = Gravity.START })
         chart = LivelineView(this)
-        root.addView(chart, LinearLayout.LayoutParams(MATCH_PARENT, dp(320)).apply { topMargin = dp(16) })
+        root.addView(chart, LinearLayout.LayoutParams(MATCH_PARENT, dp(320)).apply { topMargin = dp(10) })
         windowBar = WindowBarView(this).apply { visibility = View.GONE; onSelect = { chart.windowSeconds = it } }
         root.addView(windowBar, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(12); gravity = Gravity.CENTER_HORIZONTAL })
         subtitle = TextView(this).apply { textSize = 13f }
@@ -146,6 +155,7 @@ class MainActivity : AppCompatActivity() {
         subtitle.setTextColor(if (dark) Color.parseColor("#888888") else Color.parseColor("#666666"))
         chart.theme = if (dark) LivelineTheme.DARK else LivelineTheme.LIGHT
         windowBar.isDark = dark
+        legend.isDark = dark
     }
 
     private fun selectDemo(index: Int) {
@@ -160,7 +170,7 @@ class MainActivity : AppCompatActivity() {
             loading = false; paused = false; referenceLine = null; degen = false
             valuePrefix = ""; valueSuffix = ""; valueDecimals = 2
             accent = Color.parseColor("#3b82f6"); windowSeconds = demo.window
-            mode = LivelineMode.LINE; setCandles(emptyList(), null, 1.0); orderbook = null
+            mode = LivelineMode.LINE; setCandles(emptyList(), null, 1.0); orderbook = null; setSeries(emptyList())
         }
         demo.configure(chart)
 
@@ -170,6 +180,26 @@ class MainActivity : AppCompatActivity() {
             windowBar.isDark = dark
             windowBar.setWindows(demo.windowBar, demo.window)
         } else windowBar.visibility = View.GONE
+
+        if (demo.kind == Kind.MULTI) {
+            legend.visibility = View.VISIBLE; legend.isDark = dark
+            val defs = listOf(
+                Triple("yes", Color.parseColor("#3b82f6"), "Yes"),
+                Triple("no", Color.parseColor("#ef4444"), "No"),
+                Triple("maybe", Color.parseColor("#f59e0b"), "Maybe"),
+            )
+            val nowSec = System.currentTimeMillis() / 1000.0
+            val n = 150
+            chart.setSeries(defs.map { (id, color, label) ->
+                LivelineView.SeriesInput(id, color, label, (0 until n).map { i ->
+                    val t = nowSec - demo.window + i / (n - 1.0) * demo.window
+                    LivelinePoint(t, market(t)[id]!!)
+                })
+            })
+            legend.setItems(defs.map { SeriesLegendView.Item(it.first, it.second, it.third) })
+            startFeed(demo)
+            return
+        } else legend.visibility = View.GONE
 
         if (demo.kind == Kind.CANDLE) { seedCandles(); startFeed(demo); return }
 
@@ -185,6 +215,14 @@ class MainActivity : AppCompatActivity() {
         chart.setData(seed)
         if (demo.kind == Kind.LOADING) chart.loading = true
         startFeed(demo)
+    }
+
+    private fun market(t: Double): Map<String, Double> {
+        val yes = 45 + sin(t * 0.35) * 11 + sin(t * 0.9) * 3
+        val no = 35 + cos(t * 0.3) * 9 + cos(t * 0.8) * 2.5
+        val maybe = 30 + sin(t * 0.25 + 1) * 6 + cos(t * 0.7) * 2
+        val sum = yes + no + maybe
+        return mapOf("yes" to yes / sum * 100, "no" to no / sum * 100, "maybe" to maybe / sum * 100)
     }
 
     private fun seedCandles() {
@@ -218,6 +256,11 @@ class MainActivity : AppCompatActivity() {
                     Kind.LOADING -> { if (elapsedMs >= 3000) chart.loading = false; v += (demo.center - v) * 0.01 + Random.nextDouble(-demo.vol, demo.vol); chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v)) }
                     Kind.PAUSED -> { chart.paused = (elapsedMs / 4000) % 2 == 1L; v += (demo.center - v) * 0.01 + Random.nextDouble(-demo.vol, demo.vol); chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v)) }
                     Kind.WALK -> { v += (demo.center - v) * 0.012 + Random.nextDouble(-demo.vol * 0.35, demo.vol * 0.35); chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v)) }
+                    Kind.MULTI -> {
+                        val t = System.currentTimeMillis() / 1000.0
+                        val m = market(t)
+                        for ((id, value) in m) chart.pushSeries(id, LivelinePoint(t, value))
+                    }
                     Kind.ORDERBOOK -> {
                         v += (demo.center - v) * 0.008 + Random.nextDouble(-0.8, 0.8)
                         chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, v))

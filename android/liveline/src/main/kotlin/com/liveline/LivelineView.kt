@@ -120,6 +120,30 @@ class LivelineView @JvmOverloads constructor(
         this.candles = candles; this.liveCandle = live; this.candleWidth = width
     }
 
+    // ── Multi-series ──────────────────────────────────────────────────────────
+    /** One equal-peer line for multi-series mode. */
+    class SeriesInput(val id: String, val color: Int, val label: String?, val data: List<LivelinePoint>)
+    private class Series(val id: String, val color: Int, val label: String?, val buffer: MutableList<LivelinePoint>, var visible: Boolean, var displayValue: Double, var labelY: Float = 0f)
+    private val series = ArrayList<Series>()
+    val isMultiSeries: Boolean get() = series.isNotEmpty()
+
+    /** A non-empty list switches to multi-series mode (replaces data/value). */
+    fun setSeries(inputs: List<SeriesInput>) {
+        val wasVisible = series.associate { it.id to it.visible }
+        series.clear()
+        for (inp in inputs) series.add(Series(inp.id, inp.color, inp.label, ArrayList(inp.data), wasVisible[inp.id] ?: true, inp.data.lastOrNull()?.value ?: 0.0))
+    }
+
+    fun pushSeries(id: String, point: LivelinePoint) {
+        val s = series.firstOrNull { it.id == id } ?: return
+        val bucket = windowSeconds / 300.0
+        if (s.buffer.isEmpty() || point.time - s.buffer.last().time >= bucket) { s.buffer.add(point); if (s.buffer.size > 8192) s.buffer.removeAt(0) } else s.buffer[s.buffer.size - 1] = point
+    }
+
+    fun toggleSeries(id: String) { series.firstOrNull { it.id == id }?.let { it.visible = !it.visible } }
+    /** (id, colour, label) for building a legend. */
+    fun seriesInfo(): List<Triple<String, Int, String>> = series.map { Triple(it.id, it.color, it.label ?: it.id) }
+
     fun setData(points: List<LivelinePoint>) {
         buffer.clear()
         buffer.addAll(points)
@@ -192,6 +216,12 @@ class LivelineView @JvmOverloads constructor(
     private val candleFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val obPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(11f); typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD); textAlign = Paint.Align.LEFT }
     private val sparkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    private val seriesLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(13f); typeface = Typeface.MONOSPACE }
+    // Multi-series layout (set during drawMultiSeries so helpers can map to px).
+    private var msPadL = 0f; private var msPadT = 0f; private var msChartH = 0f; private var msChartW = 0f; private var msW = 0f
+    private var msLeft = 0.0; private var msRight = 0.0; private var msMax = 0.0; private var msRange = 1.0
+    private fun mtoX(t: Double) = msPadL + ((t - msLeft) / (msRight - msLeft)).toFloat() * msChartW
+    private fun mtoY(v: Double) = msPadT + ((msMax - v) / msRange).toFloat() * msChartH
     private val bull = Theme.up
     private val bear = Theme.down
     private fun blend(a: Rgba, b: Rgba, t: Double) = Rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
@@ -256,6 +286,8 @@ class LivelineView @JvmOverloads constructor(
         loadingAlpha = Clock.lerp(loadingAlpha, if (loading) 1.0 else 0.0, 0.1, dt).coerceIn(0.0, 1.0)
         scrubAmount = Clock.lerp(scrubAmount, if (scrubbing) 1.0 else 0.0, 0.2, dt).coerceIn(0.0, 1.0)
         degenAdvance(dt)
+
+        if (isMultiSeries) { drawMultiSeries(canvas, w, h, span, now = System.currentTimeMillis() / 1000.0, dt, nowMs); return }
 
         val padL = dp(8f); val padR = dp(64f); val padT = if (showValue) dp(40f) else dp(12f); val padB = dp(30f)
         val chartW = w - padL - padR; val chartH = h - padT - padB
@@ -501,6 +533,95 @@ class LivelineView @JvmOverloads constructor(
         tipPaint.color = palette.gridLabel.withAlpha(palette.gridLabel.a * op).toInt()
         canvas.drawText("  ·  $timeText", tx + vW, ty, tipPaint)
         tipPaint.color = save
+    }
+
+    // ── Multi-series (ported from Swift drawMultiSeries) ────────────────────────
+    private fun drawMultiSeries(canvas: Canvas, w: Float, h: Float, span: Double, now: Double, dt: Double, nowMs: Double) {
+        val padL = dp(8f); val padR = dp(64f); val padT = dp(12f); val padB = dp(30f)
+        val chartW = w - padL - padR; val chartH = h - padT - padB
+        val winBuffer = 0.1
+        val rightEdge = now + span * winBuffer; val leftEdge = rightEdge - span
+
+        for (s in series) { val cur = s.buffer.lastOrNull()?.value ?: s.displayValue; s.displayValue = Clock.lerp(s.displayValue, cur, 0.20, dt) }
+
+        val values = ArrayList<Double>()
+        for (s in series) if (s.visible) { for (p in s.buffer) if (p.time in leftEdge..now) values.add(p.value); values.add(s.displayValue) }
+        if (values.isEmpty()) return
+        domain.update(AutoRange.compute(values, values.last(), null, exaggerate), 0.23, dt, chartH.toDouble())
+
+        msPadL = padL; msPadT = padT; msChartH = chartH; msChartW = chartW; msW = w
+        msLeft = leftEdge; msRight = rightEdge; msMax = domain.maxVal; msRange = domain.valRange
+        val minV = domain.minVal; val maxV = domain.maxVal; val range = domain.valRange
+
+        // Grid + value labels.
+        val pxPerUnit = chartH / range
+        gridInterval = Ticks.pickInterval(range, pxPerUnit.toDouble(), dp(36f).toDouble(), gridInterval)
+        if (gridInterval > 0) { var g = ceil(minV / gridInterval) * gridInterval; labelPaint.textAlign = Paint.Align.LEFT; while (g <= maxV) { val y = mtoY(g); canvas.drawLine(padL, y, padL + chartW, y, gridPaint); canvas.drawText(String.format("%.${valueDecimals}f", g), padL + chartW + dp(6f), y + dp(4f), labelPaint); g += gridInterval } }
+        drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)
+
+        // Non-overlapping endpoint-label y positions.
+        val order = series.indices.filter { series[it].visible }.sortedBy { mtoY(series[it].displayValue) }
+        var lastY = -Float.MAX_VALUE; val minGap = dp(15f)
+        for (idx in order) { var y = mtoY(series[idx].displayValue); if (y - lastY < minGap) y = lastY + minGap; series[idx].labelY = y; lastY = y }
+
+        for (s in series) if (s.visible) drawOneSeries(canvas, s, padR, now)
+
+        // Left-edge fade.
+        val fadeW = dp(56f)
+        fadePaint.shader = LinearGradient(padL, 0f, padL + fadeW, 0f, palette.background.toInt(), palette.background.withAlpha(0.0).toInt(), Shader.TileMode.CLAMP)
+        canvas.drawRect(0f, padT, padL + fadeW, padT + chartH, fadePaint)
+
+        if (scrubAmount > 0.01) drawMultiSeriesHover(canvas, now, scrubAmount)
+    }
+
+    private fun drawOneSeries(canvas: Canvas, s: Series, padR: Float, now: Double) {
+        val col = s.color.toRgba()
+        val endY = mtoY(s.displayValue)
+        dashPaint.color = col.withAlpha(0.35).toInt()
+        canvas.drawLine(msPadL, endY, msPadL + msChartW, endY, dashPaint)
+
+        val pts = ArrayList<Point>()
+        for (p in s.buffer) { if (p.time < msLeft - 2) continue; if (p.time > now) break; pts.add(Point(mtoX(p.time).toDouble(), mtoY(p.value).toDouble())) }
+        if (pts.isEmpty()) return
+        pts[pts.size - 1] = Point(pts.last().x, endY.toDouble())
+        val dotX = pts.last().x.toFloat()
+        if (pts.size >= 2) {
+            val path = Path(); path.moveTo(pts[0].x.toFloat(), pts[0].y.toFloat())
+            for (seg in PathBuilder.monotoneSegments(pts)) path.cubicTo(seg.control1.x.toFloat(), seg.control1.y.toFloat(), seg.control2.x.toFloat(), seg.control2.y.toFloat(), seg.end.x.toFloat(), seg.end.y.toFloat())
+            linePaint.color = col.toInt(); linePaint.strokeWidth = dp(palette.lineWidth.toFloat())
+            canvas.drawPath(path, linePaint)
+        }
+        dotOuter.alpha = 255; canvas.drawCircle(dotX, endY, dp(6.5f), dotOuter)
+        dotInner.color = col.toInt(); canvas.drawCircle(dotX, endY, dp(3.5f), dotInner)
+        if (!s.label.isNullOrEmpty()) { seriesLabelPaint.color = col.toInt(); canvas.drawText(s.label, dotX + dp(10f), s.labelY + dp(4.5f), seriesLabelPaint) }
+    }
+
+    private fun drawMultiSeriesHover(canvas: Canvas, now: Double, opacity: Double) {
+        val maxX = mtoX(now)
+        val hx = hoverX.coerceIn(msPadL, maxX)
+        val t = msLeft + ((hx - msPadL) / msChartW).toDouble() * (msRight - msLeft)
+        crossPaint.color = palette.crosshairLine.withAlpha(palette.crosshairLine.a * opacity * 0.5).toInt()
+        canvas.drawLine(hx, msPadT, hx, msPadT + msChartH, crossPaint)
+
+        tipPaint.textAlign = Paint.Align.LEFT
+        val segs = ArrayList<Pair<String, Int>>()
+        segs.add(Pair(timeFmt("jmmss").format(Date((t * 1000).toLong())), palette.gridLabel.toInt()))
+        for (s in series) if (s.visible) {
+            val v = Interpolate.atTime(s.buffer, t) ?: continue
+            crossDot.color = s.color.toRgba().withAlpha(opacity).toInt()
+            canvas.drawCircle(hx, mtoY(v), dp(4f), crossDot)
+            segs.add(Pair("  " + (s.label ?: s.id) + " ", palette.gridLabel.toInt()))
+            segs.add(Pair(fmt(v), s.color))
+        }
+        val widths = segs.map { tipPaint.measureText(it.first) }
+        val total = widths.sum()
+        var tx = (hx - total / 2).coerceIn(msPadL + dp(4f), msW - dp(12f) - total)
+        val ty = msPadT + dp(24f)
+        for ((i, seg) in segs.withIndex()) {
+            tipPaint.color = (if (seg.second == palette.gridLabel.toInt()) palette.gridLabel.withAlpha(palette.gridLabel.a * opacity).toInt() else seg.second.toRgba().withAlpha(opacity).toInt())
+            canvas.drawText(seg.first, tx, ty, tipPaint)
+            tx += widths[i]
+        }
     }
 
     // ── Orderbook stream (ported from Swift LivelineView+Orderbook) ─────────────
