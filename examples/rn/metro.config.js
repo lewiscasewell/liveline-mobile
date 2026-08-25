@@ -1,5 +1,5 @@
 // Monorepo Metro config: watch the repo root so the local
-// react-native-liveline-mobile package resolves, and force a single instance
+// liveline-mobile package resolves, and force a single instance
 // of shared deps (react, react-native, react-native-nitro-modules) from this
 // app's node_modules — otherwise the Nitro view registers in one module
 // instance and the renderer reads another ("view config … undefined").

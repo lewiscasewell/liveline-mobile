@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { SafeAreaView, StyleSheet, Text } from 'react-native'
-import { Liveline, useLiveline } from 'react-native-liveline-mobile'
+import { Liveline, useLiveline } from 'liveline-mobile'
 import { INTERVALS, useCandles } from './useData'
 
 const WINDOWS = INTERVALS.map((i) => ({ label: i.label, secs: i.seconds }))
@@ -80,7 +80,7 @@ export default function App() {
         badge={true}
         color="#AB9FF2"
         theme="light"
-        surfaceColor="#fff"
+        // surfaceColor="#fff"
         momentum="auto"
         badgeVariant="minimal"
         pulse={interval.live}

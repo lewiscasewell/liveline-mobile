@@ -1,5 +1,5 @@
 {
-  "name": "react-native-liveline-mobile",
+  "name": "liveline-mobile",
   "version": "0.0.0",
   "description": "Real-time line/candle chart for React Native, backed by native Swift (LivelineKit) via Nitro Modules.",
   "main": "src/index.ts",

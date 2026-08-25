@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { LivelinePoint } from 'react-native-liveline-mobile'
+import type { LivelinePoint } from 'liveline-mobile'
 
 /**
  * A selectable interval — just a label and a visible span in seconds.
