@@ -413,6 +413,24 @@ namespace margelo::nitro::liveline {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* valueMomentumColor */)>("setValueMomentumColor");
     method(_javaPart, valueMomentumColor.has_value() ? jni::JBoolean::valueOf(valueMomentumColor.value()) : nullptr);
   }
+  std::optional<bool> JHybridLivelineSpec::getHaptics() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JBoolean>()>("getHaptics");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(static_cast<bool>(__result->value())) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setHaptics(std::optional<bool> haptics) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* haptics */)>("setHaptics");
+    method(_javaPart, haptics.has_value() ? jni::JBoolean::valueOf(haptics.value()) : nullptr);
+  }
+  std::optional<bool> JHybridLivelineSpec::getDegen() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JBoolean>()>("getDegen");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(static_cast<bool>(__result->value())) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setDegen(std::optional<bool> degen) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* degen */)>("setDegen");
+    method(_javaPart, degen.has_value() ? jni::JBoolean::valueOf(degen.value()) : nullptr);
+  }
   std::optional<double> JHybridLivelineSpec::getLerpSpeed() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JDouble>()>("getLerpSpeed");
     auto __result = method(_javaPart);

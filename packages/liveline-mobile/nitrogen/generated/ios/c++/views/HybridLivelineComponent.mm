@@ -272,6 +272,18 @@ using namespace margelo::nitro::liveline::views;
           : !newViewProps.valueMomentumColor.hasSameValue(oldViewProps->valueMomentumColor)) {
       swiftPart.setValueMomentumColor(newViewProps.valueMomentumColor.get());
     }
+    // haptics: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.haptics.isProvided()
+          : !newViewProps.haptics.hasSameValue(oldViewProps->haptics)) {
+      swiftPart.setHaptics(newViewProps.haptics.get());
+    }
+    // degen: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.degen.isProvided()
+          : !newViewProps.degen.hasSameValue(oldViewProps->degen)) {
+      swiftPart.setDegen(newViewProps.degen.get());
+    }
     // lerpSpeed: optional
     if (oldViewProps == nullptr
           ? newViewProps.lerpSpeed.isProvided()

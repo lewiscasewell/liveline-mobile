@@ -21,6 +21,8 @@ public extension LivelineBadgeVariant {
         self = .default
       case "minimal":
         self = .minimal
+      case "accent":
+        self = .accent
       default:
         return nil
     }
@@ -35,6 +37,8 @@ public extension LivelineBadgeVariant {
         return "default"
       case .minimal:
         return "minimal"
+      case .accent:
+        return "accent"
     }
   }
 }

@@ -39,6 +39,8 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
   var emptyText: String? { get set }
   var showValue: Bool? { get set }
   var valueMomentumColor: Bool? { get set }
+  var haptics: Bool? { get set }
+  var degen: Bool? { get set }
   var lerpSpeed: Double? { get set }
   var referenceLine: LivelineReference? { get set }
   var valuePrefix: String? { get set }

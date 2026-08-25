@@ -49,6 +49,8 @@ namespace margelo::nitro::liveline::views {
     emptyText(nitro::ReactProp<std::optional<std::string>>::fromRawValue("Liveline", "emptyText", rawProps, sourceProps.emptyText)),
     showValue(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "showValue", rawProps, sourceProps.showValue)),
     valueMomentumColor(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "valueMomentumColor", rawProps, sourceProps.valueMomentumColor)),
+    haptics(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "haptics", rawProps, sourceProps.haptics)),
+    degen(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "degen", rawProps, sourceProps.degen)),
     lerpSpeed(nitro::ReactProp<std::optional<double>>::fromRawValue("Liveline", "lerpSpeed", rawProps, sourceProps.lerpSpeed)),
     referenceLine(nitro::ReactProp<std::optional<LivelineReference>>::fromRawValue("Liveline", "referenceLine", rawProps, sourceProps.referenceLine)),
     valuePrefix(nitro::ReactProp<std::optional<std::string>>::fromRawValue("Liveline", "valuePrefix", rawProps, sourceProps.valuePrefix)),
@@ -87,6 +89,8 @@ namespace margelo::nitro::liveline::views {
       case hashString("emptyText"): return true;
       case hashString("showValue"): return true;
       case hashString("valueMomentumColor"): return true;
+      case hashString("haptics"): return true;
+      case hashString("degen"): return true;
       case hashString("lerpSpeed"): return true;
       case hashString("referenceLine"): return true;
       case hashString("valuePrefix"): return true;

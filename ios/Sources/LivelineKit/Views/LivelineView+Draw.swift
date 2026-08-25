@@ -555,7 +555,7 @@ extension LivelineView {
                 color: UIColor(rgba: palette.badgeOuterShadow).cgColor)
         } else {
             textColor = palette.badgeText
-            if momentum == .off {
+            if momentum == .off || badgeVariant == .accent {
                 fillColor = palette.line
             } else {
                 let g = badgeGreen

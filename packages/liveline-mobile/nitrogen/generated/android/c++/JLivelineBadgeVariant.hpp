@@ -48,6 +48,9 @@ namespace margelo::nitro::liveline {
         case LivelineBadgeVariant::MINIMAL:
           static const auto fieldMINIMAL = clazz->getStaticField<JLivelineBadgeVariant>("MINIMAL");
           return clazz->getStaticFieldValue(fieldMINIMAL);
+        case LivelineBadgeVariant::ACCENT:
+          static const auto fieldACCENT = clazz->getStaticField<JLivelineBadgeVariant>("ACCENT");
+          return clazz->getStaticFieldValue(fieldACCENT);
         default:
           std::string stringValue = std::to_string(static_cast<int>(value));
           throw std::invalid_argument("Invalid enum value (" + stringValue + "!");

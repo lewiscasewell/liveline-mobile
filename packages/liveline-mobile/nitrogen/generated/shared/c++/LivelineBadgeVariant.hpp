@@ -31,6 +31,7 @@ namespace margelo::nitro::liveline {
   enum class LivelineBadgeVariant {
     DEFAULT      SWIFT_NAME(default) = 0,
     MINIMAL      SWIFT_NAME(minimal) = 1,
+    ACCENT      SWIFT_NAME(accent) = 2,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::liveline
@@ -45,6 +46,7 @@ namespace margelo::nitro {
       switch (hashString(unionValue.c_str(), unionValue.size())) {
         case hashString("default"): return margelo::nitro::liveline::LivelineBadgeVariant::DEFAULT;
         case hashString("minimal"): return margelo::nitro::liveline::LivelineBadgeVariant::MINIMAL;
+        case hashString("accent"): return margelo::nitro::liveline::LivelineBadgeVariant::ACCENT;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum LivelineBadgeVariant - invalid value!");
       }
@@ -53,6 +55,7 @@ namespace margelo::nitro {
       switch (arg) {
         case margelo::nitro::liveline::LivelineBadgeVariant::DEFAULT: return JSIConverter<std::string>::toJSI(runtime, "default");
         case margelo::nitro::liveline::LivelineBadgeVariant::MINIMAL: return JSIConverter<std::string>::toJSI(runtime, "minimal");
+        case margelo::nitro::liveline::LivelineBadgeVariant::ACCENT: return JSIConverter<std::string>::toJSI(runtime, "accent");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert LivelineBadgeVariant to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
@@ -66,6 +69,7 @@ namespace margelo::nitro {
       switch (hashString(unionValue.c_str(), unionValue.size())) {
         case hashString("default"):
         case hashString("minimal"):
+        case hashString("accent"):
           return true;
         default:
           return false;

@@ -294,6 +294,20 @@ namespace margelo::nitro::liveline {
     inline void setValueMomentumColor(std::optional<bool> valueMomentumColor) noexcept override {
       _swiftPart.setValueMomentumColor(valueMomentumColor);
     }
+    inline std::optional<bool> getHaptics() noexcept override {
+      auto __result = _swiftPart.getHaptics();
+      return __result;
+    }
+    inline void setHaptics(std::optional<bool> haptics) noexcept override {
+      _swiftPart.setHaptics(haptics);
+    }
+    inline std::optional<bool> getDegen() noexcept override {
+      auto __result = _swiftPart.getDegen();
+      return __result;
+    }
+    inline void setDegen(std::optional<bool> degen) noexcept override {
+      _swiftPart.setDegen(degen);
+    }
     inline std::optional<double> getLerpSpeed() noexcept override {
       auto __result = _swiftPart.getLerpSpeed();
       return __result;

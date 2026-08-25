@@ -33,6 +33,8 @@
     "emptyText": true,
     "showValue": true,
     "valueMomentumColor": true,
+    "haptics": true,
+    "degen": true,
     "lerpSpeed": true,
     "referenceLine": true,
     "valuePrefix": true,

@@ -43,7 +43,7 @@ export type LivelineTheme = 'light' | 'dark'
  */
 export type LivelineMomentum = 'off' | 'auto' | 'up' | 'down' | 'flat'
 /** Badge visual style: `default` (accent-filled) or `minimal` (neutral pill). */
-export type LivelineBadgeVariant = 'default' | 'minimal'
+export type LivelineBadgeVariant = 'default' | 'minimal' | 'accent'
 
 /** Visual style of the built-in time-window bar. */
 export type LivelineWindowStyle = 'default' | 'rounded' | 'text'
@@ -134,7 +134,10 @@ export interface LivelineProps extends HybridViewProps {
   badge?: boolean
   /** Draw the badge's pointed tail toward the live dot. Default `true`. */
   badgeTail?: boolean
-  /** Badge visual style. Default `'default'`. */
+  /**
+   * Badge visual style. Default `'default'` (momentum green/red). `'minimal'`
+   * is a neutral pill; `'accent'` fills with the line colour (arrows still show).
+   */
   badgeVariant?: LivelineBadgeVariant
   /** Momentum tint (badge) + directional arrows on the live dot. Default `'auto'`. */
   momentum?: LivelineMomentum
@@ -156,6 +159,16 @@ export interface LivelineProps extends HybridViewProps {
   showValue?: boolean
   /** Tint the `showValue` overlay by momentum (green up / red down). Default `false`. */
   valueMomentumColor?: boolean
+  /**
+   * Haptic feedback: a light tap as the crosshair crosses each step while
+   * scrubbing, and a stronger hit on every degen burst. Default `false`.
+   */
+  haptics?: boolean
+  /**
+   * Degen mode: on a strong upward move the chart shakes and sparks burst from
+   * the live dot (with a haptic hit when `haptics` is on). Default `false`.
+   */
+  degen?: boolean
   /** Base easing speed per 60fps frame (`0…1`); lower is smoother/slower. Default `0.08`. */
   lerpSpeed?: number
   /** A horizontal reference line at a fixed value. Omit to remove it. */

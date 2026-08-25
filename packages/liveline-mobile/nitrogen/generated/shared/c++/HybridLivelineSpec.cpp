@@ -72,6 +72,10 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridSetter("showValue", &HybridLivelineSpec::setShowValue);
       prototype.registerHybridGetter("valueMomentumColor", &HybridLivelineSpec::getValueMomentumColor);
       prototype.registerHybridSetter("valueMomentumColor", &HybridLivelineSpec::setValueMomentumColor);
+      prototype.registerHybridGetter("haptics", &HybridLivelineSpec::getHaptics);
+      prototype.registerHybridSetter("haptics", &HybridLivelineSpec::setHaptics);
+      prototype.registerHybridGetter("degen", &HybridLivelineSpec::getDegen);
+      prototype.registerHybridSetter("degen", &HybridLivelineSpec::setDegen);
       prototype.registerHybridGetter("lerpSpeed", &HybridLivelineSpec::getLerpSpeed);
       prototype.registerHybridSetter("lerpSpeed", &HybridLivelineSpec::setLerpSpeed);
       prototype.registerHybridGetter("referenceLine", &HybridLivelineSpec::getReferenceLine);

@@ -168,7 +168,13 @@ final class HybridLivelineView: HybridLivelineSpec {
         didSet { chart.badgeTail = badgeTail ?? true }
     }
     var badgeVariant: LivelineBadgeVariant? {
-        didSet { chart.badgeVariant = (badgeVariant == .minimal) ? .minimal : .default }
+        didSet {
+            switch badgeVariant {
+            case .minimal: chart.badgeVariant = .minimal
+            case .accent: chart.badgeVariant = .accent
+            default: chart.badgeVariant = .default
+            }
+        }
     }
     var momentum: LivelineMomentum? {
         didSet {
@@ -207,6 +213,12 @@ final class HybridLivelineView: HybridLivelineSpec {
     }
     var valueMomentumColor: Bool? {
         didSet { chart.valueMomentumColor = valueMomentumColor ?? false }
+    }
+    var haptics: Bool? {
+        didSet { chart.haptics = haptics ?? false }
+    }
+    var degen: Bool? {
+        didSet { chart.degen = degen ?? false }
     }
     var lerpSpeed: Double? {
         didSet { if let lerpSpeed { chart.lerpSpeed = lerpSpeed } }

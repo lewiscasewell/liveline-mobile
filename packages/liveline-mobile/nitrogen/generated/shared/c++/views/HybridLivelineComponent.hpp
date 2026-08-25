@@ -82,6 +82,8 @@ namespace margelo::nitro::liveline::views {
     nitro::ReactProp<std::optional<std::string>> emptyText;
     nitro::ReactProp<std::optional<bool>> showValue;
     nitro::ReactProp<std::optional<bool>> valueMomentumColor;
+    nitro::ReactProp<std::optional<bool>> haptics;
+    nitro::ReactProp<std::optional<bool>> degen;
     nitro::ReactProp<std::optional<double>> lerpSpeed;
     nitro::ReactProp<std::optional<LivelineReference>> referenceLine;
     nitro::ReactProp<std::optional<std::string>> valuePrefix;
@@ -120,6 +122,8 @@ namespace margelo::nitro::liveline::views {
              emptyText.hasSameValue(other.emptyText) &&
              showValue.hasSameValue(other.showValue) &&
              valueMomentumColor.hasSameValue(other.valueMomentumColor) &&
+             haptics.hasSameValue(other.haptics) &&
+             degen.hasSameValue(other.degen) &&
              lerpSpeed.hasSameValue(other.lerpSpeed) &&
              referenceLine.hasSameValue(other.referenceLine) &&
              valuePrefix.hasSameValue(other.valuePrefix) &&
@@ -159,6 +163,8 @@ namespace margelo::nitro::liveline::views {
              emptyText.isProvided() ||
              showValue.isProvided() ||
              valueMomentumColor.isProvided() ||
+             haptics.isProvided() ||
+             degen.isProvided() ||
              lerpSpeed.isProvided() ||
              referenceLine.isProvided() ||
              valuePrefix.isProvided() ||

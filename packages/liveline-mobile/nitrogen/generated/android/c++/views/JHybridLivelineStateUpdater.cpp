@@ -199,6 +199,16 @@ void JHybridLivelineStateUpdater::updateViewProps(jni::alias_ref<jni::JClass> /*
     hybridView->setValueMomentumColor(newProps->valueMomentumColor.get());
   }
   if (oldProps == nullptr
+        ? newProps->haptics.isProvided()
+        : !newProps->haptics.hasSameValue(oldProps->haptics)) {
+    hybridView->setHaptics(newProps->haptics.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->degen.isProvided()
+        : !newProps->degen.hasSameValue(oldProps->degen)) {
+    hybridView->setDegen(newProps->degen.get());
+  }
+  if (oldProps == nullptr
         ? newProps->lerpSpeed.isProvided()
         : !newProps->lerpSpeed.hasSameValue(oldProps->lerpSpeed)) {
     hybridView->setLerpSpeed(newProps->lerpSpeed.get());

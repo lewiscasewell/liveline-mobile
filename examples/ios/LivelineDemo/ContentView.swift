@@ -17,6 +17,7 @@ struct ContentView: View {
         case sparse = "Slow ticker"
         case timeWindows = "Time windows"
         case candlestick = "Candlestick"
+        case degen = "Degen"
         case states = "States (loading)"
         case paused = "Paused"
         case stale = "Stale feed"
@@ -78,6 +79,7 @@ struct ContentView: View {
         case .sparse: SparseCard()
         case .timeWindows: TimeWindowsCard()
         case .candlestick: CandlestickCard()
+        case .degen: DegenCard()
         case .states: StatesCard()
         case .paused: PausedCard()
         case .stale: StaleFeedCard()
@@ -298,6 +300,26 @@ private struct SurfaceCard: View {
                 .color(Color(red: 0.67, green: 0.62, blue: 0.95))  // #AB9FF2
                 .theme(.dark)
                 .surfaceColor(Color(red: 0.11, green: 0.08, blue: 0.18))  // #1c1530
+        }
+    }
+}
+
+private struct DegenCard: View {
+    @StateObject private var walk = Walk(center: 420, vol: 6)
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        Card(
+            title: "Degen mode",
+            subtitle: "Chart shake + sparks on strong up-moves, with momentum arrows and haptics."
+        ) {
+            Liveline(data: walk.seed, value: walk.value)
+                .color(Color(red: 0.96, green: 0.45, blue: 0.16))  // orange, like the reference
+                .momentum(.auto)
+                .degen()
+                .haptics()
+                .badgeVariant(.accent)  // orange badge, matching the line + sparks
+                .theme(livelineTheme(scheme))
+                .formatValue { String(format: "%.2f", $0) }
         }
     }
 }

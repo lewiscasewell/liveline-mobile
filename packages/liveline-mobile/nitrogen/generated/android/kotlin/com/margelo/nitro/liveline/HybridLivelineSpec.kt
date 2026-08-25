@@ -221,6 +221,18 @@ abstract class HybridLivelineSpec: HybridView() {
   @get:Keep
   @set:DoNotStrip
   @set:Keep
+  abstract var haptics: Boolean?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var degen: Boolean?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
   abstract var lerpSpeed: Double?
   
   @get:DoNotStrip

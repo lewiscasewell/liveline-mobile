@@ -131,6 +131,10 @@ namespace margelo::nitro::liveline {
       virtual void setShowValue(std::optional<bool> showValue) = 0;
       virtual std::optional<bool> getValueMomentumColor() = 0;
       virtual void setValueMomentumColor(std::optional<bool> valueMomentumColor) = 0;
+      virtual std::optional<bool> getHaptics() = 0;
+      virtual void setHaptics(std::optional<bool> haptics) = 0;
+      virtual std::optional<bool> getDegen() = 0;
+      virtual void setDegen(std::optional<bool> degen) = 0;
       virtual std::optional<double> getLerpSpeed() = 0;
       virtual void setLerpSpeed(std::optional<double> lerpSpeed) = 0;
       virtual std::optional<LivelineReference> getReferenceLine() = 0;

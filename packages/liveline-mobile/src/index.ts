@@ -39,6 +39,8 @@ const defaults: Partial<LivelineProps> = {
   loading: false,
   showValue: false,
   valueMomentumColor: false,
+  haptics: false,
+  degen: false,
   window: 30,
   lineWidth: 2,
   lerpSpeed: 0.08,

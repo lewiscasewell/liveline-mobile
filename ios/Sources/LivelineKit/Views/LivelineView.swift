@@ -90,6 +90,12 @@ public final class LivelineView: UIView {
     public var showValue: Bool = false { didSet { valueLabel.isHidden = !showValue } }
     /// Tint the ``showValue`` overlay by momentum (green up / red down).
     public var valueMomentumColor: Bool = false
+    /// Emit haptic feedback: a light tap as the crosshair moves between samples
+    /// while scrubbing, and a stronger hit on each degen burst. Default `false`.
+    public var haptics: Bool = false
+    /// Degen mode: on a strong upward move the chart shakes and sparks burst from
+    /// the live dot (with a haptic hit when ``haptics`` is on). Default `false`.
+    public var degen: Bool = false { didSet { if !degen { degenParticles.removeAll(); degenShake = 0 } } }
 
     /// Named time windows. The first entry sets the visible span.
     public var windows: [Window] = [] {
@@ -154,6 +160,16 @@ public final class LivelineView: UIView {
     var arrowUp: Double = 0
     var arrowDown: Double = 0
 
+    // Degen mode + haptics state.
+    var degenParticles: [DegenParticle] = []
+    var degenShake: Double = 0
+    var degenArmed = true
+    var degenBaseline: Double = 0
+    var degenBaselineInit = false
+    lazy var lightHaptic = UIImpactFeedbackGenerator(style: .light)
+    lazy var heavyHaptic = UIImpactFeedbackGenerator(style: .heavy)
+    var lastHoverIndex = -1
+
     var gridInterval: Double = 0
     var gridAlphas: [Int: Double] = [:]  // key = round(val*1000)
     var timeAlphas: [Int: (alpha: Double, text: String)] = [:]  // key = round(t*100)
@@ -186,12 +202,14 @@ public final class LivelineView: UIView {
 
     // MARK: showValue overlay
 
-    private lazy var valueLabel: UILabel = {
-        let label = UILabel()
+    private lazy var valueLabel: TickerLabel = {
+        let label = TickerLabel()
         label.font = .monospacedSystemFont(ofSize: 20, weight: .medium)
         label.isHidden = true
         return label
     }()
+    /// Last value shown by the overlay, so the ticker knows which way to roll.
+    private var lastValueShown = 0.0
 
     // MARK: Derived
 
@@ -696,6 +714,9 @@ public final class LivelineView: UIView {
             return t * t * (3 - 2 * t)
         }
 
+        // Degen: shake the frame + advance particles before rendering.
+        degenPreDraw(ctx, dt: dt)
+
         // 1. Reference line.
         if let ref = referenceLine, reveal > 0.01 {
             ctx.saveGState()
@@ -756,6 +777,10 @@ public final class LivelineView: UIView {
             }
         }
 
+        // 5c. Degen burst — sparks + shake when the value pops up.
+        degenTrigger(at: dotPoint, value: smoothValue, range: domain.valRange, dt: dt)
+        degenDrawParticles(ctx)
+
         // 6. Left-edge fade.
         drawLeftEdgeFade(ctx, w: w, h: h, padLeft: pad.left)
 
@@ -804,7 +829,7 @@ public final class LivelineView: UIView {
         }
         valueLabel.isHidden = false
         // When momentum-coloured, drop the sign — the colour conveys direction (web parity).
-        valueLabel.text = formatValue(valueMomentumColor ? abs(value) : value)
+        let shown = valueMomentumColor ? abs(value) : value
         let color: RGBA
         if valueMomentumColor, trend != .flat {
             color = trend == .up ? Theme.up : Theme.down
@@ -812,10 +837,12 @@ public final class LivelineView: UIView {
             color = palette.tooltipText
         }
         valueLabel.textColor = UIColor(rgba: color)
-        valueLabel.sizeToFit()
-        // Sit just past the left-edge fade zone so the digits stay readable.
+        // Roll the digits that changed, in the direction the value moved.
+        valueLabel.setText(formatValue(shown), up: shown >= lastValueShown)
+        lastValueShown = shown
         // Top-left, above the plot (matching web's block above the chart).
-        valueLabel.frame.origin = CGPoint(x: pad.left, y: 6)
+        let size = valueLabel.intrinsicContentSize
+        valueLabel.frame = CGRect(x: pad.left, y: 6, width: size.width, height: size.height)
     }
 
     // MARK: Momentum resolution
@@ -845,10 +872,17 @@ public final class LivelineView: UIView {
     @objc private func handleScrub(_ gesture: UILongPressGestureRecognizer) {
         guard scrub else { return }
         switch gesture.state {
-        case .began, .changed:
+        case .began:
+            isHovering = true
+            lastHoverIndex = -1
+            if haptics { lightHaptic.prepare() }
+            hoverX = min(max(gesture.location(in: self).x, 0), bounds.width)
+            updateHover(emitHaptics: true)
+            setNeedsDisplay()
+        case .changed:
             isHovering = true
             hoverX = min(max(gesture.location(in: self).x, 0), bounds.width)
-            updateHover()
+            updateHover(emitHaptics: true)
             setNeedsDisplay()
         case .ended, .cancelled, .failed:
             isHovering = false
@@ -857,7 +891,11 @@ public final class LivelineView: UIView {
         }
     }
 
-    private func updateHover() {
+    /// Recomputes the hovered sample. `emitHaptics` is only true for real finger
+    /// movement (the per-frame re-glue call passes false), so a light tap fires
+    /// as the crosshair crosses each step — never from the chart scrolling under
+    /// a still finger.
+    private func updateHover(emitHaptics: Bool = false) {
         guard let hx = hoverX else { return }
         let pad = padding()
         let w = bounds.width
@@ -871,6 +909,14 @@ public final class LivelineView: UIView {
         let t = leftEdge + Double((clampedX - pad.left) / (w - pad.left - pad.right)) * (rightEdge - leftEdge)
         if let v = Interpolate.atTime(buffer.elements, time: t) {
             lastHover = (clampedX, v, t)
+        }
+        if emitHaptics, haptics, isHovering {
+            let idx = Int(clampedX / 6)  // a tap roughly every 6pt of travel
+            if idx != lastHoverIndex {
+                lightHaptic.impactOccurred(intensity: 0.5)
+                lightHaptic.prepare()
+                lastHoverIndex = idx
+            }
         }
     }
 }

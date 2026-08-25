@@ -80,7 +80,9 @@ export default function App() {
         badge={true}
         color="#AB9FF2"
         theme="light"
-        // surfaceColor="#fff"
+        showValue
+        haptics
+        degen
         momentum="auto"
         badgeVariant="minimal"
         pulse={interval.live}

@@ -17,7 +17,8 @@ import com.facebook.proguard.annotations.DoNotStrip
 @Keep
 enum class LivelineBadgeVariant(@DoNotStrip @Keep val value: Int) {
   DEFAULT(0),
-  MINIMAL(1);
+  MINIMAL(1),
+  ACCENT(2);
 
   companion object
 }

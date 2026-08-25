@@ -44,6 +44,8 @@ public struct Liveline: View {
     private var emptyText = "No data to display"
     private var showValue = false
     private var valueMomentumColor = false
+    private var haptics = false
+    private var degen = false
     private var referenceLine: ReferenceLine?
     private var windows: [Window] = []
     private var windowStyle: WindowStyle = .default
@@ -133,6 +135,10 @@ public struct Liveline: View {
     public func showValue(_ v: Bool = true) -> Self { with { $0.showValue = v } }
     /// Tints the value overlay by momentum.
     public func valueMomentumColor(_ v: Bool = true) -> Self { with { $0.valueMomentumColor = v } }
+    /// Light haptic taps while scrubbing + a hit on each degen burst.
+    public func haptics(_ v: Bool = true) -> Self { with { $0.haptics = v } }
+    /// Degen mode: chart shake + sparks on strong upward moves.
+    public func degen(_ v: Bool = true) -> Self { with { $0.degen = v } }
     /// Adds a horizontal reference line.
     public func referenceLine(_ v: ReferenceLine?) -> Self { with { $0.referenceLine = v } }
     /// Sets the named time windows (renders a button bar; the first is initially selected).
@@ -201,6 +207,8 @@ public struct Liveline: View {
             view.emptyText = c.emptyText
             view.showValue = c.showValue
             view.valueMomentumColor = c.valueMomentumColor
+            view.haptics = c.haptics
+            view.degen = c.degen
             view.referenceLine = c.referenceLine
             view.lineWidth = c.lineWidth
             view.lerpSpeed = c.lerpSpeed
