@@ -116,14 +116,15 @@ class LivelineView @JvmOverloads constructor(
 
     private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
-    private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(1f) }
+    private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(0.5f) }
+    private val scrubFadePaint = Paint().apply { style = Paint.Style.FILL }
     private val dashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(1f); pathEffect = DashPathEffect(floatArrayOf(dp(3f), dp(3f)), 0f) }
     private val refPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(1f) }
     private val refDashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(1f); pathEffect = DashPathEffect(floatArrayOf(dp(4f), dp(4f)), 0f) }
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(11f); typeface = Typeface.MONOSPACE }
     private val refLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(11f); textAlign = Paint.Align.CENTER }
     private val timeLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(11f); typeface = Typeface.MONOSPACE; textAlign = Paint.Align.CENTER }
-    private val axisPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(1f) }
+    private val axisPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(0.5f) }
     private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(1.5f) }
     private val dotOuter = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val dotInner = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
@@ -139,7 +140,9 @@ class LivelineView @JvmOverloads constructor(
     private fun rebuildPalette() {
         palette = Theme.palette(accent.toRgba(), theme)
         linePaint.color = palette.line.toInt(); linePaint.strokeWidth = dp(palette.lineWidth.toFloat())
-        gridPaint.color = palette.gridLine.toInt(); axisPaint.color = palette.gridLine.toInt()
+        // Grid a touch lighter than the raw palette line so it reads like web/iOS.
+        gridPaint.color = palette.gridLine.withAlpha(palette.gridLine.a * 0.7).toInt()
+        axisPaint.color = palette.gridLine.withAlpha(palette.gridLine.a * 0.7).toInt()
         labelPaint.color = palette.gridLabel.toInt(); timeLabelPaint.color = palette.timeLabel.toInt()
         badgeTextPaint.color = palette.badgeText.toInt(); dotOuter.color = palette.badgeOuterBg.toInt()
         refLabelPaint.color = palette.refLabel.toInt()
@@ -247,6 +250,13 @@ class LivelineView @JvmOverloads constructor(
         }
         canvas.drawPath(path, linePaint)
 
+        // 4b. While scrubbing, fade the line to the RIGHT of the crosshair.
+        if (scrubAmount > 0.02) {
+            val hx = hoverX.coerceIn(padL, padL + chartW)
+            scrubFadePaint.color = palette.background.withAlpha(palette.background.a * scrubAmount * 0.55).toInt()
+            canvas.drawRect(hx, padT, padL + chartW, padT + chartH, scrubFadePaint)
+        }
+
         // 5. Left-edge fade.
         val fadeW = dp(56f)
         fadePaint.shader = LinearGradient(padL, 0f, padL + fadeW, 0f, palette.background.toInt(), palette.background.withAlpha(0.0).toInt(), Shader.TileMode.CLAMP)
@@ -255,16 +265,17 @@ class LivelineView @JvmOverloads constructor(
         // 6. Time axis.
         drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, dt)
 
-        // 7. Live dot + pulse (dimmed while scrubbing).
+        // 7. Live dot + pulse (dimmed + line-coloured — no red/green — while scrubbing).
         val dim = scrubAmount * 0.7
+        val headColor = if (scrubAmount > 0.1) palette.line else dotColor
         if (dim < 0.3) {
             val t = (nowMs % 1500.0) / 900.0
-            if (t < 1) { ringPaint.color = dotColor.withAlpha(dotColor.a * 0.35 * (1 - t) * (1 - dim * 3)).toInt(); canvas.drawCircle(endX, endY, dp(9f) + (t * dp(12f).toDouble()).toFloat(), ringPaint) }
+            if (t < 1) { ringPaint.color = headColor.withAlpha(headColor.a * 0.35 * (1 - t) * (1 - dim * 3)).toInt(); canvas.drawCircle(endX, endY, dp(9f) + (t * dp(12f).toDouble()).toFloat(), ringPaint) }
         }
         val dotA = (1 - dim)
         dotOuter.alpha = (255 * dotA).toInt().coerceIn(0, 255)
         canvas.drawCircle(endX, endY, dp(6.5f), dotOuter)
-        dotInner.color = dotColor.withAlpha(dotColor.a * dotA).toInt()
+        dotInner.color = headColor.withAlpha(headColor.a * dotA).toInt()
         canvas.drawCircle(endX, endY, dp(3.5f), dotInner)
 
         // 8. Momentum arrows.
