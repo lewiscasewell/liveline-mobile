@@ -27,15 +27,17 @@ public final class LivelineView: UIView {
 
     /// Accent colour. Derives the full palette. Default `#3b82f6`.
     public var color: UIColor = LivelineView.defaultAccent { didSet { rebuildPalette() } }
-    /// Base theme. Default `.dark`. Sets the *tone* of grid, labels, text and
-    /// crosshair (light-on-dark vs dark-on-light). The surface colour is
-    /// separate — see ``surfaceColor``.
+    /// Base theme. Default `.dark`. Sets the *tone* of the line, grid, labels,
+    /// text and crosshair (light-on-dark vs dark-on-light). It does **not** paint
+    /// a background — the chart is transparent unless you set ``surfaceColor`` —
+    /// so pick a `theme` that matches whatever background sits behind the chart.
     public var theme: LivelineTheme = .dark { didSet { rebuildPalette() } }
 
-    /// Overrides the chart surface (background) colour, independent of `theme`.
-    /// `nil` uses the theme default; a clear colour lets the container show
-    /// through (as the web library does). Pick a `theme` that matches the
-    /// surface brightness so grid/text stay legible.
+    /// Opaque background fill for the chart. When `nil` (the default) the canvas
+    /// is transparent and the container behind it shows through — matching web
+    /// liveline, where the surrounding element supplies the background. Set an
+    /// opaque colour to make the chart a self-contained card instead; `theme`
+    /// still controls the tone independently.
     public var surfaceColor: UIColor? { didSet { rebuildPalette() } }
 
     /// Escape hatch to override any derived palette colours (grid, labels,
@@ -194,6 +196,10 @@ public final class LivelineView: UIView {
     // MARK: Derived
 
     var palette: Palette
+    /// Whether an opaque `surfaceColor` is set. When false the canvas is
+    /// transparent: no background fill, and the left-edge fade erases to reveal
+    /// what's behind the view rather than painting the surface over the line.
+    var surfaceIsOpaque = false
 
     // MARK: Constants (from the reference engine)
 
@@ -464,6 +470,10 @@ public final class LivelineView: UIView {
         if let surfaceColor { p.background = surfaceColor.rgba }
         if let overrides = paletteOverrides { overrides(&p) }
         palette = p
+        // With no opaque `surfaceColor` the canvas is transparent (web parity):
+        // the chart paints no background fill and the container behind it shows
+        // through. An opaque surface makes it a self-contained card instead.
+        surfaceIsOpaque = (surfaceColor?.rgba.a ?? 0) > 0.001
         setNeedsDisplay()
     }
 
@@ -548,8 +558,12 @@ public final class LivelineView: UIView {
         let h = bounds.height
         guard w > 0, h > 0 else { return }
 
-        ctx.setFillColor(UIColor(rgba: palette.background).cgColor)
-        ctx.fill(bounds)
+        // Only an opaque surface paints a background; otherwise the canvas stays
+        // transparent so the container behind the chart shows through (web parity).
+        if surfaceIsOpaque {
+            ctx.setFillColor(UIColor(rgba: palette.background).cgColor)
+            ctx.fill(bounds)
+        }
 
         // Delta time (ms), frame-rate independent.
         let nowMs = CACurrentMediaTime() * 1000

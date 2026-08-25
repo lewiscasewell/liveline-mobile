@@ -1,10 +1,12 @@
 import LivelineKit
 import SwiftUI
 
-/// A scrollable showcase of the implemented line-mode features, mirroring the
-/// web liveline docs. Each card owns its own feed so the scenarios (loading,
-/// stale data, pausing, exaggerated axis, reference line, theming) can be
-/// observed independently.
+/// A scrollable showcase of the implemented line-mode features. A global
+/// Light/Dark toggle drives the whole screen's subtle gradient background *and*
+/// every chart's `theme`, so each demo can be checked in both tones. The charts
+/// are transparent (the default), so the gradient shows straight through them —
+/// nothing paints its own background. The one exception is "Custom surface",
+/// which sets an opaque `surfaceColor` independent of the theme.
 struct ContentView: View {
     enum Demo: String, CaseIterable, Identifiable {
         case basic = "Basic"
@@ -13,35 +15,57 @@ struct ContentView: View {
         case referenceLine = "Reference line"
         case heartRate = "Heart rate"
         case sparse = "Slow ticker"
-        case theming = "Theming"
-        case surface = "Custom surface"
         case timeWindows = "Time windows"
         case candlestick = "Candlestick"
         case states = "States (loading)"
         case paused = "Paused"
         case stale = "Stale feed"
+        case surface = "Custom surface"
         var id: String { rawValue }
     }
 
     @State private var selected: Demo = .basic
+    @State private var dark = true
+
+    /// A super-subtle diagonal gradient: black→dark-grey in dark mode,
+    /// light-grey→white in light mode. Because the charts are transparent, this
+    /// is what you see behind every line.
+    private var appBackground: LinearGradient {
+        let stops: [Color] =
+            dark
+            ? [Color(red: 0.02, green: 0.02, blue: 0.02), Color(red: 0.12, green: 0.12, blue: 0.13)]
+            : [Color(red: 0.90, green: 0.91, blue: 0.93), Color(red: 1, green: 1, blue: 1)]
+        return LinearGradient(colors: stops, startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 16) {
-                Picker("Demo", selection: $selected) {
-                    ForEach(Demo.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.menu)
+            ZStack {
+                appBackground.ignoresSafeArea()
+                VStack(alignment: .leading, spacing: 16) {
+                    Picker("Theme", selection: $dark) {
+                        Text("Light").tag(false)
+                        Text("Dark").tag(true)
+                    }
+                    .pickerStyle(.segmented)
 
-                // Only the selected demo is mounted, so a single chart (one
-                // display link + one feed) runs at a time.
-                selectedCard
-                    .id(selected)
-                Spacer()
+                    Picker("Demo", selection: $selected) {
+                        ForEach(Demo.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.menu)
+
+                    // Only the selected demo is mounted, so a single chart (one
+                    // display link + one feed) runs at a time.
+                    selectedCard
+                        .id(selected)
+                    Spacer()
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
-            .padding()
             .navigationTitle("Liveline")
         }
+        .preferredColorScheme(dark ? .dark : .light)
     }
 
     @ViewBuilder private var selectedCard: some View {
@@ -52,16 +76,19 @@ struct ContentView: View {
         case .referenceLine: ReferenceLineCard()
         case .heartRate: HeartRateCard()
         case .sparse: SparseCard()
-        case .theming: ThemingCard()
-        case .surface: SurfaceCard()
         case .timeWindows: TimeWindowsCard()
         case .candlestick: CandlestickCard()
         case .states: StatesCard()
         case .paused: PausedCard()
         case .stale: StaleFeedCard()
+        case .surface: SurfaceCard()
         }
     }
 }
+
+/// Maps the SwiftUI colour scheme to a Liveline theme, so every chart's tone
+/// follows the global toggle.
+private func livelineTheme(_ scheme: ColorScheme) -> LivelineTheme { scheme == .dark ? .dark : .light }
 
 // MARK: - Card chrome
 
@@ -69,13 +96,22 @@ private struct Card<Content: View>: View {
     let title: String
     let subtitle: String
     @ViewBuilder var content: () -> Content
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title).font(.headline)
+            // No fill: the chart is transparent, so the app gradient shows
+            // through. A hairline border just delineates the card.
             content()
                 .frame(height: 220)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(
+                            scheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.08),
+                            lineWidth: 1)
+                )
             Text(subtitle).font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -152,27 +188,33 @@ final class Walk: ObservableObject {
 
 private struct BasicCard: View {
     @StateObject private var walk = Walk()
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(title: "Basic", subtitle: "A live value. Two props: data and value.") {
             Liveline(data: walk.seed, value: walk.value)
+                .theme(livelineTheme(scheme))
         }
     }
 }
 
 private struct MomentumCard: View {
     @StateObject private var walk = Walk(vol: 1.2)
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "Momentum",
             subtitle: "Directional chevrons on the live dot; the badge tints green up / red down."
         ) {
-            Liveline(data: walk.seed, value: walk.value).momentum(.auto)
+            Liveline(data: walk.seed, value: walk.value)
+                .momentum(.auto)
+                .theme(livelineTheme(scheme))
         }
     }
 }
 
 private struct ValueOverlayCard: View {
     @StateObject private var walk = Walk(center: 9800, vol: 24)
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "Value overlay",
@@ -182,24 +224,28 @@ private struct ValueOverlayCard: View {
                 .showValue()
                 .valueMomentumColor()
                 .formatValue { String(format: "$%.2f", $0) }
+                .theme(livelineTheme(scheme))
         }
     }
 }
 
 private struct ReferenceLineCard: View {
     @StateObject private var walk = Walk(center: 67_500, vol: 240)
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(title: "Reference line", subtitle: "A horizontal marker at a fixed value, kept in view.") {
             Liveline(data: walk.seed, value: walk.value)
                 .color(Color(red: 0.55, green: 0.36, blue: 0.96))
                 .referenceLine(ReferenceLine(value: 67_500, label: "Above $67,500"))
                 .formatValue { String(format: "$%.0f", $0) }
+                .theme(livelineTheme(scheme))
         }
     }
 }
 
 private struct HeartRateCard: View {
     @StateObject private var walk = Walk(center: 62, vol: 0.4)
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "Heart rate (exaggerate + formatter)",
@@ -209,25 +255,7 @@ private struct HeartRateCard: View {
                 .color(Color(red: 0.9, green: 0.3, blue: 0.24))
                 .exaggerate()
                 .formatValue { String(format: "%.0f bpm", $0) }
-        }
-    }
-}
-
-private struct ThemingCard: View {
-    @StateObject private var walk = Walk(center: 0, vol: 0.7)
-    @State private var dark = true
-    var body: some View {
-        Card(title: "Theming", subtitle: "Any accent colour derives the full palette. Toggle light/dark.") {
-            VStack(spacing: 8) {
-                Picker("", selection: $dark) {
-                    Text("Dark").tag(true)
-                    Text("Light").tag(false)
-                }
-                .pickerStyle(.segmented)
-                Liveline(data: walk.seed, value: walk.value)
-                    .color(Color(red: 0.13, green: 0.7, blue: 0.67))
-                    .theme(dark ? .dark : .light)
-            }
+                .theme(livelineTheme(scheme))
         }
     }
 }
@@ -264,7 +292,7 @@ private struct SurfaceCard: View {
     var body: some View {
         Card(
             title: "Custom surface",
-            subtitle: "Dark theme, but a purple-tinted surface via surfaceColor — independent of the accent."
+            subtitle: "The opt-in exception: an opaque surfaceColor paints its own card, independent of the global theme."
         ) {
             Liveline(data: walk.seed, value: walk.value)
                 .color(Color(red: 0.67, green: 0.62, blue: 0.95))  // #AB9FF2
@@ -276,6 +304,7 @@ private struct SurfaceCard: View {
 
 private struct StatesCard: View {
     @StateObject private var model = StatesModel()
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "States",
@@ -284,6 +313,7 @@ private struct StatesCard: View {
             Liveline(data: model.seed, value: model.value)
                 .color(Color(red: 0.29, green: 0.68, blue: 0.4))
                 .loading(model.loading)
+                .theme(livelineTheme(scheme))
         }
     }
 }
@@ -317,6 +347,7 @@ final class PausedModel: ObservableObject {
 
 private struct PausedCard: View {
     @StateObject private var model = PausedModel()
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "Paused",
@@ -329,6 +360,7 @@ private struct PausedCard: View {
                 Liveline(data: model.seed, value: model.value)
                     .color(Color(red: 0.29, green: 0.68, blue: 0.4))
                     .paused(model.paused)
+                    .theme(livelineTheme(scheme))
             }
         }
     }
@@ -362,6 +394,7 @@ final class SparseFeed: ObservableObject {
 
 private struct SparseCard: View {
     @StateObject private var feed = SparseFeed()
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "Slow ticker",
@@ -370,6 +403,7 @@ private struct SparseCard: View {
             Liveline(data: feed.seed, value: feed.value)
                 .window(60)
                 .color(Color(red: 0.55, green: 0.36, blue: 0.96))
+                .theme(livelineTheme(scheme))
         }
     }
 }
@@ -380,12 +414,14 @@ private struct StaleFeedCard: View {
         w.stopAfterSeconds = 6
         return w
     }()
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "Stale feed",
             subtitle: "The feed stops after 6s. The chart keeps scrolling; the line runs flat to the edge."
         ) {
             Liveline(data: walk.seed, value: walk.value)
+                .theme(livelineTheme(scheme))
         }
     }
 }
@@ -449,6 +485,7 @@ final class CandleFeed: ObservableObject {
 
 private struct TimeWindowsCard: View {
     @StateObject private var walk = Walk(center: 87, vol: 0.85)
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "Time windows",
@@ -462,6 +499,7 @@ private struct TimeWindowsCard: View {
                 ])
                 .windowStyle(.rounded)
                 .formatValue { String(format: "%.0f%%", $0) }
+                .theme(livelineTheme(scheme))
         }
     }
 }
@@ -469,6 +507,7 @@ private struct TimeWindowsCard: View {
 private struct CandlestickCard: View {
     @StateObject private var feed = CandleFeed()
     @State private var candle = true
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "Candlestick",
@@ -485,6 +524,7 @@ private struct CandlestickCard: View {
                     .candles(feed.candles)
                     .liveCandle(feed.live)
                     .candleWidth(feed.candleWidth)
+                    .theme(livelineTheme(scheme))
             }
         }
     }

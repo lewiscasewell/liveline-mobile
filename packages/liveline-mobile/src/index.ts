@@ -17,9 +17,10 @@ const NativeLiveline = getHostComponent<LivelineProps, LivelineMethods>(
  * components. Spreading these first means a prop the caller omits (or removes)
  * always arrives as its default value, never `null` — so nothing throws.
  *
- * `surfaceColor` defaults to `''`, which the native side treats as "no
- * override" (theme default). Genuinely data-shaped props (`data`, `value`,
- * `candles`, `liveCandle`, `referenceLine`) are intentionally not defaulted.
+ * `surfaceColor` defaults to `''`, which the native side treats as "no fill" —
+ * the chart is transparent and the view behind it shows through (web parity).
+ * Genuinely data-shaped props (`data`, `value`, `candles`, `liveCandle`,
+ * `referenceLine`) are intentionally not defaulted.
  */
 const defaults: Partial<LivelineProps> = {
   color: '#3b82f6',

@@ -32,7 +32,7 @@ export interface LivelineReference {
 
 /** Chart type. */
 export type LivelineMode = 'line' | 'candle'
-/** Base surface theme — sets the tone of grid, labels, text and crosshair. */
+/** Theme tone — sets the colour of the line, grid, labels, text and crosshair. */
 export type LivelineTheme = 'light' | 'dark'
 /**
  * Momentum behaviour. A single flat enum, unlike web's `true | 'up' | 'down' |
@@ -94,12 +94,16 @@ export interface LivelineProps extends HybridViewProps {
 
   /** Accent colour (any CSS hex). Derives the line, fill and badge. Default `'#3b82f6'`. */
   color?: string
-  /** Base theme tone for grid/labels/text. Default `'dark'`. */
+  /**
+   * Tone of the line, grid, labels, text and crosshair (`'light'` | `'dark'`).
+   * Default `'dark'`. It does not paint a background — set it to match whatever
+   * background sits behind the chart.
+   */
   theme?: LivelineTheme
   /**
-   * Overrides the surface (background) colour, independent of `theme`. Omit
-   * (or `''`) to use the theme default; pass a hex to tint the surface. Pick a
-   * `theme` matching the surface brightness so grid/text stay legible.
+   * Opaque background fill. Omit (or `''`) and the chart is transparent — the
+   * view behind it shows through, matching web liveline. Pass a hex to make the
+   * chart a self-contained card instead; `theme` still sets the tone.
    */
   surfaceColor?: string
   /** Line stroke width in points. Default `2`. */

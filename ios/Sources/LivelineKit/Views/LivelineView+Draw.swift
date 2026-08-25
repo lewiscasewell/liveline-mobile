@@ -734,16 +734,18 @@ extension LivelineView {
 
     // MARK: Left-edge fade
 
-    /// Fades the line into the left edge by painting the background colour over
-    /// it (opaque at `padLeft`, transparent 40pt later), blending the line into
-    /// the chart surface. Using `destination-out` here would punch a hole
-    /// through to whatever is behind the view (e.g. a white app background).
+    /// Fades the line into the left edge, opaque at `padLeft` and gone 40pt
+    /// later. On an opaque surface it paints the background colour over the line
+    /// so it blends into the card. On a transparent surface it instead erases
+    /// (`destination-out`) so the line dissolves into whatever is behind the
+    /// view (web parity) — a solid paint there would show as a stripe.
     func drawLeftEdgeFade(_ ctx: CGContext, w: CGFloat, h: CGFloat, padLeft: CGFloat) {
-        let bg = palette.background
+        // The eraser/paint runs opaque at padLeft → transparent 40pt to the right.
+        let tint: RGBA = surfaceIsOpaque ? palette.background : RGBA(r: 0, g: 0, b: 0)
         let colors =
             [
-                UIColor(rgba: bg.withAlpha(1)).cgColor,
-                UIColor(rgba: bg.withAlpha(0)).cgColor,
+                UIColor(rgba: tint.withAlpha(1)).cgColor,
+                UIColor(rgba: tint.withAlpha(0)).cgColor,
             ] as CFArray
         guard
             let gradient = CGGradient(
@@ -751,6 +753,7 @@ extension LivelineView {
         else { return }
         ctx.saveGState()
         ctx.clip(to: CGRect(x: 0, y: 0, width: padLeft + 40, height: h))
+        if !surfaceIsOpaque { ctx.setBlendMode(.destinationOut) }
         ctx.drawLinearGradient(
             gradient,
             start: CGPoint(x: padLeft, y: 0),
