@@ -54,6 +54,7 @@ namespace margelo::nitro::liveline::views {
     degen(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "degen", rawProps, sourceProps.degen)),
     lerpSpeed(nitro::ReactProp<std::optional<double>>::fromRawValue("Liveline", "lerpSpeed", rawProps, sourceProps.lerpSpeed)),
     referenceLine(nitro::ReactProp<std::optional<LivelineReference>>::fromRawValue("Liveline", "referenceLine", rawProps, sourceProps.referenceLine)),
+    orderbook(nitro::ReactProp<std::optional<LivelineOrderbook>>::fromRawValue("Liveline", "orderbook", rawProps, sourceProps.orderbook)),
     valuePrefix(nitro::ReactProp<std::optional<std::string>>::fromRawValue("Liveline", "valuePrefix", rawProps, sourceProps.valuePrefix)),
     valueSuffix(nitro::ReactProp<std::optional<std::string>>::fromRawValue("Liveline", "valueSuffix", rawProps, sourceProps.valueSuffix)),
     valueDecimals(nitro::ReactProp<std::optional<double>>::fromRawValue("Liveline", "valueDecimals", rawProps, sourceProps.valueDecimals)),
@@ -99,6 +100,7 @@ namespace margelo::nitro::liveline::views {
       case hashString("degen"): return true;
       case hashString("lerpSpeed"): return true;
       case hashString("referenceLine"): return true;
+      case hashString("orderbook"): return true;
       case hashString("valuePrefix"): return true;
       case hashString("valueSuffix"): return true;
       case hashString("valueDecimals"): return true;

@@ -224,6 +224,11 @@ void JHybridLivelineStateUpdater::updateViewProps(jni::alias_ref<jni::JClass> /*
     hybridView->setReferenceLine(newProps->referenceLine.get());
   }
   if (oldProps == nullptr
+        ? newProps->orderbook.isProvided()
+        : !newProps->orderbook.hasSameValue(oldProps->orderbook)) {
+    hybridView->setOrderbook(newProps->orderbook.get());
+  }
+  if (oldProps == nullptr
         ? newProps->valuePrefix.isProvided()
         : !newProps->valuePrefix.hasSameValue(oldProps->valuePrefix)) {
     hybridView->setValuePrefix(newProps->valuePrefix.get());

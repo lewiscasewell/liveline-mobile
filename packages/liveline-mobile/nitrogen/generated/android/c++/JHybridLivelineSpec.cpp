@@ -27,6 +27,10 @@ namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 namespace margelo::nitro::liveline { enum class LivelineMomentum; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineReference; }
+// Forward declaration of `LivelineOrderbook` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineOrderbook; }
+// Forward declaration of `LivelineOrderbookLevel` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineOrderbookLevel; }
 
 #include "LivelinePoint.hpp"
 #include <vector>
@@ -55,6 +59,10 @@ namespace margelo::nitro::liveline { struct LivelineReference; }
 #include "JLivelineMomentum.hpp"
 #include "LivelineReference.hpp"
 #include "JLivelineReference.hpp"
+#include "LivelineOrderbook.hpp"
+#include "JLivelineOrderbook.hpp"
+#include "LivelineOrderbookLevel.hpp"
+#include "JLivelineOrderbookLevel.hpp"
 
 namespace margelo::nitro::liveline {
 
@@ -480,6 +488,15 @@ namespace margelo::nitro::liveline {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelineReference> /* referenceLine */)>("setReferenceLine");
     method(_javaPart, referenceLine.has_value() ? JLivelineReference::fromCpp(referenceLine.value()) : nullptr);
   }
+  std::optional<LivelineOrderbook> JHybridLivelineSpec::getOrderbook() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JLivelineOrderbook>()>("getOrderbook");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(__result->toCpp()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setOrderbook(const std::optional<LivelineOrderbook>& orderbook) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelineOrderbook> /* orderbook */)>("setOrderbook");
+    method(_javaPart, orderbook.has_value() ? JLivelineOrderbook::fromCpp(orderbook.value()) : nullptr);
+  }
   std::optional<std::string> JHybridLivelineSpec::getValuePrefix() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JString>()>("getValuePrefix");
     auto __result = method(_javaPart);
@@ -548,6 +565,10 @@ namespace margelo::nitro::liveline {
   void JHybridLivelineSpec::push(const LivelinePoint& point, const std::optional<std::string>& seriesId) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelinePoint> /* point */, jni::alias_ref<jni::JString> /* seriesId */)>("push");
     method(_javaPart, JLivelinePoint::fromCpp(point), seriesId.has_value() ? jni::make_jstring(seriesId.value()) : nullptr);
+  }
+  void JHybridLivelineSpec::pushOrderbook(const LivelineOrderbook& orderbook) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelineOrderbook> /* orderbook */)>("pushOrderbook");
+    method(_javaPart, JLivelineOrderbook::fromCpp(orderbook));
   }
 
 } // namespace margelo::nitro::liveline

@@ -44,6 +44,7 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
   var degen: Bool? { get set }
   var lerpSpeed: Double? { get set }
   var referenceLine: LivelineReference? { get set }
+  var orderbook: LivelineOrderbook? { get set }
   var valuePrefix: String? { get set }
   var valueSuffix: String? { get set }
   var valueDecimals: Double? { get set }
@@ -54,6 +55,7 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
 
   // Methods
   func push(point: LivelinePoint, seriesId: String?) throws -> Void
+  func pushOrderbook(orderbook: LivelineOrderbook) throws -> Void
 }
 
 public extension HybridLivelineSpec_protocol {

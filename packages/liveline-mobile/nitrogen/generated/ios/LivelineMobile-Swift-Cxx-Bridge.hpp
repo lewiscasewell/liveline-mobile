@@ -18,6 +18,10 @@ namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 namespace margelo::nitro::liveline { enum class LivelineMode; }
 // Forward declaration of `LivelineMomentum` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineMomentum; }
+// Forward declaration of `LivelineOrderbookLevel` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineOrderbookLevel; }
+// Forward declaration of `LivelineOrderbook` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineOrderbook; }
 // Forward declaration of `LivelinePoint` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelinePoint; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
@@ -41,6 +45,8 @@ namespace LivelineMobile { class HybridLivelineSpec_cxx; }
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMode.hpp"
 #include "LivelineMomentum.hpp"
+#include "LivelineOrderbook.hpp"
+#include "LivelineOrderbookLevel.hpp"
 #include "LivelinePoint.hpp"
 #include "LivelineReference.hpp"
 #include "LivelineSeries.hpp"
@@ -386,6 +392,32 @@ namespace margelo::nitro::liveline::bridge::swift {
     return optional.has_value();
   }
   inline LivelineReference get_std__optional_LivelineReference_(const std::optional<LivelineReference>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::vector<LivelineOrderbookLevel>
+  /**
+   * Specialized version of `std::vector<LivelineOrderbookLevel>`.
+   */
+  using std__vector_LivelineOrderbookLevel_ = std::vector<LivelineOrderbookLevel>;
+  inline std::vector<LivelineOrderbookLevel> create_std__vector_LivelineOrderbookLevel_(size_t size) noexcept {
+    std::vector<LivelineOrderbookLevel> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::optional<LivelineOrderbook>
+  /**
+   * Specialized version of `std::optional<LivelineOrderbook>`.
+   */
+  using std__optional_LivelineOrderbook_ = std::optional<LivelineOrderbook>;
+  inline std::optional<LivelineOrderbook> create_std__optional_LivelineOrderbook_(const LivelineOrderbook& value) noexcept {
+    return std::optional<LivelineOrderbook>(value);
+  }
+  inline bool has_value_std__optional_LivelineOrderbook_(const std::optional<LivelineOrderbook>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline LivelineOrderbook get_std__optional_LivelineOrderbook_(const std::optional<LivelineOrderbook>& optional) noexcept {
     return optional.value();
   }
   

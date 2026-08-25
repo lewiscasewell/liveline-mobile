@@ -31,6 +31,7 @@
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
 #include "LivelineReference.hpp"
+#include "LivelineOrderbook.hpp"
 #include <memory>
 #include "HybridLivelineSpec.hpp"
 
@@ -88,6 +89,7 @@ namespace margelo::nitro::liveline::views {
     nitro::ReactProp<std::optional<bool>> degen;
     nitro::ReactProp<std::optional<double>> lerpSpeed;
     nitro::ReactProp<std::optional<LivelineReference>> referenceLine;
+    nitro::ReactProp<std::optional<LivelineOrderbook>> orderbook;
     nitro::ReactProp<std::optional<std::string>> valuePrefix;
     nitro::ReactProp<std::optional<std::string>> valueSuffix;
     nitro::ReactProp<std::optional<double>> valueDecimals;
@@ -133,6 +135,7 @@ namespace margelo::nitro::liveline::views {
              degen.hasSameValue(other.degen) &&
              lerpSpeed.hasSameValue(other.lerpSpeed) &&
              referenceLine.hasSameValue(other.referenceLine) &&
+             orderbook.hasSameValue(other.orderbook) &&
              valuePrefix.hasSameValue(other.valuePrefix) &&
              valueSuffix.hasSameValue(other.valueSuffix) &&
              valueDecimals.hasSameValue(other.valueDecimals) &&
@@ -179,6 +182,7 @@ namespace margelo::nitro::liveline::views {
              degen.isProvided() ||
              lerpSpeed.isProvided() ||
              referenceLine.isProvided() ||
+             orderbook.isProvided() ||
              valuePrefix.isProvided() ||
              valueSuffix.isProvided() ||
              valueDecimals.isProvided() ||

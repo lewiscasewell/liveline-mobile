@@ -118,6 +118,8 @@ namespace margelo::nitro::liveline {
     void setLerpSpeed(std::optional<double> lerpSpeed) override;
     std::optional<LivelineReference> getReferenceLine() override;
     void setReferenceLine(const std::optional<LivelineReference>& referenceLine) override;
+    std::optional<LivelineOrderbook> getOrderbook() override;
+    void setOrderbook(const std::optional<LivelineOrderbook>& orderbook) override;
     std::optional<std::string> getValuePrefix() override;
     void setValuePrefix(const std::optional<std::string>& valuePrefix) override;
     std::optional<std::string> getValueSuffix() override;
@@ -136,6 +138,7 @@ namespace margelo::nitro::liveline {
   public:
     // Methods
     void push(const LivelinePoint& point, const std::optional<std::string>& seriesId) override;
+    void pushOrderbook(const LivelineOrderbook& orderbook) override;
 
   private:
     jni::global_ref<JHybridLivelineSpec::JavaPart> _javaPart;

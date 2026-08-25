@@ -253,6 +253,16 @@ final class HybridLivelineView: HybridLivelineSpec {
         }
     }
 
+    var orderbook: LivelineOrderbook? {
+        didSet { chart.setOrderbook(orderbook.map(Self.toOrderbook)) }
+    }
+
+    private static func toOrderbook(_ o: LivelineOrderbook) -> LivelineKit.OrderbookData {
+        LivelineKit.OrderbookData(
+            bids: o.bids.map { LivelineKit.OrderbookLevel(price: $0.price, size: $0.size) },
+            asks: o.asks.map { LivelineKit.OrderbookLevel(price: $0.price, size: $0.size) })
+    }
+
     // MARK: Declarative value formatting
 
     var valuePrefix: String? { didSet { rebuildFormatter() } }
@@ -307,6 +317,16 @@ final class HybridLivelineView: HybridLivelineSpec {
             chart.push(p, seriesId: seriesId)
         } else {
             DispatchQueue.main.async { self.chart.push(p, seriesId: seriesId) }
+        }
+    }
+
+    func pushOrderbook(orderbook: LivelineOrderbook) throws {
+        // Like `push`, may be called off the main thread; hop to main.
+        let book = Self.toOrderbook(orderbook)
+        if Thread.isMainThread {
+            chart.setOrderbook(book)
+        } else {
+            DispatchQueue.main.async { self.chart.setOrderbook(book) }
         }
     }
 }

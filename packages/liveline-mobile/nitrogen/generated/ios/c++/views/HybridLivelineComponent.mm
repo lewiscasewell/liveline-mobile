@@ -302,6 +302,12 @@ using namespace margelo::nitro::liveline::views;
           : !newViewProps.referenceLine.hasSameValue(oldViewProps->referenceLine)) {
       swiftPart.setReferenceLine(newViewProps.referenceLine.get());
     }
+    // orderbook: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.orderbook.isProvided()
+          : !newViewProps.orderbook.hasSameValue(oldViewProps->orderbook)) {
+      swiftPart.setOrderbook(newViewProps.orderbook.get());
+    }
     // valuePrefix: optional
     if (oldViewProps == nullptr
           ? newViewProps.valuePrefix.isProvided()

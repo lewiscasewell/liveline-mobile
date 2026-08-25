@@ -251,6 +251,12 @@ abstract class HybridLivelineSpec: HybridView() {
   @get:Keep
   @set:DoNotStrip
   @set:Keep
+  abstract var orderbook: LivelineOrderbook?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
   abstract var valuePrefix: String?
   
   @get:DoNotStrip
@@ -293,6 +299,10 @@ abstract class HybridLivelineSpec: HybridView() {
   @DoNotStrip
   @Keep
   abstract fun push(point: LivelinePoint, seriesId: String?): Unit
+  
+  @DoNotStrip
+  @Keep
+  abstract fun pushOrderbook(orderbook: LivelineOrderbook): Unit
 
   // Default implementation of `HybridObject.toString()`
   override fun toString(): String {

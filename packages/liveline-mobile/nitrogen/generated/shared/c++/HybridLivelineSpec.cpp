@@ -82,6 +82,8 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridSetter("lerpSpeed", &HybridLivelineSpec::setLerpSpeed);
       prototype.registerHybridGetter("referenceLine", &HybridLivelineSpec::getReferenceLine);
       prototype.registerHybridSetter("referenceLine", &HybridLivelineSpec::setReferenceLine);
+      prototype.registerHybridGetter("orderbook", &HybridLivelineSpec::getOrderbook);
+      prototype.registerHybridSetter("orderbook", &HybridLivelineSpec::setOrderbook);
       prototype.registerHybridGetter("valuePrefix", &HybridLivelineSpec::getValuePrefix);
       prototype.registerHybridSetter("valuePrefix", &HybridLivelineSpec::setValuePrefix);
       prototype.registerHybridGetter("valueSuffix", &HybridLivelineSpec::getValueSuffix);
@@ -97,6 +99,7 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridGetter("fontFamily", &HybridLivelineSpec::getFontFamily);
       prototype.registerHybridSetter("fontFamily", &HybridLivelineSpec::setFontFamily);
       prototype.registerHybridMethod("push", &HybridLivelineSpec::push);
+      prototype.registerHybridMethod("pushOrderbook", &HybridLivelineSpec::pushOrderbook);
     });
   }
 

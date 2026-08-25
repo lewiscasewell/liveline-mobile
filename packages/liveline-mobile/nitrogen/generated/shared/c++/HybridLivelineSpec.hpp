@@ -33,6 +33,8 @@ namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 namespace margelo::nitro::liveline { enum class LivelineMomentum; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineReference; }
+// Forward declaration of `LivelineOrderbook` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineOrderbook; }
 
 #include "LivelinePoint.hpp"
 #include <vector>
@@ -48,6 +50,7 @@ namespace margelo::nitro::liveline { struct LivelineReference; }
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
 #include "LivelineReference.hpp"
+#include "LivelineOrderbook.hpp"
 
 namespace margelo::nitro::liveline {
 
@@ -144,6 +147,8 @@ namespace margelo::nitro::liveline {
       virtual void setLerpSpeed(std::optional<double> lerpSpeed) = 0;
       virtual std::optional<LivelineReference> getReferenceLine() = 0;
       virtual void setReferenceLine(const std::optional<LivelineReference>& referenceLine) = 0;
+      virtual std::optional<LivelineOrderbook> getOrderbook() = 0;
+      virtual void setOrderbook(const std::optional<LivelineOrderbook>& orderbook) = 0;
       virtual std::optional<std::string> getValuePrefix() = 0;
       virtual void setValuePrefix(const std::optional<std::string>& valuePrefix) = 0;
       virtual std::optional<std::string> getValueSuffix() = 0;
@@ -162,6 +167,7 @@ namespace margelo::nitro::liveline {
     public:
       // Methods
       virtual void push(const LivelinePoint& point, const std::optional<std::string>& seriesId) = 0;
+      virtual void pushOrderbook(const LivelineOrderbook& orderbook) = 0;
 
     protected:
       // Hybrid Setup

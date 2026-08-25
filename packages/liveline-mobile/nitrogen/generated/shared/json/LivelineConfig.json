@@ -38,6 +38,7 @@
     "degen": true,
     "lerpSpeed": true,
     "referenceLine": true,
+    "orderbook": true,
     "valuePrefix": true,
     "valueSuffix": true,
     "valueDecimals": true,

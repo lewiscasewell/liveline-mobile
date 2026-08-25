@@ -3,7 +3,29 @@ import { callback, getHostComponent } from 'react-native-nitro-modules'
 
 import LivelineConfig from '../nitrogen/generated/shared/json/LivelineConfig.json'
 import type { LivelineCurrency } from './currencies'
-import type { LivelineMethods, LivelineMode, LivelinePoint, LivelineProps } from './Liveline.nitro'
+import type {
+  LivelineMethods,
+  LivelineMode,
+  LivelineOrderbook,
+  LivelinePoint,
+  LivelineProps,
+} from './Liveline.nitro'
+
+/**
+ * Order-book depth, matching web liveline: `bids`/`asks` are arrays of
+ * `[price, size]` tuples. The resting sizes stream up behind the price line.
+ */
+export interface LivelineOrderbookData {
+  bids: [number, number][]
+  asks: [number, number][]
+}
+
+/** Convert the public `[price, size]` tuples to the native `{ price, size }` shape. */
+function toNativeOrderbook(o: LivelineOrderbookData | undefined): LivelineOrderbook {
+  const conv = (arr: [number, number][] | undefined) =>
+    (arr ?? []).map(([price, size]) => ({ price, size }))
+  return { bids: conv(o?.bids), asks: conv(o?.asks) }
+}
 
 const NativeLiveline = getHostComponent<LivelineProps, LivelineMethods>(
   'Liveline',
@@ -30,7 +52,7 @@ const NativeLiveline = getHostComponent<LivelineProps, LivelineMethods>(
 // (coalesced to sentinels below) or callbacks (wrapped separately).
 type DefaultableProps = Omit<
   LivelineProps,
-  'data' | 'value' | 'series' | 'candles' | 'liveCandle' | 'referenceLine' | 'windows' | 'onWindowChange' | 'onModeChange'
+  'data' | 'value' | 'series' | 'candles' | 'liveCandle' | 'referenceLine' | 'orderbook' | 'windows' | 'onWindowChange' | 'onModeChange'
 >
 const defaults: Required<DefaultableProps> = {
   color: '#3b82f6',
@@ -79,12 +101,14 @@ type LivelineComponentProps = React.ComponentProps<typeof NativeLiveline>
  */
 export type LivelineComponentPropsPublic = Omit<
   LivelineComponentProps,
-  'onWindowChange' | 'onModeChange' | 'currency'
+  'onWindowChange' | 'onModeChange' | 'currency' | 'orderbook'
 > & {
   onWindowChange?: (secs: number) => void
   onModeChange?: (mode: LivelineMode) => void
   // Native side takes any string; narrow the public API to valid ISO 4217 codes.
   currency?: LivelineCurrency
+  // Public API takes web-style `[price, size]` tuples; converted for native.
+  orderbook?: LivelineOrderbookData
 }
 
 declare const __DEV__: boolean | undefined
@@ -100,7 +124,7 @@ const MAX_RECOMMENDED_POINTS = 4000
 
 let warnedOverfeed = false
 
-function warnIfOverfed(props: LivelineComponentProps): void {
+function warnIfOverfed(props: { data?: unknown; candles?: unknown }): void {
   if (typeof __DEV__ === 'undefined' || !__DEV__) return
   const dataLen = Array.isArray(props.data) ? props.data.length : 0
   const candleLen = Array.isArray(props.candles) ? props.candles.length : 0
@@ -174,8 +198,12 @@ export function useLiveline() {
     (point: LivelinePoint, seriesId?: string) => ref.current?.push(point, seriesId),
     [ref]
   )
+  const pushOrderbook = React.useCallback(
+    (orderbook: LivelineOrderbookData) => ref.current?.pushOrderbook(toNativeOrderbook(orderbook)),
+    [ref]
+  )
   const attachHybridRef = React.useCallback(() => hybridRef, [hybridRef])
-  return { push, hybridRef, attachHybridRef }
+  return { push, pushOrderbook, hybridRef, attachHybridRef }
 }
 
 /**
@@ -206,6 +234,9 @@ export function Liveline(props: LivelineComponentPropsPublic): React.ReactElemen
   if (merged.series == null) merged.series = []
   if (merged.candles == null) merged.candles = []
   if (merged.windows == null) merged.windows = []
+  // Convert the web-style `[price, size]` tuples to the native `{ price, size }`
+  // shape (an empty book is the "unset" sentinel, so it's never null).
+  merged.orderbook = toNativeOrderbook(rest.orderbook as LivelineOrderbookData | undefined)
   if (merged.hybridRef == null && autoHybridRef) merged.hybridRef = autoHybridRef
   // Wrap the callbacks for Nitro (like hybridRef).
   if (onWindowChange) merged.onWindowChange = callback(onWindowChange)
@@ -222,6 +253,8 @@ export type {
   CandlePoint,
   LivelineReference,
   LivelineSeries,
+  LivelineOrderbook,
+  LivelineOrderbookLevel,
   LivelineMode,
   LivelineTheme,
   LivelineMomentum,

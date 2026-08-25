@@ -42,6 +42,22 @@ export interface LivelineSeries {
   data: LivelinePoint[]
 }
 
+/** One order-book level: a resting `size` at a `price`. */
+export interface LivelineOrderbookLevel {
+  /** The level's price. */
+  price: number
+  /** The resting size at that price (drives the label + its brightness). */
+  size: number
+}
+
+/** A snapshot of bid/ask depth. Its resting sizes stream up behind the line. */
+export interface LivelineOrderbook {
+  /** Bid levels (up-colour). */
+  bids: LivelineOrderbookLevel[]
+  /** Ask levels (down-colour). */
+  asks: LivelineOrderbookLevel[]
+}
+
 /** Chart type. */
 export type LivelineMode = 'line' | 'candle'
 /** Theme tone — sets the colour of the line, grid, labels, text and crosshair. */
@@ -193,6 +209,15 @@ export interface LivelineProps extends HybridViewProps {
   /** A horizontal reference line at a fixed value. Omit to remove it. */
   referenceLine?: LivelineReference
 
+  /**
+   * Order-book depth (`{ bids, asks }`). The resting sizes stream up behind the
+   * price line — bids in the up-colour, asks in the down-colour, bigger orders
+   * brighter — with a drift speed that reacts to price momentum and book churn.
+   * A convenience for React-driven updates; prefer `pushOrderbook()` for a
+   * high-frequency depth feed. Pair with `value`/`push()` for the price line.
+   */
+  orderbook?: LivelineOrderbook
+
   /** Prepended to every formatted value (e.g. `'$'`). Ignored when `currency` is set. */
   valuePrefix?: string
   /** Appended to every formatted value (e.g. `' bpm'`). Ignored when `currency` is set. */
@@ -234,6 +259,13 @@ export interface LivelineMethods extends HybridViewMethods {
    * omit it for the primary.
    */
   push(point: LivelinePoint, seriesId?: string): void
+
+  /**
+   * Replace the current order book. A direct native call with no React
+   * re-render — the efficient path for a high-frequency depth feed (mirrors how
+   * `push()` streams the price line). Equivalent to setting the `orderbook` prop.
+   */
+  pushOrderbook(orderbook: LivelineOrderbook): void
 }
 
 export type Liveline = HybridView<LivelineProps, LivelineMethods>

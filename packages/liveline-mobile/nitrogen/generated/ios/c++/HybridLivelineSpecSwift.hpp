@@ -32,6 +32,10 @@ namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 namespace margelo::nitro::liveline { enum class LivelineMomentum; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineReference; }
+// Forward declaration of `LivelineOrderbook` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineOrderbook; }
+// Forward declaration of `LivelineOrderbookLevel` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelineOrderbookLevel; }
 
 #include "LivelinePoint.hpp"
 #include <vector>
@@ -47,6 +51,8 @@ namespace margelo::nitro::liveline { struct LivelineReference; }
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
 #include "LivelineReference.hpp"
+#include "LivelineOrderbook.hpp"
+#include "LivelineOrderbookLevel.hpp"
 
 #include "LivelineMobile-Swift-Cxx-Umbrella.hpp"
 
@@ -332,6 +338,13 @@ namespace margelo::nitro::liveline {
     inline void setReferenceLine(const std::optional<LivelineReference>& referenceLine) noexcept override {
       _swiftPart.setReferenceLine(referenceLine);
     }
+    inline std::optional<LivelineOrderbook> getOrderbook() noexcept override {
+      auto __result = _swiftPart.getOrderbook();
+      return __result;
+    }
+    inline void setOrderbook(const std::optional<LivelineOrderbook>& orderbook) noexcept override {
+      _swiftPart.setOrderbook(orderbook);
+    }
     inline std::optional<std::string> getValuePrefix() noexcept override {
       auto __result = _swiftPart.getValuePrefix();
       return __result;
@@ -386,6 +399,12 @@ namespace margelo::nitro::liveline {
     // Methods
     inline void push(const LivelinePoint& point, const std::optional<std::string>& seriesId) override {
       auto __result = _swiftPart.push(std::forward<decltype(point)>(point), seriesId);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
+    inline void pushOrderbook(const LivelineOrderbook& orderbook) override {
+      auto __result = _swiftPart.pushOrderbook(std::forward<decltype(orderbook)>(orderbook));
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

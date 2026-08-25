@@ -928,6 +928,23 @@ open class HybridLivelineSpec_cxx {
     }
   }
   
+  public final var orderbook: bridge.std__optional_LivelineOrderbook_ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_LivelineOrderbook_ in
+        if let __unwrappedValue = self.__implementation.orderbook {
+          return bridge.create_std__optional_LivelineOrderbook_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.orderbook = newValue.value
+    }
+  }
+  
   public final var valuePrefix: bridge.std__optional_std__string_ {
     @inline(__always)
     get {
@@ -1108,6 +1125,17 @@ open class HybridLivelineSpec_cxx {
           return nil
         }
       }())
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func pushOrderbook(orderbook: LivelineOrderbook) -> bridge.Result_void_ {
+    do {
+      try self.__implementation.pushOrderbook(orderbook: orderbook)
       return bridge.create_Result_void_()
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()
