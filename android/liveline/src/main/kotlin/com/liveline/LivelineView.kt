@@ -123,7 +123,7 @@ class LivelineView @JvmOverloads constructor(
     // ── Multi-series ──────────────────────────────────────────────────────────
     /** One equal-peer line for multi-series mode. */
     class SeriesInput(val id: String, val color: Int, val label: String?, val data: List<LivelinePoint>)
-    private class Series(val id: String, val color: Int, val label: String?, val buffer: MutableList<LivelinePoint>, var visible: Boolean, var displayValue: Double, var labelY: Float = 0f)
+    private class Series(val id: String, val color: Int, val label: String?, val buffer: MutableList<LivelinePoint>, var visible: Boolean, var displayValue: Double, var lastCommit: Double, var labelY: Float = 0f)
     private val series = ArrayList<Series>()
     val isMultiSeries: Boolean get() = series.isNotEmpty()
 
@@ -131,13 +131,13 @@ class LivelineView @JvmOverloads constructor(
     fun setSeries(inputs: List<SeriesInput>) {
         val wasVisible = series.associate { it.id to it.visible }
         series.clear()
-        for (inp in inputs) series.add(Series(inp.id, inp.color, inp.label, ArrayList(inp.data), wasVisible[inp.id] ?: true, inp.data.lastOrNull()?.value ?: 0.0))
+        for (inp in inputs) series.add(Series(inp.id, inp.color, inp.label, ArrayList(inp.data), wasVisible[inp.id] ?: true, inp.data.lastOrNull()?.value ?: 0.0, inp.data.lastOrNull()?.time ?: -Double.MAX_VALUE))
     }
 
     fun pushSeries(id: String, point: LivelinePoint) {
         val s = series.firstOrNull { it.id == id } ?: return
         val bucket = windowSeconds / 300.0
-        if (s.buffer.isEmpty() || point.time - s.buffer.last().time >= bucket) { s.buffer.add(point); if (s.buffer.size > 8192) s.buffer.removeAt(0) } else s.buffer[s.buffer.size - 1] = point
+        if (s.buffer.isEmpty() || point.time - s.lastCommit >= bucket) { s.buffer.add(point); s.lastCommit = point.time; if (s.buffer.size > 8192) s.buffer.removeAt(0) } else s.buffer[s.buffer.size - 1] = point
     }
 
     fun toggleSeries(id: String) { series.firstOrNull { it.id == id }?.let { it.visible = !it.visible } }
@@ -347,7 +347,6 @@ class LivelineView @JvmOverloads constructor(
             Momentum.UP -> Trend.UP; Momentum.DOWN -> Trend.DOWN; Momentum.FLAT -> Trend.FLAT
             else -> MomentumDetect.detect(visible)
         }
-        val dotColor = when (trend) { Trend.UP -> palette.dotUp; Trend.DOWN -> palette.dotDown; else -> palette.dotFlat }
 
         // 2b. Orderbook: resting sizes stream up behind the price line.
         if (orderbook != null) {
@@ -391,9 +390,10 @@ class LivelineView @JvmOverloads constructor(
         // 6. Time axis.
         drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)
 
-        // 7. Live dot + pulse (dimmed + line-coloured — no red/green — while scrubbing).
+        // 7. Live dot + pulse — always the line colour (momentum shows via the
+        // badge + chevrons, not the dot).
         val dim = scrubAmount * 0.7
-        val headColor = if (scrubAmount > 0.1) palette.line else dotColor
+        val headColor = palette.line
         if (dim < 0.3) {
             val t = (nowMs % 1500.0) / 900.0
             if (t < 1) { ringPaint.color = headColor.withAlpha(headColor.a * 0.35 * (1 - t) * (1 - dim * 3)).toInt(); canvas.drawCircle(endX, endY, dp(9f) + (t * dp(12f).toDouble()).toFloat(), ringPaint) }
@@ -412,7 +412,8 @@ class LivelineView @JvmOverloads constructor(
 
         // 10. Value overlay.
         if (showValue) {
-            overlayPaint.color = if (valueMomentumColor) dotColor.toInt() else palette.tooltipText.toInt()
+            val momentumColor = when (trend) { Trend.UP -> palette.dotUp; Trend.DOWN -> palette.dotDown; else -> palette.dotFlat }
+            overlayPaint.color = if (valueMomentumColor) momentumColor.toInt() else palette.tooltipText.toInt()
             canvas.drawText(fmt(displayValue), padL, padT - dp(14f), overlayPaint)
         }
 
