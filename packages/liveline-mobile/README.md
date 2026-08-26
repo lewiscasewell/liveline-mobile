@@ -6,18 +6,59 @@ stream, candles, momentum, a native interval bar, and native number/time
 formatting.
 
 The render loop, all text/number formatting and the interval bar are **native**
-(Swift today, Kotlin/Android next); the JS side just declares props and pushes
+(Swift on iOS, Kotlin on Android); the JS side just declares props and pushes
 ticks, so a fast feed never re-renders React. It's a port of the API shape of
 [**liveline**](https://github.com/benjitaylor/liveline) by Benji Taylor (MIT,
-web/React/canvas) — the prop vocabulary matches, so names carry across platforms.
+web/React/canvas) — the prop vocabulary matches, so names carry across platforms
+— then extended with mobile-native touches (see
+[Built for mobile](#built-for-mobile)).
 
 > **Two modes only: line and candle.** Not a general charting framework — no
 > generic axes, no arbitrary chart types, no plugin system.
 
 ---
 
+## Preview
+
+<!-- TODO: add demo videos. On GitHub, drag an .mp4 into the README editor (or any
+     issue/PR comment) to upload it and get a https://github.com/user-attachments/…
+     URL, then paste that URL on its own line in place of a placeholder below. -->
+
+> **Demo videos coming soon.**
+
+| | |
+| --- | --- |
+| **Line + momentum** — _video coming soon_ | **Candlesticks** — _video coming soon_ |
+| **Multi-series** — _video coming soon_ | **Orderbook stream** — _video coming soon_ |
+
+---
+
+## Built for mobile
+
+liveline-mobile ports [liveline](https://github.com/benjitaylor/liveline)'s API
+and modes — line, candle, multi-series, orderbook, momentum, degen, the interval
+bar, crosshair scrubbing — faithfully, then adds what only makes sense once a
+chart lives on a phone:
+
+- **A native render loop, decoupled from JS** — drawn on the platform display
+  link (`CADisplayLink` / `Choreographer`) at the screen's refresh rate, **120 Hz
+  on ProMotion**. `push()` a tick and React never re-renders.
+- **Touch, not hover** — crosshair scrubbing is **press-and-hold**: hold to
+  inspect (the line to the right dims), release to resume.
+- **Haptics** — optional, firing on momentum swings and degen bursts _(iOS today;
+  Android next)_.
+- **Native controls & formatting** — the interval bar is a real native segmented
+  control (Liquid Glass on iOS); number/time formatting, `currency`/`locale`
+  localization and custom fonts all run natively, per frame.
+- **An imperative streaming API** — `value` drives the feed declaratively, or
+  `useLiveline().push()` streams through a Nitro `hybridRef`, bypassing React for
+  high-frequency feeds.
+
+---
+
 ## Contents
 
+- [Preview](#preview) · [Built for mobile](#built-for-mobile)
 - [Install](#install) · [Quick start](#quick-start)
 - [Live data: `push()` and `useLiveline`](#live-data-push-and-useliveline)
 - [Multi-series](#multi-series) · [Orderbook stream](#orderbook-stream)
@@ -412,10 +453,19 @@ the value overlay all persist in candle mode.
 | Platform | Status |
 | --- | --- |
 | **iOS** | ✅ Shipping (Swift `LivelineKit`, iOS 16+) |
-| **Android** | 🚧 Coming soon (Kotlin) — same API |
+| **Android** | ✅ Supported (Kotlin) — beta; a few props not yet wired (see below) |
 
-The API is designed to be identical across platforms, so nothing about your
-JavaScript changes when Android lands.
+The API is identical across platforms — the same JavaScript renders on both. The
+Android renderer is a native `Canvas`/`Choreographer` port of the engine, at
+full feature parity for the core: line & candle modes, multi-series, the
+orderbook stream, momentum, degen, the value overlay, reference lines,
+`exaggerate`, loading/paused, and press-and-hold scrubbing.
+
+Not yet wired on Android (they no-op there for now, and are on the roadmap): the
+interval bar (`windows` / `windowStyle` / `onWindowChange`), `surfaceColor`,
+`haptics`, `fontFamily`, and `currency` / `locale` number formatting (use
+`valuePrefix` / `valueSuffix` / `valueDecimals`, which do work). Nothing about
+your JavaScript needs to change as these land.
 
 ### Also available as a Swift package
 
@@ -427,7 +477,12 @@ for the Swift API and the full example app.
 ## Credit
 
 The API shape (prop names, modes, momentum semantics) is ported from
-[liveline](https://github.com/benjitaylor/liveline) by Benji Taylor, MIT.
+[**liveline**](https://github.com/benjitaylor/liveline) by Benji Taylor, MIT —
+the original web/React/canvas library this is based on.
+<!-- TODO: link Benji Taylor's original liveline blog post / write-up here. -->
+
+liveline-mobile adds the mobile-native layer on top (see
+[Built for mobile](#built-for-mobile)).
 
 ## Licence
 

@@ -1,14 +1,15 @@
 # liveline-mobile
 
 An open-source, real-time **line and candlestick** chart, implemented natively
-on iOS (Swift, `LivelineKit`) with a thin React Native binding on top via
-[Nitro Modules](https://nitro.margelo.com). Kotlin/Android is coming next, with
-the same API.
+on **iOS** (Swift, `LivelineKit`) and **Android** (Kotlin), with a thin React
+Native binding on top via [Nitro Modules](https://nitro.margelo.com). One API
+across all three.
 
 It's a deliberate port of the API shape of
 [**liveline**](https://github.com/benjitaylor/liveline) by Benji Taylor (MIT,
 web/React/canvas) — the prop vocabulary matches so you're not relearning names
-across platforms.
+across platforms — then **extended with the things that only make sense on a
+phone** (see [Built for mobile](#built-for-mobile)).
 
 **Two modes only: line and candle.** This is not a general charting framework —
 no generic axes, no arbitrary chart types, no plugin system. If a feature would
@@ -17,6 +18,50 @@ make you configure a scale or an axis by hand, it doesn't belong here.
 Everything (the render loop, all text/number formatting, the interval bar, the
 orderbook stream) is **native** — the JS side just declares props and pushes
 ticks, so a fast feed never re-renders React.
+
+---
+
+## Preview
+
+<!-- TODO: add demo videos. On GitHub, drag an .mp4 into the README editor (or any
+     issue/PR comment) to upload it and get a https://github.com/user-attachments/…
+     URL, then paste that URL on its own line to replace each placeholder below. -->
+
+> **Demo videos coming soon.**
+
+| | |
+| --- | --- |
+| **Line + momentum** — _video coming soon_ | **Candlesticks** — _video coming soon_ |
+| **Multi-series** — _video coming soon_ | **Orderbook stream** — _video coming soon_ |
+
+_See the original web charts in motion in Benji Taylor's
+[liveline](https://github.com/benjitaylor/liveline) and its
+[write-up](# "TODO: original liveline blog-post URL")._
+
+---
+
+## Built for mobile
+
+liveline-mobile ports [liveline](https://github.com/benjitaylor/liveline)'s API
+and modes — line, candle, multi-series, orderbook, momentum, degen, the interval
+bar, crosshair scrubbing — faithfully, then adds what only makes sense once a
+chart lives on a phone:
+
+- **A native render loop, decoupled from JS.** The line is drawn on the platform's
+  own display link (`CADisplayLink` on iOS, `Choreographer` on Android) at the
+  screen's refresh rate — **120 Hz on ProMotion**. A fast feed pushes ticks
+  straight to native, so React never re-renders per tick.
+- **Touch, not hover.** Crosshair scrubbing is **press-and-hold**: hold to inspect
+  a point (the line to the right dims), release to resume — the touch-native
+  equivalent of the web's mouse hover.
+- **Haptics.** Optional `haptics` fire on momentum swings and degen bursts _(iOS
+  today; Android next)_.
+- **Native controls & formatting.** The interval bar is a real native segmented
+  control (Liquid Glass on iOS); all number/time formatting and localization
+  (`currency`, `locale`, custom fonts) run natively, per frame.
+- **An imperative streaming API.** `value` drives the live feed declaratively, or
+  `useLiveline().push()` streams through a Nitro `hybridRef` — bypassing React
+  entirely for high-frequency feeds.
 
 ---
 
@@ -92,16 +137,27 @@ closures (or `.locale()`) for localization on the Swift side — the `currency` 
 
 | Path | What |
 | --- | --- |
-| `ios/Sources/LivelineKit` | The native engine — Swift Package (pure-maths modules + UIKit `LivelineView` + SwiftUI `Liveline`). |
+| `ios/Sources/LivelineKit` | The native iOS engine — Swift Package (pure-maths modules + UIKit `LivelineView` + SwiftUI `Liveline`). |
+| `android/liveline-core` | The native Android engine — the pure-maths modules ported 1-for-1 to Kotlin (JUnit tests mirror the Swift XCTests). |
+| `android/liveline` | The Android `LivelineView` (Canvas renderer, `Choreographer` loop). |
 | `packages/liveline-mobile` | The React Native library (Nitro binding + JS wrapper). Its README is the RN documentation. |
 | `examples/ios/LivelineDemo` | The native Swift showcase — a card per feature (parity with the web liveline examples). |
-| `examples/rn` | The React Native example app (Expo). |
+| `android/demo` | The native Kotlin showcase — the same menu of demos as the iOS one. |
+| `examples/rn` | The React Native example app (Expo) — a dropdown showcase of every demo. |
 
 ## Development
 
 ```bash
 swift build          # builds the pure-maths modules on the host (repo root)
 swift test           # runs the maths XCTest suite (no simulator)
+```
+
+Android (the engine is a 1-for-1 Kotlin port with a mirrored test suite):
+
+```bash
+cd android
+./gradlew :liveline-core:test      # the maths port's JUnit suite
+./gradlew :demo:assembleDebug      # the native Kotlin showcase app
 ```
 
 The pure-maths modules import only `Foundation`/`CoreGraphics`, so they build and
@@ -121,7 +177,11 @@ spec (`src/Liveline.nitro.ts`) requires a nitrogen regen.
 ## Credit
 
 The API shape (prop names, modes, momentum semantics) is ported from
-[liveline](https://github.com/benjitaylor/liveline) by Benji Taylor, MIT.
+[**liveline**](https://github.com/benjitaylor/liveline) by Benji Taylor, MIT —
+the original web/React/canvas library this is based on.
+<!-- TODO: link Benji Taylor's original liveline blog post / write-up here. -->
+
+
 
 ## Licence
 
