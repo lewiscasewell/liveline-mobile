@@ -774,8 +774,7 @@ class LivelineView @JvmOverloads constructor(
         displayValue = Clock.lerp(displayValue, liveClose, speed, dt)
         val endX = toX(now); val endY = toY(displayValue).coerceIn(padT, padT + chartH)
         val col = if ((liveCandle?.let { it.close >= it.open } ?: true)) bull else bear
-        dotOuter.alpha = 255; canvas.drawCircle(endX, endY, dp(6.5f), dotOuter)
-        dotInner.color = col.toInt(); canvas.drawCircle(endX, endY, dp(3.5f), dotInner)
+        // No live dot in candle mode — the live candle already shows the close.
         drawBadge(canvas, endX, endY, w, padR, padT, chartH, col.toInt())
     }
 
