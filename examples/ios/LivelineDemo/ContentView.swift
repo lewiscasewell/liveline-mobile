@@ -129,30 +129,56 @@ private struct Card<Content: View>: View {
 
 // MARK: - Feed models
 
-/// Generates a backfill history ending at "now", so a chart opens populated
-/// rather than building up from empty. Returns the points and the final value.
-func seedSeries(center: Double, vol: Double, seconds: Double = 45) -> ([LivelinePoint], Double) {
-    let now = Date().timeIntervalSince1970
-    let hz = 5.0
-    let n = Int(seconds * hz)
-    var v = center
-    var pts = [LivelinePoint]()
-    pts.reserveCapacity(n)
-    for i in 0..<n {
-        v += (center - v) * 0.01 + Double.random(in: -vol...vol)
-        pts.append(LivelinePoint(time: now - seconds + Double(i) / hz, value: v))
-    }
-    return (pts, v)
+/// Standard normal via Box–Muller — smoother tails than a uniform.
+func randn() -> Double {
+    let u = Double.random(in: Double.leastNormalMagnitude...1)
+    let v = Double.random(in: 0...1)
+    return (-2 * log(u)).squareRoot() * cos(2 * Double.pi * v)
 }
 
-/// A mean-reverting random walk pushing values at 20 Hz. Models a data feed,
-/// deliberately separate from the chart's own render loop. Starts from a
-/// backfilled history so the chart is populated immediately.
+/// A trending random walk. Instead of i.i.d. up/down noise (which reads as
+/// jittery zig-zag), it integrates a slowly-decaying AR(1) *velocity*, so the
+/// value keeps moving one direction for a stretch — mostly up during an up-move,
+/// with the odd down-tick — then stalls and reverses. Mean-reversion keeps it
+/// bounded. `momentum` is the velocity autocorrelation (higher = longer trends).
+struct TrendWalk {
+    private(set) var value: Double
+    private var velocity = 0.0
+    private let center, vol, momentum, reversion: Double
+
+    init(center: Double, vol: Double, momentum: Double = 0.94, reversion: Double = 0.01) {
+        self.center = center
+        self.vol = vol
+        self.momentum = momentum
+        self.reversion = reversion
+        self.value = center
+    }
+
+    /// Advance one step and return the new value.
+    mutating func step() -> Double {
+        let kick = vol * (1 - momentum * momentum).squareRoot()
+        velocity = velocity * momentum + randn() * kick
+        value += velocity + (center - value) * reversion
+        return value
+    }
+
+    /// A backfill history ending at "now", so a chart opens populated.
+    mutating func seed(seconds: Double = 45, hz: Double = 5) -> [LivelinePoint] {
+        let now = Date().timeIntervalSince1970
+        let n = Int(seconds * hz)
+        return (0..<n).map { i in
+            LivelinePoint(time: now - seconds + Double(i) / hz, value: step())
+        }
+    }
+}
+
+/// A trending feed pushing values at 20 Hz. Models a data source, deliberately
+/// separate from the chart's own render loop. Starts from a backfilled history
+/// (continuing seamlessly, no jump) so the chart is populated immediately.
 final class Walk: ObservableObject {
     @Published var value: Double
     let seed: [LivelinePoint]
-    private let center: Double
-    private let vol: Double
+    private var walk: TrendWalk
     private var timer: Timer?
     private var ticks = 0
 
@@ -166,12 +192,11 @@ final class Walk: ObservableObject {
     /// loading demo to flip state.
     var onTick: ((Double) -> Void)?
 
-    init(center: Double = 100, vol: Double = 0.9) {
-        let (points, last) = seedSeries(center: center, vol: vol)
-        self.seed = points
-        self.value = last
-        self.center = center
-        self.vol = vol
+    init(center: Double = 100, vol: Double = 0.55, momentum: Double = 0.94, reversion: Double = 0.01) {
+        var w = TrendWalk(center: center, vol: vol, momentum: momentum, reversion: reversion)
+        self.seed = w.seed()
+        self.value = w.value
+        self.walk = w
         start()
     }
 
@@ -187,8 +212,7 @@ final class Walk: ObservableObject {
         onTick?(elapsed)
         if let delay = feedDelaySeconds, elapsed < delay { return }
         if let stop = stopAfterSeconds, elapsed > stop { return }
-        let drift = (center - value) * 0.01
-        value += drift + Double.random(in: -vol...vol)
+        value = walk.step()
     }
 
     deinit { timer?.invalidate() }
@@ -208,7 +232,7 @@ private struct BasicCard: View {
 }
 
 private struct MomentumCard: View {
-    @StateObject private var walk = Walk(vol: 1.2)
+    @StateObject private var walk = Walk(vol: 0.7)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
@@ -223,7 +247,7 @@ private struct MomentumCard: View {
 }
 
 private struct ValueOverlayCard: View {
-    @StateObject private var walk = Walk(center: 9800, vol: 24)
+    @StateObject private var walk = Walk(center: 9800, vol: 4, momentum: 0.95, reversion: 0.008)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
@@ -240,7 +264,7 @@ private struct ValueOverlayCard: View {
 }
 
 private struct ReferenceLineCard: View {
-    @StateObject private var walk = Walk(center: 67_500, vol: 240)
+    @StateObject private var walk = Walk(center: 67_500, vol: 55, momentum: 0.93)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(title: "Reference line", subtitle: "A horizontal marker at a fixed value, kept in view.") {
@@ -254,7 +278,7 @@ private struct ReferenceLineCard: View {
 }
 
 private struct HeartRateCard: View {
-    @StateObject private var walk = Walk(center: 62, vol: 0.4)
+    @StateObject private var walk = Walk(center: 62, vol: 0.3, momentum: 0.8, reversion: 0.02)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
@@ -276,13 +300,15 @@ final class StatesModel: ObservableObject {
     @Published var value: Double
     @Published var loading = true
     let seed: [LivelinePoint]
+    private var walk: TrendWalk
     private var timer: Timer?
     private var t = 0.0
 
     init() {
-        let (points, last) = seedSeries(center: 210, vol: 1.2)
-        seed = points
-        value = last
+        var w = TrendWalk(center: 210, vol: 0.9)
+        seed = w.seed()
+        value = w.value
+        walk = w
         timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             self?.step()
         }
@@ -291,14 +317,14 @@ final class StatesModel: ObservableObject {
     private func step() {
         t += 0.05
         if t >= 3 { loading = false }
-        value += (210 - value) * 0.01 + Double.random(in: -1.2...1.2)
+        value = walk.step()
     }
 
     deinit { timer?.invalidate() }
 }
 
 private struct SurfaceCard: View {
-    @StateObject private var walk = Walk(center: 100, vol: 0.9)
+    @StateObject private var walk = Walk(center: 100, vol: 0.55)
     var body: some View {
         Card(
             title: "Custom surface",
@@ -313,7 +339,7 @@ private struct SurfaceCard: View {
 }
 
 private struct DegenCard: View {
-    @StateObject private var walk = Walk(center: 420, vol: 6)
+    @StateObject private var walk = Walk(center: 420, vol: 3)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
@@ -354,13 +380,15 @@ final class PausedModel: ObservableObject {
     @Published var value: Double
     @Published var paused = false
     let seed: [LivelinePoint]
+    private var walk: TrendWalk
     private var timer: Timer?
     private var t = 0.0
 
     init() {
-        let (points, last) = seedSeries(center: 160, vol: 1.0)
-        seed = points
-        value = last
+        var w = TrendWalk(center: 160, vol: 0.7)
+        seed = w.seed()
+        value = w.value
+        walk = w
         timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             self?.step()
         }
@@ -369,7 +397,7 @@ final class PausedModel: ObservableObject {
     private func step() {
         t += 0.05
         paused = t.truncatingRemainder(dividingBy: 8) >= 4
-        value += (160 - value) * 0.01 + Double.random(in: -1.0...1.0)
+        value = walk.step()
     }
 
     deinit { timer?.invalidate() }
@@ -401,21 +429,18 @@ private struct PausedCard: View {
 final class SparseFeed: ObservableObject {
     @Published var value: Double
     let seed: [LivelinePoint]
+    private var walk: TrendWalk
     private var timer: Timer?
 
     init() {
-        // A sparse backfill: one point every 4s.
-        let now = Date().timeIntervalSince1970
-        var v = 100.0
-        var pts = [LivelinePoint]()
-        for i in 0..<12 {
-            v += Double.random(in: -5...5)
-            pts.append(LivelinePoint(time: now - 48 + Double(i) * 4, value: v))
-        }
-        seed = pts
-        value = v
+        // A sparse backfill: one point every 4s (a low-volume asset).
+        var w = TrendWalk(center: 100, vol: 4, momentum: 0.6)
+        seed = w.seed(seconds: 48, hz: 0.25)
+        value = w.value
+        walk = w
         timer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { [weak self] _ in
-            self?.value += Double.random(in: -5...5)
+            guard let self else { return }
+            self.value = self.walk.step()
         }
     }
 
@@ -440,7 +465,7 @@ private struct SparseCard: View {
 
 private struct StaleFeedCard: View {
     @StateObject private var walk: Walk = {
-        let w = Walk(center: 100, vol: 0.9)
+        let w = Walk(center: 100, vol: 0.55)
         w.stopAfterSeconds = 6
         return w
     }()
@@ -463,22 +488,22 @@ private struct StaleFeedCard: View {
 final class CPUFeed: ObservableObject {
     @Published var value: Double
     let seed: [LivelinePoint]
-    private var timer: Timer?
-    private var base = 14.0
+    private var base = TrendWalk(center: 14, vol: 1.2, momentum: 0.85, reversion: 0.06)
     private var spike = 0.0
+    private var timer: Timer?
 
     init() {
         let now = Date().timeIntervalSince1970
-        var b = 14.0
+        var b = TrendWalk(center: 14, vol: 1.2, momentum: 0.85, reversion: 0.06)
         var sp = 0.0
         var pts = [LivelinePoint]()
         for i in 0..<200 {
-            b += (14 - b) * 0.05 + Double.random(in: -2...2)
-            if Double.random(in: 0...1) > 0.97 { sp = Double.random(in: 40...75) }
+            let bv = b.step()
+            if Double.random(in: 0...1) > 0.985 { sp = Double.random(in: 40...75) }
             sp *= 0.8
             pts.append(
                 LivelinePoint(
-                    time: now - 45 + Double(i) / 199 * 45, value: max(2, min(100, b + sp))))
+                    time: now - 45 + Double(i) / 199 * 45, value: max(2, min(100, bv + sp))))
         }
         seed = pts
         base = b
@@ -490,10 +515,10 @@ final class CPUFeed: ObservableObject {
     }
 
     private func step() {
-        base += (14 - base) * 0.05 + Double.random(in: -2...2)
-        if Double.random(in: 0...1) > 0.97 { spike = Double.random(in: 40...75) }
+        let bv = base.step()
+        if Double.random(in: 0...1) > 0.985 { spike = Double.random(in: 40...75) }
         spike *= 0.82
-        value = max(2, min(100, base + spike))
+        value = max(2, min(100, bv + spike))
     }
 
     deinit { timer?.invalidate() }
@@ -732,22 +757,22 @@ final class OrderbookFeed: ObservableObject {
     @Published var value: Double
     @Published var book: OrderbookData
     let seed: [LivelinePoint]
-    private var price: Double
+    private var walk: TrendWalk
     private var timer: Timer?
 
     init() {
-        let (pts, last) = seedSeries(center: 62, vol: 0.7)
-        seed = pts
-        price = last
-        value = last
-        book = OrderbookFeed.makeBook(price: last)
+        var w = TrendWalk(center: 62, vol: 0.45)
+        seed = w.seed()
+        value = w.value
+        walk = w
+        book = OrderbookFeed.makeBook(price: w.value)
         timer = Timer.scheduledTimer(withTimeInterval: 0.12, repeats: true) { [weak self] _ in
             self?.step()
         }
     }
 
     private func step() {
-        price += (62 - price) * 0.008 + Double.random(in: -0.8...0.8)
+        let price = walk.step()
         value = price
         book = OrderbookFeed.makeBook(price: price)
     }
@@ -793,30 +818,32 @@ final class CandleFeed: ObservableObject {
     @Published var candles: [LivelineCandle] = []
     @Published var live: LivelineCandle
     let candleWidth: Double = 3
-    private var price: Double = 150
+    private var walk = TrendWalk(center: 150, vol: 1.4, momentum: 0.93, reversion: 0.006)
     private var timer: Timer?
 
     init() {
         // Backfill ~18 historical candles so the chart opens populated.
         let cw = 3.0
         let liveBucket = (Date().timeIntervalSince1970 / cw).rounded(.down) * cw
-        var p = 150.0
+        var w = TrendWalk(center: 150, vol: 1.4, momentum: 0.93, reversion: 0.006)
         var history = [LivelineCandle]()
         for i in 0..<18 {
-            let open = p
+            let open = w.value
             var hi = open
             var lo = open
+            var close = open
             for _ in 0..<10 {
-                p += Double.random(in: -1.8...1.8)
-                hi = max(hi, p)
-                lo = min(lo, p)
+                close = w.step()
+                hi = max(hi, close)
+                lo = min(lo, close)
             }
             history.append(
                 LivelineCandle(
-                    time: liveBucket - cw * Double(18 - i), open: open, high: hi, low: lo, close: p))
+                    time: liveBucket - cw * Double(18 - i), open: open, high: hi, low: lo, close: close))
         }
         candles = history
-        price = p
+        walk = w
+        let p = w.value
         live = LivelineCandle(time: liveBucket, open: p, high: p, low: p, close: p)
         timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             self?.step()
@@ -824,7 +851,7 @@ final class CandleFeed: ObservableObject {
     }
 
     private func step() {
-        price += Double.random(in: -1.8...1.8)
+        let price = walk.step()
         let bucket = (Date().timeIntervalSince1970 / candleWidth).rounded(.down) * candleWidth
         if bucket != live.time {
             candles.append(live)
@@ -843,7 +870,7 @@ final class CandleFeed: ObservableObject {
 }
 
 private struct TimeWindowsCard: View {
-    @StateObject private var walk = Walk(center: 87, vol: 0.85)
+    @StateObject private var walk = Walk(center: 87, vol: 0.6)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
