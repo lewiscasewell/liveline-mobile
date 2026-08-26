@@ -382,13 +382,14 @@ class LivelineView @JvmOverloads constructor(
             canvas.drawRect(hx, padT, padL + chartW, padT + chartH, scrubFadePaint)
         }
 
-        // 5. Left-edge fade.
+        // 5. Time axis.
+        drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)
+
+        // 6. Left-edge fade — over the line AND the time labels (full height), so
+        // the labels dissolve into the background on the left (matches iOS).
         val fadeW = dp(56f)
         fadePaint.shader = LinearGradient(padL, 0f, padL + fadeW, 0f, palette.background.toInt(), palette.background.withAlpha(0.0).toInt(), Shader.TileMode.CLAMP)
-        canvas.drawRect(0f, padT, padL + fadeW, padT + chartH, fadePaint)
-
-        // 6. Time axis.
-        drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)
+        canvas.drawRect(0f, 0f, padL + fadeW, h, fadePaint)
 
         // 7. Live dot + pulse — always the line colour (momentum shows via the
         // badge + chevrons, not the dot).
@@ -567,10 +568,10 @@ class LivelineView @JvmOverloads constructor(
 
         for (s in series) if (s.visible) drawOneSeries(canvas, s, padR, now)
 
-        // Left-edge fade.
+        // Left-edge fade — over lines AND time labels (full height), like iOS.
         val fadeW = dp(56f)
         fadePaint.shader = LinearGradient(padL, 0f, padL + fadeW, 0f, palette.background.toInt(), palette.background.withAlpha(0.0).toInt(), Shader.TileMode.CLAMP)
-        canvas.drawRect(0f, padT, padL + fadeW, padT + chartH, fadePaint)
+        canvas.drawRect(0f, 0f, padL + fadeW, h, fadePaint)
 
         if (scrubAmount > 0.01) drawMultiSeriesHover(canvas, now, scrubAmount)
     }
@@ -759,6 +760,11 @@ class LivelineView @JvmOverloads constructor(
         }
 
         drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)
+
+        // Left-edge fade over candles + time labels.
+        val fadeW = dp(56f)
+        fadePaint.shader = LinearGradient(padL, 0f, padL + fadeW, 0f, palette.background.toInt(), palette.background.withAlpha(0.0).toInt(), Shader.TileMode.CLAMP)
+        canvas.drawRect(0f, 0f, padL + fadeW, padT + chartH + dp(32f), fadePaint)
 
         // Live close dot + badge (tinted by the live candle direction).
         val liveClose = liveCandle?.close ?: visible.last().close
