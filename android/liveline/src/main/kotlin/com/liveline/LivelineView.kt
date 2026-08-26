@@ -661,6 +661,9 @@ class LivelineView @JvmOverloads constructor(
         val pick = if (top.isEmpty()) return else top[(Math.random() * top.size).toInt().coerceAtMost(top.size - 1)]
         val maxSize = top.maxOf { it.size }
         val weight = if (maxSize > 0) min(1.0, pick.size / maxSize) else 0.5
+        // Keep a minimum vertical gap between rising labels so the column reads as
+        // a spaced stream rather than a solid block (the newest label sits last).
+        obLabels.lastOrNull()?.let { if (it.yOffset < dp(20f)) return }
         obLabels.add(ObLabel("+$" + fmtSize(pick.size), padL + dp(6f), padT + chartH - dp(6f), isBid, weight))
         if (obLabels.size > 40) obLabels.removeAt(0)
     }
@@ -791,10 +794,18 @@ class LivelineView @JvmOverloads constructor(
         val chartLeft = padL; val chartRight = w - padR; val chartW = chartRight - chartLeft
         val tickLen = dp(5f); val fadeZone = dp(50f)
         fun toX(t: Double) = chartLeft + ((t - leftEdge) / (rightEdge - leftEdge)).toFloat() * chartW
-        // Only fade the RIGHT (entering) edge via alpha; the LEFT is faded by the
-        // left-edge gradient drawn over the labels, so a label stays anchored to
-        // its timestamp and dissolves into the background instead of popping.
-        fun edgeAlpha(x: Float): Double { val fromRight = chartRight - x; return when { fromRight >= fadeZone -> 1.0; fromRight <= 0f -> 0.0; else -> (fromRight / fadeZone).toDouble() } }
+        // Fade the whole label uniformly near BOTH edges so it dissolves in place
+        // instead of a tail bleeding past the edge. The left needs alpha (not just
+        // the gradient) because a centred label's right half can extend beyond the
+        // gradient's fade zone and stay visible; fading the label's alpha takes the
+        // entire label — tail included — down together.
+        fun edgeAlpha(x: Float): Double {
+            val fromRight = chartRight - x
+            val fromLeft = x - chartLeft
+            val r = when { fromRight >= fadeZone -> 1.0; fromRight <= 0f -> 0.0; else -> (fromRight / fadeZone).toDouble() }
+            val l = when { fromLeft >= fadeZone -> 1.0; fromLeft <= 0f -> 0.0; else -> (fromLeft / fadeZone).toDouble() }
+            return min(r, l)
+        }
         val targetPxPerSec = chartW / span
         var interval = Intervals.niceTimeInterval(span)
         // Widen the interval until adjacent labels can't overlap (measure a
