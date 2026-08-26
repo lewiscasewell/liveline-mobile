@@ -478,8 +478,8 @@ for the Swift API and the full example app.
 
 The API shape (prop names, modes, momentum semantics) is ported from
 [**liveline**](https://github.com/benjitaylor/liveline) by Benji Taylor, MIT —
-the original web/React/canvas library this is based on.
-<!-- TODO: link Benji Taylor's original liveline blog post / write-up here. -->
+the original web/React/canvas library this is based on. See also his
+[write-up](https://benji.org/liveline).
 
 liveline-mobile adds the mobile-native layer on top (see
 [Built for mobile](#built-for-mobile)).

@@ -36,7 +36,7 @@ ticks, so a fast feed never re-renders React.
 
 _See the original web charts in motion in Benji Taylor's
 [liveline](https://github.com/benjitaylor/liveline) and its
-[write-up](# "TODO: original liveline blog-post URL")._
+[write-up](https://benji.org/liveline)._
 
 ---
 
@@ -178,8 +178,8 @@ spec (`src/Liveline.nitro.ts`) requires a nitrogen regen.
 
 The API shape (prop names, modes, momentum semantics) is ported from
 [**liveline**](https://github.com/benjitaylor/liveline) by Benji Taylor, MIT —
-the original web/React/canvas library this is based on.
-<!-- TODO: link Benji Taylor's original liveline blog post / write-up here. -->
+the original web/React/canvas library this is based on. See also his
+[write-up](https://benji.org/liveline).
 
 
 
