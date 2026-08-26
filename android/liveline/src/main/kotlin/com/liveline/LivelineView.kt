@@ -792,10 +792,20 @@ class LivelineView @JvmOverloads constructor(
         val chartLeft = padL; val chartRight = w - padR; val chartW = chartRight - chartLeft
         val tickLen = dp(5f); val fadeZone = dp(50f)
         fun toX(t: Double) = chartLeft + ((t - leftEdge) / (rightEdge - leftEdge)).toFloat() * chartW
-        fun edgeAlpha(x: Float): Double { val fromEdge = min(x - chartLeft, chartRight - x); return when { fromEdge >= fadeZone -> 1.0; fromEdge <= 0f -> 0.0; else -> (fromEdge / fadeZone).toDouble() } }
+        // Only fade the RIGHT (entering) edge via alpha; the LEFT is faded by the
+        // left-edge gradient drawn over the labels, so a label stays anchored to
+        // its timestamp and dissolves into the background instead of popping.
+        fun edgeAlpha(x: Float): Double { val fromRight = chartRight - x; return when { fromRight >= fadeZone -> 1.0; fromRight <= 0f -> 0.0; else -> (fromRight / fadeZone).toDouble() } }
         val targetPxPerSec = chartW / span
         var interval = Intervals.niceTimeInterval(span)
-        while (interval * targetPxPerSec < 60 && interval < span) interval *= 2
+        // Widen the interval until adjacent labels can't overlap (measure a
+        // representative label), so the visible set never swaps as it scrolls.
+        var guard = 0
+        while (guard++ < 8 && interval < span) {
+            val sampleW = timeLabelPaint.measureText(axisTimeLabel(rightEdge, interval)) + dp(24f)
+            if (interval * targetPxPerSec >= sampleW) break
+            interval *= 2
+        }
         val firstTime = ceil((leftEdge - interval) / interval) * interval
         val targetKeys = HashSet<Long>(); var t = firstTime
         while (t <= rightEdge + interval && targetKeys.size < 30) { targetKeys.add(Math.round(t * 100)); t += interval }
