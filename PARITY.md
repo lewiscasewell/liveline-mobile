@@ -32,11 +32,11 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `candles` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| candle↔line morph (via `mode`) | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | mode-driven; see divergences |
+| candle↔line morph (via `mode`) | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | mode-driven; see divergences |
 | `lineMode`/`lineData`/`lineValue` | — | — | — | — | — | — | intentionally not ported — see divergences |
 | `onModeChange` | — | — | — | — | — | — | app owns `mode`; no built-in toggle to fire it |
-| `onSeriesToggle` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | legend in the Nitro container; verified on device |
-| `seriesToggleCompact` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | legend in the Nitro container; verified on device |
+| `onSeriesToggle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | legend in the Nitro container; verified on device |
+| `seriesToggleCompact` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | legend in the Nitro container; verified on device |
 | `loading` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `paused` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `emptyText` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
@@ -44,12 +44,12 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `windows` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | Android bar wired |
 | `onWindowChange` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `windowStyle` | ✅ | ⚠️ | ✅ | ⚠️ | ☑ | ☐ | Kotlin has one style |
-| `tooltipY` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | ported (renderer + Nitro, both platforms) |
-| `tooltipOutline` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | ported (renderer + Nitro, both platforms) |
+| `tooltipY` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | ported (renderer + Nitro, both platforms) |
+| `tooltipOutline` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | ported (renderer + Nitro, both platforms) |
 | `orderbook` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `referenceLine` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `lerpSpeed` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
-| `padding` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | ported (renderer + Nitro, both platforms) |
+| `padding` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | ported (renderer + Nitro, both platforms) |
 | `onHover` | — | — | — | — | — | — | intentionally not ported — no pointer/hover on touch |
 | `cursor` | — | — | — | — | — | — | intentionally not ported — no pointer/hover on touch |
 | formatting: `formatValue`/`formatTime` | ✅ | ⚠️ | — | — | ☑ | ☐ | ours: `valuePrefix/suffix/decimals` |

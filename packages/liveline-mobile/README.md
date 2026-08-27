@@ -199,6 +199,26 @@ Several equal-peer lines on one chart. A non-empty `series` replaces
 <!-- 🎥 record: Prediction-market demo, tapping legend chips to toggle lines -->
 > _Video coming soon._
 
+#### `onSeriesToggle` — legend toggle callback
+
+Fires when a legend chip shows/hides a line: `(id, visible) => void`.
+
+```tsx
+<Liveline series={series} onSeriesToggle={(id, visible) => console.log(id, visible)} />
+```
+<!-- 🎥 record: tapping a chip, the line hiding, the callback logging -->
+> _Video coming soon._
+
+#### `seriesToggleCompact` — dots-only legend
+
+Shows the legend as colour dots without labels. Default `false`.
+
+```tsx
+<Liveline series={series} seriesToggleCompact />
+```
+<!-- 🎥 record: the legend as labels vs compact dots -->
+> _Video coming soon._
+
 ### Appearance
 
 #### `color` — accent
@@ -254,6 +274,18 @@ The gradient fill beneath the curve. Default `true`; set `false` for a bare line
 <Liveline data={data} fill={false} />
 ```
 <!-- 🎥 record: same chart with fill on → off -->
+> _Video coming soon._
+
+#### `padding` — chart insets
+
+Override the plot insets (points): `{ top?, right?, bottom?, left? }`. Any side
+you omit keeps its default. Handy to make room for your own chrome, or to tighten
+the chart.
+
+```tsx
+<Liveline data={data} padding={{ top: 24, right: 12 }} />
+```
+<!-- 🎥 record: default insets vs a custom padding -->
 > _Video coming soon._
 
 #### `lineWidth` — stroke width
@@ -434,6 +466,18 @@ Default `true`.
 <!-- 🎥 record: pressing and dragging along the line, crosshair + values -->
 > _Video coming soon._
 
+#### `tooltipY` / `tooltipOutline` — crosshair tooltip
+
+Tune the scrub tooltip: `tooltipY` is the tooltip text's vertical offset in points
+(default `14`); `tooltipOutline` strokes an outline behind the text for legibility
+over the line (default `true`).
+
+```tsx
+<Liveline data={data} value={value} tooltipY={20} tooltipOutline={false} />
+```
+<!-- 🎥 record: scrubbing, tooltip offset + outline on vs off -->
+> _Video coming soon._
+
 #### `exaggerate` — amplify small moves
 
 Tightens the Y-axis around the recent range so tiny fluctuations fill the height
@@ -490,6 +534,20 @@ updated every tick so its wicks grow in place until the bucket rolls over.
 <Liveline mode='candle' candles={history} candleWidth={3} liveCandle={live} />
 ```
 <!-- 🎥 record: the live candle growing, then a new bucket starting -->
+> _Video coming soon._
+
+#### candle ↔ line morph
+
+Flipping `mode` between `'candle'` and `'line'` **animates** the transition — the
+candles collapse toward their closes while the line draws in (from `data`/`value`).
+So provide `data` (the tick line) alongside `candles` if you want the morph, and
+just toggle `mode`. There's no separate "line mode" prop — see
+[divergences](../../PARITY.md#deliberate-divergences).
+
+```tsx
+<Liveline mode={showCandles ? 'candle' : 'line'} data={ticks} candles={history} liveCandle={live} candleWidth={3} />
+```
+<!-- 🎥 record: toggling mode, candles melting into the line and back -->
 > _Video coming soon._
 
 ### The interval bar
