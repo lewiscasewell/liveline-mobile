@@ -59,14 +59,9 @@ chart lives on a phone:
 
 - [Preview](#preview) · [Built for mobile](#built-for-mobile)
 - [Install](#install) · [Quick start](#quick-start)
-- [Live data: `push()` and `useLiveline`](#live-data-push-and-useliveline)
-- [Multi-series](#multi-series) · [Orderbook stream](#orderbook-stream)
-- [Appearance](#appearance): [color & theme](#color--theme) · [transparent surface](#transparent-surface) · [custom fonts](#custom-fonts)
-- [Number & time formatting](#number--time-formatting): [`currency` vs `valuePrefix`](#currency-vs-valueprefix) · [localization](#localization)
-- [The value overlay & badge](#the-value-overlay--badge)
-- [Momentum, degen mode & haptics](#momentum-degen-mode--haptics)
-- [The interval bar & candles](#the-interval-bar--candles)
-- [Everything else](#everything-else) · [Full prop & method reference](#full-prop--method-reference)
+- [**Feature reference**](#feature-reference) — every prop, one at a time (data, appearance, momentum & effects, candles, the interval bar, formatting, states, overlays)
+- Recipes: [Live data & `useLiveline`](#live-data-push-and-useliveline) · [Custom fonts](#custom-fonts) · [Formatting](#formatting-recipes)
+- [Full prop & method reference](#full-prop--method-reference)
 - [Platforms](#platforms) · [Swift](#also-available-as-a-swift-package)
 
 ---
@@ -133,9 +128,8 @@ Two things drive a chart:
 Every prop, one at a time — what it does, a minimal snippet, and a demo clip. The
 props mirror the original web [liveline](https://github.com/benjitaylor/liveline);
 where mobile changes the behaviour it's called out (➕ = mobile-only addition).
-
-<!-- This gallery is being built out feature by feature; the older topical
-     how-tos below are folded in and trimmed as each group lands. -->
+For task-oriented guides (streaming, fonts, currency/locale) see the
+[recipes](#live-data-push-and-useliveline) below.
 
 ### Live data
 
@@ -634,7 +628,12 @@ const { pushOrderbook } = useLiveline()
 
 ---
 
-## Live data: `push()` and `useLiveline`
+## Recipes
+
+Task-oriented guides that cut across several props. The per-prop details live in
+the [Feature reference](#feature-reference) above.
+
+### Live data: `push()` and `useLiveline`
 
 `useLiveline()` owns the imperative handle so you never touch `hybridRef`
 plumbing:
@@ -669,110 +668,8 @@ every tick. Just call it once per data tick; no per-window bookkeeping.
 
 ---
 
-## Multi-series
-
-Pass **`series`** instead of `data`/`value` to draw several **equal-peer** lines
-on one chart. Each series gets its own colour, endpoint dot, faded dashed
-baseline and endpoint label; the Y-axis auto-ranges over the visible series.
-
-```tsx
-<Liveline
-  style={{ height: 320 }}
-  series={[
-    { id: 'yes',   color: '#3b82f6', label: 'Yes',   data: yesHistory },
-    { id: 'no',    color: '#ef4444', label: 'No',    data: noHistory },
-    { id: 'maybe', color: '#f59e0b', label: 'Maybe', data: maybeHistory },
-  ]}
-  valueSuffix="%"
-  valueDecimals={0}
-  hybridRef={attachHybridRef()}
-/>
-```
-
-- A **legend of toggle chips** (colour dot + label) appears above the chart — tap
-  a chip to hide/show that line; the shared Y-range re-fits to what's visible.
-- **Live updates** route by id: `push({ time, value }, seriesId)`.
-- **Hover** (press-and-hold) shows a crosshair, a filled dot on each visible line
-  at that time, and a top row of per-series values
-  (`16:31:48 · Yes 68% · No 7% · Maybe 25%`).
-- Multi-series is line-mode only; the single-series badge / value overlay /
-  momentum don't apply (the per-series labels stand in).
-
-```tsx
-// each outcome pushes once per tick, routed by series id
-for (const o of outcomes) push({ time, value: o.value }, o.id)
-```
-
----
-
-## Orderbook stream
-
-Pass an **`orderbook`** snapshot to render a Kalshi-style depth stream behind the
-price line. `bids` and `asks` are arrays of **`[price, size]`** tuples; the
-resting sizes float up behind the line as a uniform, left-aligned column and fade
-out — **green for bids, red for asks, bigger orders brighter**. The stream speed
-reacts to price momentum and orderbook churn (how fast the totals change): calm
-markets drift, volatile ones rush.
-
-```tsx
-const { attachHybridRef, push, pushOrderbook } = useLiveline()
-
-// price line + depth, each tick
-push({ time, value: price })
-pushOrderbook({
-  bids: [[price - 0.1, 1200], [price - 0.2, 800]],
-  asks: [[price + 0.1, 950],  [price + 0.2, 1500]],
-})
-
-<Liveline data={seed} value={price} valuePrefix="$" hybridRef={attachHybridRef()} />
-```
-
-- **`pushOrderbook({ bids, asks })`** — the imperative path (via `useLiveline()`),
-  with no React re-render. Prefer it for a high-frequency depth feed.
-- **`orderbook` prop** — the declarative equivalent, for React-driven updates:
-
-```tsx
-<Liveline data={seed} value={price} orderbook={{ bids, asks }} />
-```
-
-Pair it with the price line (`value` / `push()`); the orderbook is an overlay,
-not a replacement for the line.
-
----
-
-## Appearance
-
-### color & theme
-
-```tsx
-<Liveline color="#AB9FF2" theme="dark" />
-```
-
-- **`color`** — one accent colour; the whole palette (line, fill, badge, dot) is
-  derived from it. Momentum green/red are always semantic, independent of accent.
-- **`theme`** — `'light' | 'dark'` (default `'dark'`). Sets the *tone* of the
-  ink (line, grid, labels, crosshair). **It doesn't paint a background** — see
-  below.
-
-### Transparent surface
-
-By default the chart is **transparent** (like web liveline): whatever is behind
-the view shows through, and `theme` just sets the ink tone to match it.
-
-```tsx
-// Transparent — put it on any background and pick a theme that suits it:
-<View style={{ backgroundColor: '#0a0a0a' }}>
-  <Liveline data={history} theme="dark" />
-</View>
-
-// Or make it a self-contained card with its own opaque fill:
-<Liveline data={history} theme="dark" surfaceColor="#1c1530" />
-```
-
-- Omit **`surfaceColor`** → transparent (the container supplies the background).
-- Set an opaque `surfaceColor` → the chart paints its own background.
-
 ### Custom fonts
+
 
 Set **`fontFamily`** to change the font of *all* chart text — the value overlay,
 badge, axis, crosshair/OHLC readout, orderbook labels and the interval bar.
@@ -799,7 +696,7 @@ font — it never crashes.
 
 ---
 
-## Number & time formatting
+### Formatting recipes
 
 All numbers are formatted **natively** (per frame, across many labels), so
 formatting is declarative — you can't pass a JS formatter callback.
@@ -843,97 +740,6 @@ localized month names & field order, 12/24-hour), and overridable:
 > `locale` is a plain string because BCP-47 is open-ended.
 
 ---
-
-## The value overlay & badge
-
-**Value overlay** — a large live number above the plot, with an Apple-style
-per-digit roll animation:
-
-```tsx
-<Liveline showValue valueMomentumColor />
-```
-- **`showValue`** draws it. **`valueMomentumColor`** tints it green up / red down.
-
-**Badge** — the pill at the live dot:
-
-```tsx
-<Liveline badge badgeTail badgeVariant="accent" />
-```
-- **`badgeVariant`**: `'default'` (momentum green/red) · `'minimal'` (neutral
-  pill) · `'accent'` (filled with the line colour, arrows still show).
-- **`badgeTail`** toggles the pointer toward the dot.
-
----
-
-## Momentum, degen mode & haptics
-
-```tsx
-<Liveline momentum="auto" degen haptics />
-```
-
-- **`momentum`**: `'auto'` (detect direction) · `'up'` · `'down'` · `'off'`.
-  Draws directional chevrons on the live dot and tints the badge.
-- **`degen`**: on a fast upward move the chart **shakes** and **line-coloured
-  sparks** burst from the live dot. Great with `momentum`.
-- **`haptics`**: a light tap as the crosshair crosses each step while scrubbing,
-  and a stronger hit on each degen burst.
-
----
-
-## The interval bar & candles
-
-**Interval bar** — a built-in, native segmented control (Liquid Glass on iOS 26)
-that reports the chosen span. You refetch history on change:
-
-```tsx
-const WINDOWS = [
-  { label: '1H', secs: 3600 },
-  { label: '30M', secs: 1800 },
-  { label: 'Live', secs: 30 },
-]
-
-<Liveline
-  windows={WINDOWS}
-  window={interval}                    // current span (seconds)
-  windowStyle="rounded"                // 'default' | 'rounded' | 'text'
-  onWindowChange={(secs) => refetch(secs)}
-/>
-```
-
-**Candles** — switch to candle mode; an optional line/candle toggle appears at
-the end of the bar:
-
-```tsx
-<Liveline
-  mode={mode}                          // 'line' | 'candle'
-  candles={ohlc}                       // { time, open, high, low, close }[]
-  candleWidth={interval / ohlc.length} // seconds per candle
-  liveCandle={forming}                 // the currently-forming candle (optional)
-  onModeChange={setMode}
-/>
-```
-
-The live candle streams from the same `push()` feed and grows its wicks; the
-line fades out as candles grow in when you switch. Momentum arrows, the badge and
-the value overlay all persist in candle mode.
-
----
-
-## Everything else
-
-| Prop | Meaning |
-| --- | --- |
-| `grid` | value grid + labels (default `true`) |
-| `fill` | area fill under the line (default `true`) |
-| `scrub` | press-and-hold crosshair scrubbing (default `true`) |
-| `pulse` | pulsing ring on the live dot (default `true`) |
-| `exaggerate` | tighten the Y-range so small moves fill the height (default `false`) |
-| `paused` | freeze scrolling while data keeps arriving; catches up on resume |
-| `loading` | breathing loading line (morphs into data when it arrives) |
-| `emptyText` | message shown when `data` is empty |
-| `referenceLine` | `{ value, label? }` — a horizontal marker kept in view |
-| `lineWidth` | stroke width in points (default `2`) |
-| `lerpSpeed` | base easing speed per 60fps frame, `0…1` (default `0.08`) |
 
 ## Full prop & method reference
 

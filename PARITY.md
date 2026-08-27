@@ -43,7 +43,7 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `window` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `windows` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | Android bar wired |
 | `onWindowChange` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `windowStyle` | ✅ | ⚠️ | ✅ | ⚠️ | ☑ | ☐ | Kotlin has one style |
+| `windowStyle` | — | — | — | — | ☑ | ☐ | accepted for compat; native styling per platform (see divergences) |
 | `tooltipY` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | ported (renderer + Nitro, both platforms) |
 | `tooltipOutline` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | ported (renderer + Nitro, both platforms) |
 | `orderbook` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
@@ -90,6 +90,12 @@ more than help. The divergences below are intentional.
   `(inout Palette) -> Void` closure to tweak the full palette; a closure that
   mutates native structs has no declarative RN equivalent, so it stays a
   Swift/Kotlin-renderer escape hatch, not an RN prop.
+- **`windowStyle` — native styling, not the web's CSS variants.** The prop is
+  accepted for API compatibility, but the interval bar is a native control on
+  each platform (a Liquid-Glass `UISegmentedControl` on iOS, a pill bar on
+  Android), so the web's `default`/`rounded`/`text` looks don't apply — iOS
+  ignores it too. One native bar per platform beats three hand-drawn CSS
+  look-alikes.
 - **Number formatting** uses declarative `valuePrefix` / `valueSuffix` /
   `valueDecimals` / `currency` / `locale` / `useGrouping` instead of the web's
   `formatValue` / `formatTime` closures, so formatting stays native (off the JS
