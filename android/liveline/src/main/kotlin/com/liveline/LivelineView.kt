@@ -71,6 +71,8 @@ class LivelineView @JvmOverloads constructor(
     var showValue: Boolean = false
     var valueMomentumColor: Boolean = false
     var fill: Boolean = true
+    /** Y-axis grid lines + value labels (the time axis is always drawn). */
+    var grid: Boolean = true
     var exaggerate: Boolean = false
     var loading: Boolean = false
     var paused: Boolean = false
@@ -332,7 +334,7 @@ class LivelineView @JvmOverloads constructor(
         // 2. Grid + value labels.
         val pxPerUnit = chartH / range
         gridInterval = Ticks.pickInterval(range, pxPerUnit.toDouble(), dp(36f).toDouble(), gridInterval)
-        if (gridInterval > 0) {
+        if (grid && gridInterval > 0) {
             var g = ceil(minV / gridInterval) * gridInterval
             labelPaint.textAlign = Paint.Align.LEFT
             while (g <= maxV) {
@@ -734,7 +736,7 @@ class LivelineView @JvmOverloads constructor(
         // Grid + value labels.
         val pxPerUnit = chartH / range
         gridInterval = Ticks.pickInterval(range, pxPerUnit.toDouble(), dp(36f).toDouble(), gridInterval)
-        if (gridInterval > 0) {
+        if (grid && gridInterval > 0) {
             var g = ceil(minV / gridInterval) * gridInterval
             labelPaint.textAlign = Paint.Align.LEFT
             while (g <= maxV) { val y = toY(g); canvas.drawLine(padL, y, padL + chartW, y, gridPaint); canvas.drawText(String.format("%.${valueDecimals}f", g), padL + chartW + dp(6f), y + dp(4f), labelPaint); g += gridInterval }

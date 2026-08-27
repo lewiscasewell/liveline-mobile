@@ -128,6 +128,7 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
     override var onWindowChange: ((secs: Double) -> Unit)? = null
     override var onModeChange: ((mode: LivelineMode) -> Unit)? = null
     override var grid: Boolean? = null
+        set(v) { field = v; if (v != null) chart.grid = v }
     override var badge: Boolean? = null
     override var badgeTail: Boolean? = null
     override var badgeVariant: LivelineBadgeVariant? = null
