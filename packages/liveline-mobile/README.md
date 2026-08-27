@@ -129,6 +129,124 @@ Two things drive a chart:
 
 ---
 
+## Feature reference
+
+Every prop, one at a time — what it does, a minimal snippet, and a demo clip. The
+props mirror the original web [liveline](https://github.com/benjitaylor/liveline);
+where mobile changes the behaviour it's called out (➕ = mobile-only addition).
+
+<!-- This gallery is being built out feature by feature; the older topical
+     how-tos below are folded in and trimmed as each group lands. -->
+
+### Live data
+
+#### `data` — backfill history
+
+The initial series drawn when the chart mounts — a one-off backfill so the chart
+opens populated, not from empty. It is **not** the live path: send it once (and
+again when the timeframe changes), never a growing array every tick.
+
+```tsx
+<Liveline data={history} />   // history: { time: number; value: number }[]
+```
+<!-- 🎥 record: a chart mounting already populated from `data` -->
+> _Video coming soon._
+
+#### `value` — the live value
+
+The latest value. Each new `value` is appended and smoothly interpolated to, so a
+low-frequency source still scrolls at the display's refresh rate. Convenient for
+React-driven updates; for a high-frequency feed prefer `push()` (below), which
+never re-renders React.
+
+```tsx
+<Liveline data={history} value={price} />
+```
+<!-- 🎥 record: value updating live, badge tracking the tip -->
+> _Video coming soon._
+
+#### `push()` / `useLiveline()` — the imperative feed
+
+`useLiveline()` hands you `push()` (and `pushOrderbook()`) wired to the chart via
+a Nitro `hybridRef`, so ticks go straight to native — no React re-render per tick.
+
+```tsx
+const { push, attachHybridRef } = useLiveline()
+useEffect(() => {
+  const id = setInterval(() => push({ time: Date.now() / 1000, value: next() }), 100)
+  return () => clearInterval(id)
+}, [push])
+
+return <Liveline data={history} hybridRef={attachHybridRef()} />
+```
+<!-- 🎥 record: a fast (50–100Hz) push feed staying smooth -->
+> _Video coming soon._
+
+#### `series` — multiple lines
+
+Several equal-peer lines on one chart. A non-empty `series` replaces
+`data`/`value`; each line carries its own `id`, `color`, `label` and backfill
+`data`, and streams live via `push(point, seriesId)`. A legend toggles lines.
+
+```tsx
+<Liveline
+  series={[
+    { id: 'yes', color: '#3b82f6', label: 'Yes', data: yesHistory },
+    { id: 'no',  color: '#ef4444', label: 'No',  data: noHistory },
+  ]}
+/>
+// live: push({ time, value }, 'yes')
+```
+<!-- 🎥 record: Prediction-market demo, tapping legend chips to toggle lines -->
+> _Video coming soon._
+
+### Appearance
+
+#### `color` — accent
+
+The accent colour the whole palette derives from (line, dot, badge, fill).
+Default `#3b82f6`.
+
+```tsx
+<Liveline data={data} color='#8b5cf6' />
+```
+<!-- 🎥 record: same chart in two accent colours -->
+> _Video coming soon._
+
+#### `theme` — light / dark
+
+Base surface tone for background, grid and text. `'light' | 'dark'`, default
+`'dark'`. The chart is otherwise transparent, so it sits on whatever is behind it.
+
+```tsx
+<Liveline data={data} theme='light' />
+```
+<!-- 🎥 record: toggling theme light ↔ dark -->
+> _Video coming soon._
+
+#### `grid` — Y-axis grid & labels
+
+Toggles the horizontal grid lines and their value labels. The time axis is
+unaffected. Default `true`.
+
+```tsx
+<Liveline data={data} grid={false} />
+```
+<!-- 🎥 record: Basic chart, grid on → off -->
+> _Video coming soon._
+
+#### `fill` — area under the line
+
+The gradient fill beneath the curve. Default `true`; set `false` for a bare line.
+
+```tsx
+<Liveline data={data} fill={false} />
+```
+<!-- 🎥 record: same chart with fill on → off -->
+> _Video coming soon._
+
+---
+
 ## Live data: `push()` and `useLiveline`
 
 `useLiveline()` owns the imperative handle so you never touch `hybridRef`

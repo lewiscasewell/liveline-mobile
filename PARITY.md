@@ -10,16 +10,16 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 
 | Prop / feature | Swift | Kotlin | RN·iOS | RN·Android | 📄 | 🎥 | Notes |
 | --- | :--: | :--: | :--: | :--: | :--: | :--: | --- |
-| `data` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | backfill |
-| `value` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | live feed (or `push()`) |
-| `series` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | multi-series |
-| `theme` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
-| `color` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | accent |
-| `grid` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | Kotlin renderer + Nitro now respect it |
+| `data` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | backfill |
+| `value` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | live feed (or `push()`) |
+| `series` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | multi-series |
+| `theme` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | |
+| `color` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | accent |
+| `grid` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | Kotlin renderer + Nitro now respect it |
 | `badge` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** |
 | `badgeVariant` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | +`accent` (ours) |
 | `badgeTail` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** |
-| `fill` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
+| `fill` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | |
 | `pulse` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** |
 | `lineWidth` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** |
 | `momentum` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
