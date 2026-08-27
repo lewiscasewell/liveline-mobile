@@ -167,21 +167,29 @@ const SlowTicker: React.FC<DemoProps> = ({ dark }) => {
 }
 
 const TimeWindows: React.FC<DemoProps> = ({ dark }) => {
-  const { seed, attachHybridRef } = useWalkFeed(() => createWalk({ center: 87, vol: 0.6 }))
-  // No native window bar over the Nitro view yet, so cycle the window prop to
-  // show the smooth zoom the bar would drive.
-  const spans = [30, 60, 300]
-  const [i, setI] = useState(0)
+  // Seed a full 5m of history so the widest window opens populated, not empty.
+  const walk = useMemo(
+    () => createWalk({ center: 87, vol: 0.6, min: 55, max: 99 }),
+    [],
+  )
+  const seed = useMemo(() => walk.seed(300, 6), [walk])
+  const { push, attachHybridRef } = useLiveline()
   useEffect(() => {
-    const id = setInterval(() => setI((n) => (n + 1) % spans.length), 5000)
+    const id = setInterval(() => push({ time: Date.now() / 1000, value: walk.step() }), 1000 / 15)
     return () => clearInterval(id)
-  }, [])
+  }, [walk, push])
   return (
     <Liveline
       style={styles.card}
       data={seed}
       color='#f2990f'
-      window={spans[i]}
+      window={60}
+      windows={[
+        { label: '30s', secs: 30 },
+        { label: '1m', secs: 60 },
+        { label: '5m', secs: 300 },
+      ]}
+      windowStyle='rounded'
       valueSuffix='%'
       valueDecimals={0}
       theme={themeOf(dark)}
@@ -378,7 +386,7 @@ const DEMOS: Demo[] = [
   { id: 'heart', title: 'Heart rate', subtitle: 'exaggerate tightens the Y-axis so tiny moves fill the height.', Comp: HeartRate },
   { id: 'cpu', title: 'CPU usage', subtitle: 'A low idle baseline with occasional spikes.', Comp: Cpu },
   { id: 'sparse', title: 'Slow ticker', subtitle: 'One update every 4s. It still scrolls smoothly between ticks.', Comp: SlowTicker },
-  { id: 'windows', title: 'Time windows', subtitle: 'Smoothly zooms the interval (auto-cycling 30s / 1m / 5m).', Comp: TimeWindows },
+  { id: 'windows', title: 'Time windows', subtitle: 'Tap 30s / 1m / 5m to smoothly zoom the interval over 5 minutes of history.', Comp: TimeWindows },
   { id: 'candles', title: 'Candlestick', subtitle: 'OHLC candles with a live candle that grows its wicks. Toggle line / candle.', Comp: Candlestick },
   { id: 'prediction', title: 'Prediction market', subtitle: 'Multi-series: three outcomes summing to 100%. Tap a chip to toggle a line.', Comp: Prediction },
   { id: 'orderbook', title: 'Orderbook', subtitle: 'Bid/ask sizes float up behind the price line — green bids, red asks.', Comp: Orderbook },

@@ -3,8 +3,11 @@ package com.margelo.nitro.liveline
 import android.content.Context
 import android.graphics.Color
 import android.os.Looper
+import android.view.Gravity
 import android.view.View
+import android.widget.LinearLayout
 import com.liveline.LivelineView
+import com.liveline.WindowBarView
 import com.liveline.core.BadgeVariant as CoreBadge
 import com.liveline.core.LivelineCandle as CoreCandle
 import com.liveline.core.LivelineMode as CoreMode
@@ -29,8 +32,35 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
     }
 
     private val chart = LivelineView(context)
-    override val view: View get() = chart
+    private val windowBar = WindowBarView(context).apply { visibility = View.GONE }
+    // The view is a vertical container: the chart fills, the interval bar (shown
+    // only when `windows` is set) sits below it — mirroring the iOS container.
+    private val container = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        addView(chart, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        addView(
+            windowBar,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { gravity = Gravity.CENTER_HORIZONTAL; topMargin = (8 * resources.displayMetrics.density).toInt() },
+        )
+    }
+    override val view: View get() = container
     private var lastValue: Double? = null
+
+    init {
+        windowBar.onSelect = { secs ->
+            chart.windowSeconds = secs
+            onWindowChange?.invoke(secs)
+        }
+    }
+
+    private fun refreshWindowBar() {
+        val w = windows
+        if (w.isNullOrEmpty()) { windowBar.visibility = View.GONE; return }
+        windowBar.visibility = View.VISIBLE
+        windowBar.setWindows(w.map { WindowBarView.Window(it.label, it.secs) }, window ?: w.first().secs)
+    }
 
     private fun corePoint(p: LivelinePoint) = com.liveline.core.LivelinePoint(p.time, p.value)
     private fun coreCandle(c: CandlePoint) = CoreCandle(c.time, c.open, c.high, c.low, c.close)
@@ -81,12 +111,19 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
     override var color: String? = null
         set(v) { field = v; if (!v.isNullOrEmpty()) runCatching { chart.accent = Color.parseColor(v) } }
     override var theme: LivelineTheme? = null
-        set(v) { field = v; chart.theme = if (v == LivelineTheme.LIGHT) CoreTheme.LIGHT else CoreTheme.DARK }
+        set(v) {
+            field = v
+            chart.theme = if (v == LivelineTheme.LIGHT) CoreTheme.LIGHT else CoreTheme.DARK
+            windowBar.isDark = v != LivelineTheme.LIGHT
+        }
     override var surfaceColor: String? = null
     override var lineWidth: Double? = null
     override var window: Double? = null
-        set(v) { field = v; if (v != null && v > 0) chart.windowSeconds = v }
+        set(v) { field = v; if (v != null && v > 0) { chart.windowSeconds = v; windowBar.setActive(v) } }
     override var windows: Array<WindowOption>? = null
+        set(v) { field = v; refreshWindowBar() }
+    // The Android interval bar has a single (pill) style for now; the `windowStyle`
+    // variants (rounded/text) are honoured on iOS.
     override var windowStyle: LivelineWindowStyle? = null
     override var onWindowChange: ((secs: Double) -> Unit)? = null
     override var onModeChange: ((mode: LivelineMode) -> Unit)? = null
