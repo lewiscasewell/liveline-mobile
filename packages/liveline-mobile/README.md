@@ -245,6 +245,83 @@ The gradient fill beneath the curve. Default `true`; set `false` for a bare line
 <!-- 🎥 record: same chart with fill on → off -->
 > _Video coming soon._
 
+#### `lineWidth` — stroke width
+
+The line's stroke width in points. Default `2`.
+
+```tsx
+<Liveline data={data} lineWidth={4} />
+```
+<!-- 🎥 record: same chart at lineWidth 2 → 5 -->
+> _Video coming soon._
+
+#### `badge` — the value pill
+
+The rounded pill that tracks the chart tip and shows the current value. Default
+`true`; set `false` to hide it.
+
+```tsx
+<Liveline data={data} value={value} badge={false} />
+```
+<!-- 🎥 record: chart with badge on → off -->
+> _Video coming soon._
+
+#### `badgeVariant` — pill style
+
+`'default' | 'minimal' | 'accent'` (default `'default'`). `minimal` drops the
+tail and uses the surface tone; `accent` fills the pill with the accent colour.
+
+```tsx
+<Liveline data={data} value={value} badgeVariant='accent' />
+```
+<!-- 🎥 record: the three badge variants side by side -->
+> _Video coming soon._
+
+#### `badgeTail` — the pill's pointer
+
+The pointed tail joining the pill to the live dot. Default `true`; `false` gives
+a plain rounded pill (also implied by the `minimal` variant).
+
+```tsx
+<Liveline data={data} value={value} badgeTail={false} />
+```
+<!-- 🎥 record: badge with tail on → off -->
+> _Video coming soon._
+
+#### `pulse` — the live-dot ring
+
+The pulsing ring radiating from the live dot. Default `true`.
+
+```tsx
+<Liveline data={data} value={value} pulse={false} />
+```
+<!-- 🎥 record: the dot with the pulse ring on → off -->
+> _Video coming soon._
+
+### Behaviour
+
+#### `lerpSpeed` — interpolation speed
+
+How quickly the line eases toward each new value, `0–1`. Default `0.08`. Lower is
+smoother/laggier; higher snaps faster.
+
+```tsx
+<Liveline data={data} value={value} lerpSpeed={0.2} />
+```
+<!-- 🎥 record: a jumpy feed at low vs high lerpSpeed -->
+> _Video coming soon._
+
+#### `emptyText` — empty state
+
+The text shown, centred, when there's no data yet (and not `loading`). Default
+`'No data to display'`.
+
+```tsx
+<Liveline data={[]} emptyText='Waiting for feed…' />
+```
+<!-- 🎥 record: an empty chart showing the empty text, then data arriving -->
+> _Video coming soon._
+
 ---
 
 ## Live data: `push()` and `useLiveline`

@@ -118,6 +118,7 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
         }
     override var surfaceColor: String? = null
     override var lineWidth: Double? = null
+        set(v) { field = v; if (v != null && v > 0) chart.lineWidth = v }
     override var window: Double? = null
         set(v) { field = v; if (v != null && v > 0) { chart.windowSeconds = v; windowBar.setActive(v) } }
     override var windows: Array<WindowOption>? = null
@@ -130,7 +131,9 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
     override var grid: Boolean? = null
         set(v) { field = v; if (v != null) chart.grid = v }
     override var badge: Boolean? = null
+        set(v) { field = v; if (v != null) chart.badge = v }
     override var badgeTail: Boolean? = null
+        set(v) { field = v; if (v != null) chart.badgeTail = v }
     override var badgeVariant: LivelineBadgeVariant? = null
         set(v) {
             field = v
@@ -156,6 +159,7 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
     override var scrub: Boolean? = null
         set(v) { field = v; if (v != null) chart.scrub = v }
     override var pulse: Boolean? = null
+        set(v) { field = v; if (v != null) chart.pulse = v }
     override var exaggerate: Boolean? = null
         set(v) { field = v; if (v != null) chart.exaggerate = v }
     override var paused: Boolean? = null
@@ -163,6 +167,7 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
     override var loading: Boolean? = null
         set(v) { field = v; if (v != null) chart.loading = v }
     override var emptyText: String? = null
+        set(v) { field = v; if (v != null) chart.emptyText = v }
     override var showValue: Boolean? = null
         set(v) { field = v; if (v != null) chart.showValue = v }
     override var valueMomentumColor: Boolean? = null
@@ -171,6 +176,7 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
     override var degen: Boolean? = null
         set(v) { field = v; if (v != null) chart.degen = v }
     override var lerpSpeed: Double? = null
+        set(v) { field = v; if (v != null && v > 0) chart.lerpSpeed = v }
     override var referenceLine: LivelineReference? = null
         set(v) { field = v; chart.referenceLine = v?.let { CoreRef(it.value, it.label) } }
     override var orderbook: LivelineOrderbook? = null

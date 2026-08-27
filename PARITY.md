@@ -13,41 +13,41 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `data` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | backfill |
 | `value` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | live feed (or `push()`) |
 | `series` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | multi-series |
-| `theme` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | |
+| `theme` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `color` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | accent |
 | `grid` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | Kotlin renderer + Nitro now respect it |
-| `badge` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** |
-| `badgeVariant` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | +`accent` (ours) |
-| `badgeTail` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** |
-| `fill` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | |
-| `pulse` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** |
-| `lineWidth` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** |
-| `momentum` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
+| `badge` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
+| `badgeVariant` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | +`accent` (ours) |
+| `badgeTail` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
+| `fill` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `pulse` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
+| `lineWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
+| `momentum` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
 | `scrub` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | press-and-hold on mobile |
-| `exaggerate` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
-| `showValue` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
-| `valueMomentumColor` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
+| `exaggerate` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `showValue` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `valueMomentumColor` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
 | `degen` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | haptics part ❌ Kotlin |
 | `mode` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | line/candle |
-| `candles` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
-| `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
-| `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
+| `candles` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
 | `lineMode`+`lineData`+`lineValue` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — candle↔line morph |
-| `onModeChange` | ⚠️ | ❌ | ⚠️ | ❌ | ☐ | ☐ | |
+| `onModeChange` | ⚠️ | ❌ | ⚠️ | ❌ | ☐ | ☐ |  |
 | `onSeriesToggle` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** |
 | `seriesToggleCompact` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — dots-only legend |
-| `loading` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
-| `paused` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
-| `emptyText` | ✅ | ❌ | ⚠️ | ❌ | ☐ | ☐ | **B/C gap** |
-| `window` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
+| `loading` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `paused` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `emptyText` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
+| `window` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
 | `windows` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | Android bar wired |
-| `onWindowChange` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
+| `onWindowChange` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
 | `windowStyle` | ✅ | ⚠️ | ✅ | ⚠️ | ☐ | ☐ | Kotlin has one style |
 | `tooltipY` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** |
 | `tooltipOutline` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** |
-| `orderbook` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
-| `referenceLine` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | |
-| `lerpSpeed` | ✅ | ❌ | ⚠️ | ❌ | ☐ | ☐ | **B/C gap** |
+| `orderbook` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `referenceLine` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `lerpSpeed` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
 | `padding` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — to port |
 | `onHover` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | map to `onScrub` |
 | `cursor` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | to port (map to scrub crosshair) |

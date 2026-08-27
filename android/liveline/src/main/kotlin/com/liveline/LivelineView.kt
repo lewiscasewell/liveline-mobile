@@ -68,11 +68,23 @@ class LivelineView @JvmOverloads constructor(
     var windowSeconds: Double = 30.0
     var momentum: Momentum = Momentum.AUTO
     var badgeVariant: BadgeVariant = BadgeVariant.DEFAULT
+    /** The value pill that tracks the chart tip. */
+    var badge: Boolean = true
+    /** The pointed tail on the badge pill (ignored for the minimal variant). */
+    var badgeTail: Boolean = true
     var showValue: Boolean = false
     var valueMomentumColor: Boolean = false
     var fill: Boolean = true
     /** Y-axis grid lines + value labels (the time axis is always drawn). */
     var grid: Boolean = true
+    /** The pulsing ring on the live dot. */
+    var pulse: Boolean = true
+    /** Line stroke width in points. */
+    var lineWidth: Double = 2.0
+    /** Interpolation speed toward the latest value (0–1). */
+    var lerpSpeed: Double = 0.08
+    /** Shown centred when there is no data (and not loading). */
+    var emptyText: String = "No data to display"
     var exaggerate: Boolean = false
     var loading: Boolean = false
     var paused: Boolean = false
@@ -230,7 +242,7 @@ class LivelineView @JvmOverloads constructor(
 
     private fun rebuildPalette() {
         palette = Theme.palette(accent.toRgba(), theme)
-        linePaint.color = palette.line.toInt(); linePaint.strokeWidth = dp(palette.lineWidth.toFloat())
+        linePaint.color = palette.line.toInt(); linePaint.strokeWidth = dp(lineWidth.toFloat())
         // Grid a touch lighter than the raw palette line so it reads like web/iOS.
         gridPaint.color = palette.gridLine.withAlpha(palette.gridLine.a * 0.7).toInt()
         axisPaint.color = palette.gridLine.withAlpha(palette.gridLine.a * 0.7).toInt()
@@ -305,7 +317,17 @@ class LivelineView @JvmOverloads constructor(
             drawCandleFrame(canvas, w, padL, padR, padT, chartH, span, now, leftEdge, rightEdge, nowMs, dt)
             return
         }
-        if (buffer.size < 2) return
+        if (buffer.size < 2) {
+            if (buffer.isEmpty() && !loading && emptyText.isNotEmpty()) {
+                labelPaint.textAlign = Paint.Align.CENTER
+                labelPaint.textSize = dp(13f)
+                labelPaint.color = palette.timeLabel.withAlpha(palette.timeLabel.a * 0.9).toInt()
+                canvas.drawText(emptyText, w / 2f, padT + chartH / 2f, labelPaint)
+                labelPaint.textAlign = Paint.Align.LEFT
+                labelPaint.textSize = dp(11f)
+            }
+            return
+        }
 
         var startIdx = 0
         for (i in buffer.indices) if (buffer[i].time >= leftEdge) { startIdx = max(0, i - 1); break }
@@ -313,7 +335,7 @@ class LivelineView @JvmOverloads constructor(
         for (i in startIdx until buffer.size) if (buffer[i].time <= now) visible.add(buffer[i])
         if (visible.size < 2) return
 
-        val speed = Domain.adaptiveSpeed(value, displayValue, domain.minVal, domain.maxVal, 0.08)
+        val speed = Domain.adaptiveSpeed(value, displayValue, domain.minVal, domain.maxVal, lerpSpeed)
         displayValue = Clock.lerp(displayValue, value, speed, dt)
         val target = AutoRange.compute(visible.map { it.value }, displayValue, referenceLine?.value, exaggerate)
         domain.update(target, speed, dt, chartH.toDouble())
@@ -397,7 +419,7 @@ class LivelineView @JvmOverloads constructor(
         // badge + chevrons, not the dot).
         val dim = scrubAmount * 0.7
         val headColor = palette.line
-        if (dim < 0.3) {
+        if (pulse && dim < 0.3) {
             val t = (nowMs % 1500.0) / 900.0
             if (t < 1) { ringPaint.color = headColor.withAlpha(headColor.a * 0.35 * (1 - t) * (1 - dim * 3)).toInt(); canvas.drawCircle(endX, endY, dp(9f) + (t * dp(12f).toDouble()).toFloat(), ringPaint) }
         }
@@ -411,7 +433,7 @@ class LivelineView @JvmOverloads constructor(
         if (momentum != Momentum.OFF) drawArrows(canvas, endX, endY, trend, dt, nowMs)
 
         // 9. Badge (momentum-tinted, tailed).
-        drawBadge(canvas, endX, endY, w, padR, padT, chartH)
+        if (badge) drawBadge(canvas, endX, endY, w, padR, padT, chartH)
 
         // 10. Value overlay.
         if (showValue) {
@@ -456,7 +478,7 @@ class LivelineView @JvmOverloads constructor(
         val label = fmt(displayValue)
         val textW = badgeTextPaint.measureText(label)
         val padX = dp(8f); val padY = dp(4f); val lineH = dp(16f)
-        val tailLen = if (badgeVariant == BadgeVariant.MINIMAL) 0f else dp(7f)
+        val tailLen = if (badgeVariant == BadgeVariant.MINIMAL || !badgeTail) 0f else dp(7f)
         val pillW = textW + padX * 2; val pillH = lineH + padY * 2
         badgeY = if (badgeY == 0f) endY else Clock.lerp(badgeY.toDouble(), endY.toDouble(), 0.2, frameDt).toFloat()
         badgeY = badgeY.coerceIn(padT + pillH / 2, padT + chartH - pillH / 2)
@@ -592,7 +614,7 @@ class LivelineView @JvmOverloads constructor(
         if (pts.size >= 2) {
             val path = Path(); path.moveTo(pts[0].x.toFloat(), pts[0].y.toFloat())
             for (seg in PathBuilder.monotoneSegments(pts)) path.cubicTo(seg.control1.x.toFloat(), seg.control1.y.toFloat(), seg.control2.x.toFloat(), seg.control2.y.toFloat(), seg.end.x.toFloat(), seg.end.y.toFloat())
-            linePaint.color = col.toInt(); linePaint.strokeWidth = dp(palette.lineWidth.toFloat())
+            linePaint.color = col.toInt(); linePaint.strokeWidth = dp(lineWidth.toFloat())
             canvas.drawPath(path, linePaint)
         }
         dotOuter.alpha = 255; canvas.drawCircle(dotX, endY, dp(6.5f), dotOuter)
