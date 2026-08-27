@@ -126,9 +126,17 @@ export interface LivelineProps extends HybridViewProps {
   /** Called when a legend chip toggles a series' visibility. */
   onSeriesToggle?: (id: string, visible: boolean) => void
   /**
-   * A single live value; each distinct value is appended as a new sample. A
-   * convenience for low-frequency React-driven updates — prefer `push()` for
-   * high-frequency feeds, since setting a prop re-renders React every tick.
+   * A single live value; each distinct value is appended as a new sample.
+   *
+   * ⚠️ Setting this prop **re-renders React on every change.** Fine for
+   * low-frequency, React-driven updates — but at high rates it saturates the JS
+   * thread and *drops* ticks. Measured on-device at a 60Hz feed: `value` manages
+   * only ~40 renders/s (leaf) or ~22/s (in a real screen) and can't keep up,
+   * versus `push()` at **0 renders/s** (the chart stays 60fps either way — it's
+   * the JS thread that suffers).
+   *
+   * **For anything real-time, prefer the imperative `push()` via `useLiveline()`**
+   * — it goes straight to native, bypassing React entirely.
    */
   value?: number
 
@@ -270,10 +278,12 @@ export interface LivelineProps extends HybridViewProps {
 /** Imperative methods, reached via `hybridRef`. */
 export interface LivelineMethods extends HybridViewMethods {
   /**
-   * Add one live sample. A direct native call with no React re-render — call
-   * once per data tick, never per animation frame. It auto-adapts to the current
-   * window: on a wide window a fast feed slides the current point in place; on a
-   * live/short window it keeps every tick.
+   * Add one live sample. **The recommended way to stream a live feed** — a direct
+   * native call with **no React re-render** (unlike the `value` prop, which
+   * re-renders on every change; see its note). Call once per data tick, never per
+   * animation frame. It auto-adapts to the current window: on a wide window a fast
+   * feed slides the current point in place; on a live/short window it keeps every
+   * tick.
    *
    * In multi-series mode, pass `seriesId` to route the tick to that series (see
    * `series`); omit it for the single-series line.

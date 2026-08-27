@@ -170,13 +170,20 @@ again when the timeframe changes), never a growing array every tick.
 #### `value` — the live value
 
 The latest value. Each new `value` is appended and smoothly interpolated to, so a
-low-frequency source still scrolls at the display's refresh rate. Convenient for
-React-driven updates; for a high-frequency feed prefer `push()` (below), which
-never re-renders React.
+low-frequency source still scrolls at the display's refresh rate.
 
 ```tsx
 <Liveline data={history} value={price} />
 ```
+
+> **⚠️ `value` re-renders React on every change — use it only for low-frequency,
+> React-driven updates.** At high rates it saturates the JS thread and drops
+> ticks. Measured on-device at a **60Hz** feed: `value` hits only **~40
+> renders/s** (leaf) or **~22/s** (in a real screen) and can't keep up, while
+> **`push()` does 0 renders/s**. The chart stays 60fps either way — but with
+> `value` your app's JS thread is pegged (laggy touches, stalled logic).
+> **For real-time feeds, use [`push()`](#push--useliveline--the-imperative-feed).**
+
 <!-- 🎥 record: value updating live, badge tracking the tip -->
 > _Video coming soon._
 
