@@ -459,10 +459,11 @@ The API is identical across platforms — the same JavaScript renders on both. T
 Android renderer is a native `Canvas`/`Choreographer` port of the engine, at
 full feature parity for the core: line & candle modes, multi-series, the
 orderbook stream, momentum, degen, the value overlay, reference lines,
-`exaggerate`, loading/paused, and press-and-hold scrubbing.
+`exaggerate`, loading/paused, press-and-hold scrubbing, and the interval bar
+(`windows` / `onWindowChange`).
 
-Not yet wired on Android (they no-op there for now, and are on the roadmap): the
-interval bar (`windows` / `windowStyle` / `onWindowChange`), `surfaceColor`,
+Not yet wired on Android (they no-op there for now, and are on the roadmap):
+`windowStyle` variants (the Android bar has a single pill style), `surfaceColor`,
 `haptics`, `fontFamily`, and `currency` / `locale` number formatting (use
 `valuePrefix` / `valueSuffix` / `valueDecimals`, which do work). Nothing about
 your JavaScript needs to change as these land.
