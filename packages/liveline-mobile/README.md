@@ -176,13 +176,16 @@ low-frequency source still scrolls at the display's refresh rate.
 <Liveline data={history} value={price} />
 ```
 
-> **⚠️ `value` re-renders React on every change — use it only for low-frequency,
-> React-driven updates.** At high rates it saturates the JS thread and drops
-> ticks. Measured on-device at a **60Hz** feed: `value` hits only **~40
-> renders/s** (leaf) or **~22/s** (in a real screen) and can't keep up, while
-> **`push()` does 0 renders/s**. The chart stays 60fps either way — but with
-> `value` your app's JS thread is pegged (laggy touches, stalled logic).
-> **For real-time feeds, use [`push()`](#push--useliveline--the-imperative-feed).**
+> **⚠️ Use `value` only for low-frequency, React-driven updates.** Props only
+> change during a render, so updating `value` live means re-rendering the
+> component that renders `<Liveline>` every tick (you drive it from state — a
+> `setState` per update). It's that **re-render** — of the component and its
+> subtree — that costs, not the prop. At high rates the re-renders saturate the JS
+> thread and drop ticks: measured at **60Hz**, only **~40 renders/s** (leaf) or
+> **~22/s** (in a real screen), can't keep up — while **`push()` does 0**. The
+> chart stays 60fps either way; it's your app's JS thread that gets pegged (laggy
+> touches, stalled logic). **For real-time feeds, use
+> [`push()`](#push--useliveline--the-imperative-feed).**
 
 <!-- 🎥 record: value updating live, badge tracking the tip -->
 > _Video coming soon._

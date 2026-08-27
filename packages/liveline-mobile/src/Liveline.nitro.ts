@@ -128,15 +128,17 @@ export interface LivelineProps extends HybridViewProps {
   /**
    * A single live value; each distinct value is appended as a new sample.
    *
-   * ⚠️ Setting this prop **re-renders React on every change.** Fine for
-   * low-frequency, React-driven updates — but at high rates it saturates the JS
-   * thread and *drops* ticks. Measured on-device at a 60Hz feed: `value` manages
-   * only ~40 renders/s (leaf) or ~22/s (in a real screen) and can't keep up,
-   * versus `push()` at **0 renders/s** (the chart stays 60fps either way — it's
-   * the JS thread that suffers).
+   * ⚠️ Props only change during a render, so **driving `value` live means
+   * re-rendering the component that renders `<Liveline>` on every tick** — you
+   * feed it from React state, i.e. a `setState` per update. It's that re-render
+   * (of the component and its whole subtree) that costs, not the prop itself.
+   * Fine for low-frequency updates; at high rates the re-renders saturate the JS
+   * thread and *drop* ticks. Measured on-device at a 60Hz feed: only ~40
+   * renders/s (leaf) or ~22/s (in a real screen), can't keep up — versus `push()`
+   * at **0** (the chart stays 60fps either way; it's the JS thread that suffers).
    *
    * **For anything real-time, prefer the imperative `push()` via `useLiveline()`**
-   * — it goes straight to native, bypassing React entirely.
+   * — it updates the chart with no React render at all.
    */
   value?: number
 
@@ -279,9 +281,9 @@ export interface LivelineProps extends HybridViewProps {
 export interface LivelineMethods extends HybridViewMethods {
   /**
    * Add one live sample. **The recommended way to stream a live feed** — a direct
-   * native call with **no React re-render** (unlike the `value` prop, which
-   * re-renders on every change; see its note). Call once per data tick, never per
-   * animation frame. It auto-adapts to the current window: on a wide window a fast
+   * native call with **no React render at all** (unlike driving the `value` prop
+   * from state, which re-renders your component every tick; see its note). Call
+   * once per data tick, never per animation frame. It auto-adapts to the current window: on a wide window a fast
    * feed slides the current point in place; on a live/short window it keeps every
    * tick.
    *
