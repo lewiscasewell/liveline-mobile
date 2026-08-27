@@ -192,7 +192,15 @@ final class Walk: ObservableObject {
     /// loading demo to flip state.
     var onTick: ((Double) -> Void)?
 
-    init(center: Double = 100, vol: Double = 0.55, momentum: Double = 0.94, reversion: Double = 0.01) {
+    /// Seconds between pushes. Most feeds run at 20 Hz; a calmer demo (e.g. the
+    /// value overlay) can push less often so the number steps rather than races.
+    private let interval: Double
+
+    init(
+        center: Double = 100, vol: Double = 0.55, momentum: Double = 0.94, reversion: Double = 0.01,
+        interval: Double = 0.05
+    ) {
+        self.interval = interval
         var w = TrendWalk(center: center, vol: vol, momentum: momentum, reversion: reversion)
         self.seed = w.seed()
         self.value = w.value
@@ -201,14 +209,14 @@ final class Walk: ObservableObject {
     }
 
     private func start() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.step()
         }
     }
 
     private func step() {
         ticks += 1
-        let elapsed = Double(ticks) * 0.05
+        let elapsed = Double(ticks) * interval
         onTick?(elapsed)
         if let delay = feedDelaySeconds, elapsed < delay { return }
         if let stop = stopAfterSeconds, elapsed > stop { return }
@@ -247,7 +255,8 @@ private struct MomentumCard: View {
 }
 
 private struct ValueOverlayCard: View {
-    @StateObject private var walk = Walk(center: 9800, vol: 4, momentum: 0.95, reversion: 0.008)
+    @StateObject private var walk = Walk(
+        center: 9800, vol: 4, momentum: 0.95, reversion: 0.008, interval: 0.3)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
