@@ -300,11 +300,11 @@ public final class LivelineView: UIView {
         static let gridFadeIn = 0.18
         static let gridFadeOut = 0.12
         static let timeFade = 0.08
-        // showValue ticker: don't repaint the number faster than this (readable
-        // cadence), and only roll the digits when at least this long has passed
-        // since the last change — faster than that, snap instead of rolling.
-        static let tickerThrottleMs = 100.0
-        static let tickerRollGapMs = 280.0
+        // showValue ticker: don't repaint the number more often than this. Each
+        // digit rolls over ~0.28s; holding repaints to roughly that duration lets
+        // a roll finish before the next starts, so fast moves step cleanly instead
+        // of stacking into a blur of half-rolled digits.
+        static let tickerThrottleMs = 280.0
         // Badge geometry
         static let badgePadX: CGFloat = 10
         static let badgePadY: CGFloat = 3
@@ -1002,17 +1002,16 @@ public final class LivelineView: UIView {
             color = palette.tooltipText
         }
         valueLabel.textColor = UIColor(rgba: color)
-        // The ticker rolls each changed digit over ~0.28s. Because it's driven
-        // every frame by the eased value, fast movement restarts a digit's roll
-        // before it finishes — a blur of half-rolled ghosts. So throttle the
-        // number to a readable cadence, and while it's moving faster than a roll
-        // can complete, snap the digits (crisp) instead of rolling; the roll
-        // returns once the value settles.
+        // The ticker rolls each changed digit over ~0.28s. Driven every frame by
+        // the eased value, fast movement would restart a digit's roll before it
+        // finishes — a blur of half-rolled ghosts. Throttling repaints to about
+        // the roll's own duration lets each roll finish first, so fast moves step
+        // over cleanly. Slow moves change less often than the throttle, so they
+        // roll immediately, exactly as before.
         let text = formatValue(shown)
         let nowMs = CACurrentMediaTime() * 1000
         if text != valueLabel.currentText, nowMs - lastTickerMs >= K.tickerThrottleMs {
-            let animated = nowMs - lastTickerMs >= K.tickerRollGapMs
-            valueLabel.setText(text, up: shown >= lastValueShown, animated: animated)
+            valueLabel.setText(text, up: shown >= lastValueShown)
             lastTickerMs = nowMs
             lastValueShown = shown
         }
