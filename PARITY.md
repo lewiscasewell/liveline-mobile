@@ -22,31 +22,31 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `fill` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `pulse` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
 | `lineWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
-| `momentum` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `scrub` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | press-and-hold on mobile |
-| `exaggerate` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `showValue` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `valueMomentumColor` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `degen` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | haptics part ❌ Kotlin |
-| `mode` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | line/candle |
-| `candles` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `momentum` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `scrub` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | press-and-hold on mobile |
+| `exaggerate` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `showValue` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `valueMomentumColor` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `degen` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | haptics part ❌ Kotlin |
+| `mode` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | line/candle |
+| `candles` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `lineMode`+`lineData`+`lineValue` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — candle↔line morph |
 | `onModeChange` | ⚠️ | ❌ | ⚠️ | ❌ | ☐ | ☐ |  |
 | `onSeriesToggle` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** |
 | `seriesToggleCompact` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — dots-only legend |
-| `loading` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `paused` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `loading` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `paused` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `emptyText` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
-| `window` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `windows` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | Android bar wired |
-| `onWindowChange` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `windowStyle` | ✅ | ⚠️ | ✅ | ⚠️ | ☐ | ☐ | Kotlin has one style |
+| `window` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `windows` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | Android bar wired |
+| `onWindowChange` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `windowStyle` | ✅ | ⚠️ | ✅ | ⚠️ | ☑ | ☐ | Kotlin has one style |
 | `tooltipY` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** |
 | `tooltipOutline` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** |
-| `orderbook` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
-| `referenceLine` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ |  |
+| `orderbook` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `referenceLine` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `lerpSpeed` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
 | `padding` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — to port |
 | `onHover` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | map to `onScrub` |

@@ -409,6 +409,170 @@ natively). Falls back to the tabular monospace default.
 <!-- 🎥 record: default font vs a bundled custom font -->
 > _Video coming soon._
 
+### Momentum & effects
+
+#### `momentum` — direction cues
+
+Directional chevrons on the live dot and a green-up / red-down tint on the badge.
+`'off' | 'auto' | 'up' | 'down' | 'flat'` (default `'auto'`, which detects
+direction from the recent slope; the explicit values force it).
+
+```tsx
+<Liveline data={data} value={value} momentum='auto' />
+```
+<!-- 🎥 record: a rising then falling feed, badge tinting green → red -->
+> _Video coming soon._
+
+#### `scrub` — press-and-hold crosshair
+
+Touch and hold to inspect a point: a crosshair snaps to the line, the value +
+time show, and the line to the right of your finger dims. Release to resume.
+Default `true`.
+
+```tsx
+<Liveline data={data} value={value} scrub />
+```
+<!-- 🎥 record: pressing and dragging along the line, crosshair + values -->
+> _Video coming soon._
+
+#### `exaggerate` — amplify small moves
+
+Tightens the Y-axis around the recent range so tiny fluctuations fill the height
+(e.g. a heart-rate or temperature line). Default `false`.
+
+```tsx
+<Liveline data={data} value={bpm} exaggerate valueSuffix=' bpm' />
+```
+<!-- 🎥 record: a near-flat feed, normal vs exaggerated -->
+> _Video coming soon._
+
+#### `showValue` / `valueMomentumColor` — the big number
+
+`showValue` draws the current value large, over the chart. `valueMomentumColor`
+tints that number green/red by momentum. Both default `false`.
+
+```tsx
+<Liveline data={data} value={value} showValue valueMomentumColor currency='USD' />
+```
+<!-- 🎥 record: the large value updating and tinting with direction -->
+> _Video coming soon._
+
+#### `degen` — burst + shake
+
+Confetti-style particle bursts and a screen shake on strong up-moves. Pairs with
+`momentum` and `haptics`. Default `false`.
+
+```tsx
+<Liveline data={data} value={value} degen momentum='auto' badgeVariant='accent' haptics />
+```
+<!-- 🎥 record: a pump triggering the sparks + shake -->
+> _Video coming soon._
+
+### Candles
+
+#### `mode` — line or candle
+
+`'line' | 'candle'` (default `'line'`). In candle mode the chart draws OHLC
+candlesticks instead of the line.
+
+```tsx
+<Liveline mode='candle' candles={candles} liveCandle={live} candleWidth={3} />
+```
+<!-- 🎥 record: toggling a chart between line and candle -->
+> _Video coming soon._
+
+#### `candles` / `candleWidth` / `liveCandle`
+
+`candles` is the OHLC history (`{ time, open, high, low, close }[]`); `candleWidth`
+is the seconds each candle spans; `liveCandle` is the currently-forming candle,
+updated every tick so its wicks grow in place until the bucket rolls over.
+
+```tsx
+<Liveline mode='candle' candles={history} candleWidth={3} liveCandle={live} />
+```
+<!-- 🎥 record: the live candle growing, then a new bucket starting -->
+> _Video coming soon._
+
+### The interval bar
+
+#### `window` — visible span
+
+The visible time window, in seconds (default `30`). Changing it smoothly zooms.
+
+```tsx
+<Liveline data={data} window={60} />
+```
+<!-- 🎥 record: window changing 30s → 5m, the line zooming -->
+> _Video coming soon._
+
+#### `windows` / `windowStyle` / `onWindowChange` — the native bar
+
+Passing `windows` renders a **native** interval bar (e.g. 30s / 1m / 5m) below the
+chart; tapping a chip smoothly zooms and fires `onWindowChange(secs)`.
+`windowStyle` (`'default' | 'rounded' | 'text'`) styles it (iOS; the Android bar
+has a single pill style for now).
+
+```tsx
+<Liveline
+  data={data}
+  windows={[{ label: '30s', secs: 30 }, { label: '1m', secs: 60 }, { label: '5m', secs: 300 }]}
+  windowStyle='rounded'
+  onWindowChange={(secs) => console.log(secs)}
+/>
+```
+<!-- 🎥 record: tapping the 30s / 1m / 5m chips -->
+> _Video coming soon._
+
+### States
+
+#### `loading` — connecting
+
+A breathing placeholder line while data is loading; when it clears, the chart
+morphs into the (backfilled) data. Default `false`.
+
+```tsx
+<Liveline data={history} loading={isConnecting} />
+```
+<!-- 🎥 record: loading breathing line → morph into data -->
+> _Video coming soon._
+
+#### `paused` — freeze scrolling
+
+Freezes the chart's scroll while data keeps arriving underneath; on resume it
+catches up. Default `false`.
+
+```tsx
+<Liveline data={data} value={value} paused={isPaused} />
+```
+<!-- 🎥 record: pausing, data building up, then resuming/catch-up -->
+> _Video coming soon._
+
+### Overlays
+
+#### `referenceLine` — a fixed marker
+
+A horizontal line at a fixed value with an optional label, always kept in view by
+the autoscale. `{ value, label? }`.
+
+```tsx
+<Liveline data={data} value={value} referenceLine={{ value: 67500, label: 'Above $67,500' }} />
+```
+<!-- 🎥 record: the reference line held in view as the line moves around it -->
+> _Video coming soon._
+
+#### `orderbook` — depth stream
+
+Bid/ask depth (`{ bids, asks }`, each `[price, size][]`). Resting sizes float up
+behind the price line — green bids, red asks — faster when the price is moving.
+Stream it live via `useLiveline().pushOrderbook()`.
+
+```tsx
+const { pushOrderbook } = useLiveline()
+// each tick: pushOrderbook({ bids: [[price - d, size], …], asks: [[price + d, size], …] })
+```
+<!-- 🎥 record: the bid/ask sizes streaming up behind the price line -->
+> _Video coming soon._
+
 ---
 
 ## Live data: `push()` and `useLiveline`
