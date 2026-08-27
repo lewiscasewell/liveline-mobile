@@ -79,7 +79,7 @@ bun  add     liveline-mobile react-native-nitro-modules
 native code, so it needs the **New Architecture (Fabric)** — which is **on by
 default** in current Expo / React Native.
 
-### Expo
+### Expo (recommended)
 
 Works great with Expo — you just need a **development build**, not Expo Go
 (custom native code never runs in Expo Go). You **don't** hand-manage `ios/` /
