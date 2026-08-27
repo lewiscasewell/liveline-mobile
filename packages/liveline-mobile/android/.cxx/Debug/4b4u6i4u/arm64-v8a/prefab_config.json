@@ -1,9 +1,0 @@
-{
-  "enabled": true,
-  "prefabPath": "/Users/lewiscasewell/.gradle/caches/modules-2/files-2.1/com.google.prefab/cli/2.1.0/aa32fec809c44fa531f01dcfb739b5b3304d3050/cli-2.1.0-all.jar",
-  "packages": [
-    "/Users/lewiscasewell/.gradle/caches/9.3.1/transforms/18b53a1a7dc1fea8dac0e93d1830fb1f/transformed/react-android-0.86.2-debug/prefab",
-    "/Users/lewiscasewell/src/liveline-mobile/examples/rn/node_modules/react-native-nitro-modules/android/build/intermediates/prefab_package/debug/prefab",
-    "/Users/lewiscasewell/.gradle/caches/9.3.1/transforms/dd29849c799951ad0680f4b910344724/transformed/fbjni-0.7.0/prefab"
-  ]
-}

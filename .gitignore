@@ -35,3 +35,6 @@ Pods/
 .expo-shared/
 .metro-health-check*
 *.tsbuildinfo
+
+# Native build output (CMake/Ninja) — regenerated every build
+**/.cxx/
