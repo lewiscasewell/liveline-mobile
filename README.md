@@ -133,6 +133,60 @@ Because number/time formatting is per-frame, use `formatValue` / `formatTime`
 closures (or `.locale()`) for localization on the Swift side — the `currency` /
 `locale` string props are the RN equivalents.
 
+## Using it in Android (Kotlin, no React Native)
+
+The engine ships to Maven Central (namespace `io.github.lewiscasewell`) — add the
+`liveline` artifact (it pulls in `liveline-core`), Android 7+ / minSdk 24:
+
+```kotlin
+// build.gradle.kts
+implementation("io.github.lewiscasewell:liveline:0.1.0")
+```
+
+`com.liveline.LivelineView` is a plain Android `View` whose property names match
+the RN props. Configure it and drive the live feed with `push` — this is the same
+view the RN binding holds:
+
+```kotlin
+import com.liveline.LivelineView
+import com.liveline.core.LivelinePoint
+import com.liveline.core.LivelineTheme
+import com.liveline.core.Momentum
+import com.liveline.core.BadgeVariant
+
+val chart = LivelineView(context).apply {
+    color = Color.parseColor("#AB9EF3")
+    theme = LivelineTheme.DARK
+    surfaceColor = null                 // null = transparent
+    momentum = Momentum.AUTO
+    degen = true
+    badgeVariant = BadgeVariant.ACCENT
+    showValue = true
+    numberTypeface = Typeface.create("Inter", Typeface.NORMAL)
+    formatValue = { v -> "$%.2f".format(v) }   // full control
+}
+
+chart.setData(backfill)                 // backfill only
+chart.push(LivelinePoint(time = t, value = v))  // each push appends to the live feed
+```
+
+Multi-series and the orderbook overlay:
+
+```kotlin
+chart.setSeries(listOf(
+    LivelineView.SeriesInput(id = "yes", color = Color.GREEN, label = "Yes", data = yes),
+    // one SeriesInput per line…
+))
+chart.orderbook = OrderbookData(bids = bids, asks = asks)
+chart.mode = LivelineMode.CANDLE        // or set candles via setCandles(...)
+```
+
+As on iOS, `setData` is **backfill only**; drive the live feed with `push` (each
+new point is appended). Number/time formatting is per-frame, so use the
+`formatValue` closure and `numberTypeface` for localization on the Kotlin side —
+these are the native equivalents of the RN `currency` / `locale` / `fontFamily`
+props.
+
 ---
 
 ## Repository layout
@@ -169,9 +223,10 @@ preallocated and fixed-capacity.
 
 **React Native example** (`examples/rn`): needs
 [watchman](https://facebook.github.io/watchman/) (`brew install watchman`), then
-`npx expo start` + build the iOS app. Adding a new native source file to
-`LivelineKit` requires a `pod install` in `examples/rn/ios`; changing the Nitro
-spec (`src/Liveline.nitro.ts`) requires a nitrogen regen.
+`npx expo run:ios` or `npx expo run:android` (a dev build — the prebuild + native
+linking are automatic). Adding a new native iOS source file to `LivelineKit`
+requires a `pod install` in `examples/rn/ios`; changing the Nitro spec
+(`src/Liveline.nitro.ts`) requires a nitrogen regen.
 
 - **Format:** `swift format --configuration .swift-format --in-place --recursive ios/Sources`
 - **Lint:** `swift format lint --configuration .swift-format --recursive ios/Sources`

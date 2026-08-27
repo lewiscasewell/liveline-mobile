@@ -796,20 +796,20 @@ localized month names & field order, 12/24-hour), and overridable:
 | Platform | Status |
 | --- | --- |
 | **iOS** | ✅ Shipping (Swift `LivelineKit`, iOS 16+) |
-| **Android** | ✅ Supported (Kotlin) — beta; a few props not yet wired (see below) |
+| **Android** | ✅ Supported (Kotlin, Android 7+ / minSdk 24) — beta |
 
 The API is identical across platforms — the same JavaScript renders on both. The
 Android renderer is a native `Canvas`/`Choreographer` port of the engine, at
 full feature parity for the core: line & candle modes, multi-series, the
 orderbook stream, momentum, degen, the value overlay, reference lines,
-`exaggerate`, loading/paused, press-and-hold scrubbing, and the interval bar
-(`windows` / `onWindowChange`).
+`exaggerate`, loading/paused, press-and-hold scrubbing, the interval bar
+(`windows` / `onWindowChange`), plus `haptics`, `surfaceColor`, `fontFamily`,
+and `currency` / `locale` number formatting.
 
-Not yet wired on Android (they no-op there for now, and are on the roadmap):
-`windowStyle` variants (the Android bar has a single pill style), `surfaceColor`,
-`haptics`, `fontFamily`, and `currency` / `locale` number formatting (use
-`valuePrefix` / `valueSuffix` / `valueDecimals`, which do work). Nothing about
-your JavaScript needs to change as these land.
+The one native-styling difference: `windowStyle` variants only apply on iOS —
+the Android interval bar has a single pill style. This is a deliberate
+divergence (each platform styles that control natively); your JavaScript is
+identical either way.
 
 ### Also available as a Swift package
 
