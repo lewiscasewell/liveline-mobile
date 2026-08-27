@@ -29,7 +29,9 @@ extension LivelineView {
                 .font: font,
                 .foregroundColor: UIColor.clear,
                 .strokeColor: UIColor(rgba: outline),
-                .strokeWidth: 8.0,
+                // Percentage of the font's point size; a fat halo that reads
+                // clearly where the readout crosses the line behind it.
+                .strokeWidth: 16.0,
             ]
             ns.draw(at: point, withAttributes: outlineAttrs)
         }

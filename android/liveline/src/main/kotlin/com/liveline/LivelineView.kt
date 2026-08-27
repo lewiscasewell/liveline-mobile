@@ -596,8 +596,9 @@ class LivelineView @JvmOverloads constructor(
         fun tip(text: String, x: Float, color: Int) {
             if (tooltipOutline) {
                 tipPaint.style = Paint.Style.STROKE
-                tipPaint.strokeWidth = dp(3f)
-                tipPaint.color = palette.background.withAlpha(palette.background.a * op).toInt()
+                tipPaint.strokeWidth = dp(3.5f)
+                tipPaint.strokeJoin = Paint.Join.ROUND
+                tipPaint.color = palette.tooltipBg.withAlpha(palette.tooltipBg.a * op).toInt()
                 canvas.drawText(text, x, ty, tipPaint)
                 tipPaint.style = Paint.Style.FILL
             }
