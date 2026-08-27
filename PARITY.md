@@ -52,7 +52,7 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `padding` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | ported (renderer + Nitro, both platforms) |
 | `onHover` | — | — | — | — | — | — | intentionally not ported — no pointer/hover on touch |
 | `cursor` | — | — | — | — | — | — | intentionally not ported — no pointer/hover on touch |
-| formatting: `formatValue`/`formatTime` | ✅ | ⚠️ | — | — | ☑ | ☐ | ours: `valuePrefix/suffix/decimals` |
+| formatting: `formatValue`/`formatTime` | ✅ | — | — | — | ☑ | ☐ | Swift-native closures; RN/Kotlin use declarative valuePrefix/suffix/decimals + currency/locale |
 | `currency` / `locale` / `useGrouping` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** — native NumberFormatter |
 | `fontFamily` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
 | `surfaceColor` ➕ | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | mobile addition; **C gap** Android |
