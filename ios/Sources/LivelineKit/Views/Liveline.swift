@@ -65,9 +65,6 @@ public struct Liveline: View {
     private var candleWidth: Double = 1
     private var liveCandle: LivelineCandle?
 
-    /// The window selected via the button bar (nil = the first window / `window`).
-    @State private var activeWindow: Double?
-
     /// Creates a chart.
     /// - Parameters:
     ///   - data: Initial backfill series. Not re-sent on every value change.
@@ -78,22 +75,12 @@ public struct Liveline: View {
         self.value = value
     }
 
-    /// The effective visible span: the selected window button, else the first
-    /// window, else the `window` value.
-    private var effectiveWindow: Double {
-        activeWindow ?? windows.first?.secs ?? window
-    }
-
-    /// The chart, with an optional time-window button bar above it.
+    /// The chart, its multi-series legend and the interval bar, all composed in
+    /// one UIView container. The bar is the library's own ``WindowBarView`` — the
+    /// same native control the React Native binding uses — so window selection is
+    /// driven natively rather than by a SwiftUI reimplementation.
     public var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if !windows.isEmpty {
-                WindowBar(
-                    windows: windows, style: windowStyle, active: effectiveWindow
-                ) { activeWindow = $0 }
-            }
-            Representable(config: self, window: effectiveWindow)
-        }
+        Representable(config: self)
     }
 
     // MARK: Modifiers (return Self)
@@ -193,7 +180,6 @@ public struct Liveline: View {
 
     private struct Representable: UIViewRepresentable {
         var config: Liveline
-        var window: Double
 
         func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -238,7 +224,36 @@ public struct Liveline: View {
             view.theme = c.theme
             view.surfaceColor = c.surfaceColor.map { UIColor($0) }
             view.paletteOverrides = c.paletteOverrides
-            view.windowSeconds = window
+            // Interval bar — the library's native WindowBarView, wired inside the
+            // container to drive the chart's window (like the RN binding). The
+            // window is set from config only when the window set first appears or
+            // changes; after that the bar owns the selection, so SwiftUI re-applies
+            // don't clobber the user's choice.
+            if !c.windows.isEmpty {
+                let signature = c.windows.map { "\($0.label)|\($0.secs)" }.joined(separator: ",")
+                if signature != context.coordinator.windowSignature {
+                    context.coordinator.windowSignature = signature
+                    container.windowBar.windows = c.windows.map { ($0.label, $0.secs) }
+                    let initial = c.windows.first?.secs ?? c.window
+                    container.windowBar.activeSecs = initial
+                    view.windowSeconds = initial
+                }
+                container.windowBar.style = WindowBarView.Style(c.windowStyle)
+                let barDark = c.theme != .light
+                if container.windowBar.isDark != barDark { container.windowBar.isDark = barDark }
+                container.windowBar.fontFamily = c.fontFamily
+                if container.windowBar.isHidden {
+                    container.windowBar.isHidden = false
+                    container.setNeedsLayout()
+                }
+            } else {
+                context.coordinator.windowSignature = nil
+                view.windowSeconds = c.window
+                if !container.windowBar.isHidden {
+                    container.windowBar.isHidden = true
+                    container.setNeedsLayout()
+                }
+            }
             view.grid = c.grid
             view.badge = c.badge
             view.badgeTail = c.badgeTail
@@ -295,20 +310,27 @@ public struct Liveline: View {
             var lastSeriesValues: [String: Double] = [:]
             var legendSignature: String?
             var legendIsDark: Bool?
+            var windowSignature: String?
         }
     }
 
-    /// Stacks the multi-series legend chips above the chart. In single-series
-    /// mode the legend is hidden and the chart fills the whole view.
+    /// Stacks the multi-series legend chips above the chart and the native
+    /// interval bar below it — mirroring the React Native container. The legend
+    /// and bar are hidden until series / windows are set, so a plain chart fills
+    /// the whole view.
     final class LegendChartContainer: UIView {
         let legend = SeriesLegendView()
         let chart = LivelineView()
+        let windowBar = WindowBarView()
 
         override init(frame: CGRect) {
             super.init(frame: frame)
             addSubview(chart)
             addSubview(legend)
+            addSubview(windowBar)
             legend.isHidden = true
+            windowBar.isHidden = true
+            windowBar.onSelect = { [weak chart] secs in chart?.windowSeconds = secs }
         }
 
         @available(*, unavailable)
@@ -317,58 +339,24 @@ public struct Liveline: View {
         override func layoutSubviews() {
             super.layoutSubviews()
             let legendH = legend.isHidden ? 0 : legend.intrinsicContentSize.height
+            let barH = windowBar.isHidden ? 0 : windowBar.intrinsicContentSize.height
             legend.frame = CGRect(x: 0, y: 0, width: bounds.width, height: legendH)
-            chart.frame = CGRect(x: 0, y: legendH, width: bounds.width, height: bounds.height - legendH)
+            windowBar.frame = CGRect(x: 0, y: bounds.height - barH, width: bounds.width, height: barH)
+            chart.frame = CGRect(
+                x: 0, y: legendH, width: bounds.width, height: bounds.height - legendH - barH)
         }
     }
 }
 
-// MARK: - Window button bar
+// MARK: - Window style bridge
 
-@MainActor
-private struct WindowBar: View {
-    let windows: [Window]
-    let style: WindowStyle
-    let active: Double
-    let onSelect: (Double) -> Void
-
-    // The bar is chrome outside the chart, so it follows the app's appearance
-    // rather than the chart's own theme.
-    @Environment(\.colorScheme) private var colorScheme
-    private var dark: Bool { colorScheme == .dark }
-
-    private func gray(_ alpha: Double) -> Color { (dark ? Color.white : Color.black).opacity(alpha) }
-    private var activeColor: Color { gray(WindowBarTokens.activeAlpha(isDark: dark)) }
-    private var inactiveColor: Color { gray(WindowBarTokens.inactiveAlpha(isDark: dark)) }
-    private var trackColor: Color {
-        style == .text ? .clear : gray(WindowBarTokens.trackAlpha(isDark: dark))
-    }
-    private var indicatorColor: Color { gray(WindowBarTokens.indicatorAlpha(isDark: dark)) }
-    private var corner: CGFloat { style == .rounded ? 999 : 6 }
-    private var innerCorner: CGFloat { style == .rounded ? 999 : 4 }
-
-    var body: some View {
-        HStack(spacing: style == .text ? 4 : 2) {
-            ForEach(windows) { w in
-                let isActive = w.secs == active
-                Button {
-                    onSelect(w.secs)
-                } label: {
-                    Text(w.label)
-                        .font(.system(size: WindowBarTokens.fontSize, weight: isActive ? .semibold : .regular))
-                        .foregroundColor(isActive ? activeColor : inactiveColor)
-                        .padding(.horizontal, style == .text ? 6 : 10)
-                        .padding(.vertical, style == .text ? 2 : 3)
-                        .background(
-                            RoundedRectangle(cornerRadius: innerCorner)
-                                .fill(isActive && style != .text ? indicatorColor : .clear)
-                        )
-                }
-                .buttonStyle(.plain)
-            }
+extension WindowBarView.Style {
+    init(_ s: WindowStyle) {
+        switch s {
+        case .default: self = .default
+        case .rounded: self = .rounded
+        case .text: self = .text
         }
-        .padding(style == .text ? 0 : (style == .rounded ? 3 : 2))
-        .background(RoundedRectangle(cornerRadius: corner).fill(trackColor))
     }
 }
 #endif
