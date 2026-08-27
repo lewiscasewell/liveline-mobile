@@ -45,8 +45,7 @@ chart lives on a phone:
   on ProMotion**. `push()` a tick and React never re-renders.
 - **Touch, not hover** — crosshair scrubbing is **press-and-hold**: hold to
   inspect (the line to the right dims), release to resume.
-- **Haptics** — optional, firing on momentum swings and degen bursts _(iOS today;
-  Android next)_.
+- **Haptics** — optional, firing on degen bursts (iOS + Android).
 - **Native controls & formatting** — the interval bar is a real native segmented
   control (Liquid Glass on iOS); number/time formatting, `currency`/`locale`
   localization and custom fonts all run natively, per frame.

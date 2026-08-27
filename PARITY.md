@@ -32,7 +32,7 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `candles` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| candle↔line morph (via `mode`) | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | Kotlin morph to build; see divergences |
+| candle↔line morph (via `mode`) | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | mode-driven; see divergences |
 | `lineMode`/`lineData`/`lineValue` | — | — | — | — | — | — | intentionally not ported — see divergences |
 | `onModeChange` | — | — | — | — | — | — | app owns `mode`; no built-in toggle to fire it |
 | `onSeriesToggle` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** |
@@ -77,7 +77,7 @@ more than help. The divergences below are intentional.
   more simply: the candle↔line **morph is driven by `mode`** — flipping it
   animates the transition, drawing the line from the `data` / `value` the app
   already supplies. So there's one line source, not two, and no confusingly-named
-  props. (Swift already works this way; Android is the outstanding port.)
+  props.
 - **`onModeChange` — not ported.** It exists in the web API to report a *built-in*
   line/candle toggle control. Our library ships no such control — the app owns
   `mode` (e.g. the demo's Line/Candle buttons) — so it already knows when it

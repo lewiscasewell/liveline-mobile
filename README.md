@@ -54,8 +54,7 @@ chart lives on a phone:
 - **Touch, not hover.** Crosshair scrubbing is **press-and-hold**: hold to inspect
   a point (the line to the right dims), release to resume — the touch-native
   equivalent of the web's mouse hover.
-- **Haptics.** Optional `haptics` fire on momentum swings and degen bursts _(iOS
-  today; Android next)_.
+- **Haptics.** Optional `haptics` fire on degen bursts (iOS + Android).
 - **Native controls & formatting.** The interval bar is a real native segmented
   control (Liquid Glass on iOS); all number/time formatting and localization
   (`currency`, `locale`, custom fonts) run natively, per frame.
