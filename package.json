@@ -1,0 +1,11 @@
+{
+  "name": "liveline-mobile-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples/rn"
+  ],
+  "overrides": {
+    "react-native-nitro-modules": "0.37.1"
+  }
+}

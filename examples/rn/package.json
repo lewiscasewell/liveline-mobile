@@ -6,10 +6,10 @@
     "expo": "~57.0.16",
     "expo-font": "~57.0.1",
     "expo-status-bar": "~57.0.1",
-    "liveline-mobile": "file:../../packages/liveline-mobile",
+    "liveline-mobile": "workspace:*",
     "react": "19.2.3",
     "react-native": "0.86.2",
-    "react-native-nitro-modules": "^0.37.0"
+    "react-native-nitro-modules": "0.37.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
