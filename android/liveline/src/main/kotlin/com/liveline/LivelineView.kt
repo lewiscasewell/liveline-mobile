@@ -350,10 +350,15 @@ class LivelineView @JvmOverloads constructor(
         val realNow = System.currentTimeMillis() / 1000.0
         if (!paused) pauseNow = realNow
         val now = if (paused) pauseNow else realNow
-        val rightEdge = now + span * 0.05
+        val isCandle = modeProgress > 0.0 && (candles.isNotEmpty() || liveCandle != null)
+        // Momentum chevrons sit just right of the live dot; widen the right-edge
+        // buffer so they clear the badge instead of hiding behind it (mirrors iOS
+        // currentWinBuffer). One source of truth so the crosshair mapping agrees.
+        val rightBuf = if (!isCandle && badge && momentum != Momentum.OFF) max(0.05, dp(37f).toDouble() / chartW) else 0.05
+        val rightEdge = now + span * rightBuf
         val leftEdge = rightEdge - span
 
-        if (modeProgress > 0.0 && (candles.isNotEmpty() || liveCandle != null)) {
+        if (isCandle) {
             drawCandleFrame(canvas, w, padL, padR, padT, chartH, span, now, leftEdge, rightEdge, nowMs, dt, modeProgress)
             return
         }
