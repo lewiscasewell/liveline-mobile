@@ -67,9 +67,12 @@ chart lives on a phone:
 ## Using it in React Native
 
 ```bash
+# npm · yarn · pnpm · bun
 npm install liveline-mobile react-native-nitro-modules
-cd ios && pod install
 ```
+
+**Expo:** needs a development build, not Expo Go (`npx expo run:ios` / `run:android`
+does the prebuild + linking for you — no config plugin). **Bare RN:** `cd ios && pod install`.
 
 ```tsx
 import { Liveline, useLiveline } from 'liveline-mobile'

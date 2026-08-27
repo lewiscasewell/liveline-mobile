@@ -69,13 +69,35 @@ chart lives on a phone:
 ## Install
 
 ```bash
-npm install liveline-mobile react-native-nitro-modules
+npm  install liveline-mobile react-native-nitro-modules
+yarn add     liveline-mobile react-native-nitro-modules
+pnpm add     liveline-mobile react-native-nitro-modules
+bun  add     liveline-mobile react-native-nitro-modules
+```
+
+`react-native-nitro-modules` is a peer dependency (the native runtime). It ships
+native code, so it needs the **New Architecture (Fabric)** — which is **on by
+default** in current Expo / React Native.
+
+### Expo
+
+Works great with Expo — you just need a **development build**, not Expo Go
+(custom native code never runs in Expo Go). You **don't** hand-manage `ios/` /
+`android/` or run `expo prebuild` yourself — a dev-client build does the prebuild
++ native linking for you, and there's **no config plugin to add** (it autolinks):
+
+```bash
+npx expo run:ios       # or: npx expo run:android
+# or a cloud build:  eas build --profile development
+```
+
+### Bare React Native
+
+```bash
 cd ios && pod install
 ```
 
-`react-native-nitro-modules` is a peer dependency (the native runtime). The **New
-Architecture (Fabric) is required**. Works in bare React Native and in Expo
-(dev/prod builds — it ships native code, so it isn't in Expo Go). Then:
+Then, either way:
 
 ```tsx
 import { Liveline, useLiveline } from 'liveline-mobile'
