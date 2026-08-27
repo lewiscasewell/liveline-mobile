@@ -50,8 +50,8 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `referenceLine` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `lerpSpeed` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
 | `padding` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — to port |
-| `onHover` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | map to `onScrub` |
-| `cursor` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | to port (map to scrub crosshair) |
+| `onHover` | — | — | — | — | — | — | intentionally not ported — no pointer/hover on touch |
+| `cursor` | — | — | — | — | — | — | intentionally not ported — no pointer/hover on touch |
 | formatting: `formatValue`/`formatTime` | ✅ | ⚠️ | — | — | ☑ | ☐ | ours: `valuePrefix/suffix/decimals` |
 | `currency` / `locale` / `useGrouping` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** — native NumberFormatter |
 | `fontFamily` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
@@ -82,6 +82,10 @@ more than help. The divergences below are intentional.
   line/candle toggle control. Our library ships no such control — the app owns
   `mode` (e.g. the demo's Line/Candle buttons) — so it already knows when it
   changes and there's nothing for the library to call back.
+- **`onHover` / `cursor` — not ported.** Both are pointer/hover concepts with
+  no touchscreen equivalent: there's no cursor to style, and "hover" is a
+  press-and-hold **scrub** here (see `scrub`), which the app can already read
+  from its own gesture handling if it needs the scrubbed point.
 - **Number formatting** uses declarative `valuePrefix` / `valueSuffix` /
   `valueDecimals` / `currency` / `locale` / `useGrouping` instead of the web's
   `formatValue` / `formatTime` closures, so formatting stays native (off the JS
