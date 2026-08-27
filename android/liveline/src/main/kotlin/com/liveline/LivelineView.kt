@@ -203,6 +203,7 @@ class LivelineView @JvmOverloads constructor(
     private var scrubAmount = 0.0
     // Smooth window (interval) transition, log-interpolated over 750ms.
     private var displayWindow = 0.0
+    private var modeProgress = 0.0
     private var windowInited = false
     private var windowFrom = 0.0
     private var windowTo = 0.0
@@ -318,6 +319,9 @@ class LivelineView @JvmOverloads constructor(
 
         loadingAlpha = Clock.lerp(loadingAlpha, if (loading) 1.0 else 0.0, 0.1, dt).coerceIn(0.0, 1.0)
         scrubAmount = Clock.lerp(scrubAmount, if (scrubbing) 1.0 else 0.0, 0.2, dt).coerceIn(0.0, 1.0)
+        modeProgress = Clock.lerp(modeProgress, if (mode == LivelineMode.CANDLE) 1.0 else 0.0, 0.1, dt)
+        if (modeProgress < 0.002) modeProgress = 0.0
+        if (modeProgress > 0.998) modeProgress = 1.0
         degenAdvance(dt)
 
         if (isMultiSeries) { drawMultiSeries(canvas, w, h, span, now = System.currentTimeMillis() / 1000.0, dt, nowMs); return }
@@ -332,8 +336,8 @@ class LivelineView @JvmOverloads constructor(
         val rightEdge = now + span * 0.05
         val leftEdge = rightEdge - span
 
-        if (mode == LivelineMode.CANDLE && (candles.isNotEmpty() || liveCandle != null)) {
-            drawCandleFrame(canvas, w, padL, padR, padT, chartH, span, now, leftEdge, rightEdge, nowMs, dt)
+        if (modeProgress > 0.0 && (candles.isNotEmpty() || liveCandle != null)) {
+            drawCandleFrame(canvas, w, padL, padR, padT, chartH, span, now, leftEdge, rightEdge, nowMs, dt, modeProgress)
             return
         }
         if (buffer.size < 2) {
@@ -761,7 +765,7 @@ class LivelineView @JvmOverloads constructor(
     }
 
     // ── Candle mode ─────────────────────────────────────────────────────────────
-    private fun drawCandleFrame(canvas: Canvas, w: Float, padL: Float, padR: Float, padT: Float, chartH: Float, span: Double, now: Double, leftEdge: Double, rightEdge: Double, nowMs: Double, dt: Double) {
+    private fun drawCandleFrame(canvas: Canvas, w: Float, padL: Float, padR: Float, padT: Float, chartH: Float, span: Double, now: Double, leftEdge: Double, rightEdge: Double, nowMs: Double, dt: Double, grow: Double = 1.0) {
         val liveT = liveCandle?.time
         liveCandle?.let { liveBull = Clock.lerp(liveBull, if (it.close >= it.open) 1.0 else 0.0, 0.12, dt) }
         val all = ArrayList(candles)
@@ -784,7 +788,9 @@ class LivelineView @JvmOverloads constructor(
             while (g <= maxV) { val y = toY(g); canvas.drawLine(padL, y, padL + chartW, y, gridPaint); canvas.drawText(fmt(g), padL + chartW + dp(6f), y + dp(4f), labelPaint); g += gridInterval }
         }
 
-        // Candlesticks.
+        // Candlesticks. During a mode morph (grow < 1) each candle collapses
+        // toward its close, so it melts into the line overlay drawn below.
+        val growF = grow.toFloat().coerceIn(0f, 1f)
         val pxPerSec = chartW / span.toFloat()
         val bodyW = max(1f, candleWidth.toFloat() * pxPerSec * 0.7f)
         val wickW = max(0.8f, min(2f, bodyW * 0.15f))
@@ -795,15 +801,31 @@ class LivelineView @JvmOverloads constructor(
             val cx = toX(c.time + candleWidth / 2)
             val isLive = liveT != null && c.time == liveT
             val color = if (isLive) blend(bear, bull, liveBull) else if (c.close >= c.open) bull else bear
-            val bodyTop = toY(max(c.open, c.close)); val bodyBottom = toY(min(c.open, c.close))
+            val closeY = toY(c.close)
+            fun grown(y: Float) = if (growF >= 1f) y else closeY + (y - closeY) * growF
+            val bodyTop = grown(toY(max(c.open, c.close))); val bodyBottom = grown(toY(min(c.open, c.close)))
             val bodyH = max(1f, bodyBottom - bodyTop)
-            candleStroke.color = color.toInt(); candleStroke.strokeWidth = wickW
-            if (bodyTop - toY(c.high) > 0.5f) canvas.drawLine(cx, bodyTop, cx, toY(c.high), candleStroke)
-            if (toY(c.low) - bodyBottom > 0.5f) canvas.drawLine(cx, bodyBottom, cx, toY(c.low), candleStroke)
-            candleFill.color = color.toInt()
+            candleStroke.color = color.withAlpha(color.a * growF).toInt(); candleStroke.strokeWidth = wickW
+            if (bodyTop - grown(toY(c.high)) > 0.5f) canvas.drawLine(cx, bodyTop, cx, grown(toY(c.high)), candleStroke)
+            if (grown(toY(c.low)) - bodyBottom > 0.5f) canvas.drawLine(cx, bodyBottom, cx, grown(toY(c.low)), candleStroke)
+            candleFill.color = color.withAlpha(color.a * growF).toInt()
             val rect = RectF(cx - half, bodyTop, cx + half, bodyTop + bodyH)
             if (radius > 0 && bodyH >= radius * 2) canvas.drawRoundRect(rect, radius, radius, candleFill) else canvas.drawRect(rect, candleFill)
-            if (isLive) { candleFill.color = color.withAlpha(color.a * livePulse).toInt(); if (radius > 0 && bodyH >= radius * 2) canvas.drawRoundRect(rect, radius, radius, candleFill) else canvas.drawRect(rect, candleFill) }
+            if (isLive) { candleFill.color = color.withAlpha(color.a * livePulse * growF).toInt(); if (radius > 0 && bodyH >= radius * 2) canvas.drawRoundRect(rect, radius, radius, candleFill) else canvas.drawRect(rect, candleFill) }
+        }
+
+        // Line overlay: fades in from the `data` buffer as the candles collapse.
+        if (growF < 1f) {
+            val a = (1f - growF).toDouble()
+            linePaint.color = palette.line.withAlpha(palette.line.a * a).toInt()
+            linePaint.strokeWidth = dp(lineWidth.toFloat())
+            val pts = ArrayList<Point>()
+            for (p in buffer) { if (p.time < leftEdge - 2) continue; if (p.time > now) break; pts.add(Point(toX(p.time).toDouble(), toY(p.value).toDouble())) }
+            if (pts.size >= 2) {
+                val path = Path(); path.moveTo(pts[0].x.toFloat(), pts[0].y.toFloat())
+                for (s in PathBuilder.monotoneSegments(pts)) path.cubicTo(s.control1.x.toFloat(), s.control1.y.toFloat(), s.control2.x.toFloat(), s.control2.y.toFloat(), s.end.x.toFloat(), s.end.y.toFloat())
+                canvas.drawPath(path, linePaint)
+            }
         }
 
         drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)

@@ -204,13 +204,20 @@ const Candlestick: React.FC<DemoProps> = ({ dark }) => {
   const stateRef = React.useRef(initial)
   const [, force] = useState(0)
   const [candle, setCandle] = useState(true)
+  const { push, attachHybridRef } = useLiveline()
+  // The line source for the morph (and line mode): candle closes, then live ticks.
+  const seed = useMemo<LivelinePoint[]>(
+    () => initial.candles.map((c) => ({ time: c.time + feed.width, value: c.close })),
+    [initial, feed],
+  )
   useEffect(() => {
     const id = setInterval(() => {
       stateRef.current = feed.step(stateRef.current.candles, stateRef.current.live)
+      push({ time: Date.now() / 1000, value: stateRef.current.live.close })
       force((n) => n + 1)
     }, 1000 / 15)
     return () => clearInterval(id)
-  }, [feed])
+  }, [feed, push])
   const { candles, live } = stateRef.current
   return (
     <View style={styles.stack}>
@@ -230,11 +237,13 @@ const Candlestick: React.FC<DemoProps> = ({ dark }) => {
       </View>
       <Liveline
         style={styles.card}
+        data={seed}
         mode={candle ? 'candle' : 'line'}
         candles={candles.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))}
         liveCandle={{ time: live.time, open: live.open, high: live.high, low: live.low, close: live.close }}
         candleWidth={feed.width}
         theme={themeOf(dark)}
+        hybridRef={attachHybridRef()}
       />
     </View>
   )

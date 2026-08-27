@@ -32,7 +32,7 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `candles` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| candle↔line morph (via `mode`) | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | Kotlin morph to build; see divergences |
+| candle↔line morph (via `mode`) | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | Kotlin morph to build; see divergences |
 | `lineMode`/`lineData`/`lineValue` | — | — | — | — | — | — | intentionally not ported — see divergences |
 | `onModeChange` | — | — | — | — | — | — | app owns `mode`; no built-in toggle to fire it |
 | `onSeriesToggle` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** |
