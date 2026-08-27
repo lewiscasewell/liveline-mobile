@@ -10,7 +10,9 @@ module.exports = {
     platforms: {
       android: {
         packageImportPath: 'import com.liveline.mobile.LivelinePackage',
-        packageInstance: 'new LivelinePackage()',
+        // Fully qualified: Expo's PackageList generator emits packageInstance
+        // verbatim without adding an import, so an unqualified name won't resolve.
+        packageInstance: 'new com.liveline.mobile.LivelinePackage()',
       },
     },
   },

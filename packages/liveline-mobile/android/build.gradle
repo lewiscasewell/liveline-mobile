@@ -6,6 +6,14 @@ def safeExtGet(prop, fallback) {
   rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
+// The ABIs the app is building for. Must match react-native-nitro-modules (which
+// filters the same way) — otherwise this module builds an ABI Nitro didn't, and
+// its .so fails to link the missing libNitroModules.so.
+def reactNativeArchitectures() {
+  def value = rootProject.getProperties().get("reactNativeArchitectures")
+  return value ? value.split(",") : ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
+}
+
 android {
   namespace "com.liveline.mobile"
   compileSdk safeExtGet("compileSdkVersion", 36)
@@ -13,6 +21,9 @@ android {
 
   defaultConfig {
     minSdk safeExtGet("minSdkVersion", 24)
+    ndk {
+      abiFilters (*reactNativeArchitectures())
+    }
     externalNativeBuild {
       cmake {
         cppFlags "-frtti -fexceptions -Wall -fstack-protector-all -std=c++20"
