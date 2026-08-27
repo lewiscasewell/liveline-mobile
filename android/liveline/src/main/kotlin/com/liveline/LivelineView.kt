@@ -68,7 +68,6 @@ class LivelineView @JvmOverloads constructor(
     var windowSeconds: Double = 30.0
     var momentum: Momentum = Momentum.AUTO
     var badgeVariant: BadgeVariant = BadgeVariant.DEFAULT
-    /** The value pill that tracks the chart tip. */
     var badge: Boolean = true
     /** The pointed tail on the badge pill (ignored for the minimal variant). */
     var badgeTail: Boolean = true
@@ -77,9 +76,7 @@ class LivelineView @JvmOverloads constructor(
     var fill: Boolean = true
     /** Y-axis grid lines + value labels (the time axis is always drawn). */
     var grid: Boolean = true
-    /** The pulsing ring on the live dot. */
     var pulse: Boolean = true
-    /** Line stroke width in points. */
     var lineWidth: Double = 2.0
     /** Interpolation speed toward the latest value (0–1). */
     var lerpSpeed: Double = 0.08
@@ -824,7 +821,6 @@ class LivelineView @JvmOverloads constructor(
         displayValue = Clock.lerp(displayValue, liveClose, speed, dt)
         val endX = toX(now); val endY = toY(displayValue).coerceIn(padT, padT + chartH)
         val col = if ((liveCandle?.let { it.close >= it.open } ?: true)) bull else bear
-        // No live dot in candle mode — the live candle already shows the close.
         drawBadge(canvas, endX, endY, w, padR, padT, chartH, col.toInt())
     }
 

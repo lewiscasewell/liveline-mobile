@@ -142,9 +142,6 @@ extension LivelineView {
         let dotY = max(pad.top, min(h - pad.bottom, layout.toY(smoothValue)))
         let dotPoint = CGPoint(x: layout.toX(now), y: dotY)
 
-        if reveal >= 0.3 {
-            drawDot(ctx, at: dotPoint, showPulse: pulse && reveal > 0.6, scrubDim: scrubAmount, nowMs: nowMs)
-        }
         if showMomentum, let trend {
             drawArrows(ctx, at: dotPoint, trend: trend, dt: dt, nowMs: nowMs)
         }
