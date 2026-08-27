@@ -32,8 +32,9 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `candles` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `lineMode`+`lineData`+`lineValue` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — candle↔line morph |
-| `onModeChange` | ⚠️ | ❌ | ⚠️ | ❌ | ☐ | ☐ |  |
+| candle↔line morph (via `mode`) | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | Kotlin morph to build; see divergences |
+| `lineMode`/`lineData`/`lineValue` | — | — | — | — | — | — | intentionally not ported — see divergences |
+| `onModeChange` | — | — | — | — | — | — | app owns `mode`; no built-in toggle to fire it |
 | `onSeriesToggle` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** |
 | `seriesToggleCompact` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — dots-only legend |
 | `loading` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
@@ -62,3 +63,26 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 on both, write the README doc section (prose + code + video placeholder), verify,
 commit. Docs land in `packages/liveline-mobile/README.md`. Videos are captured by
 the maintainer and linked (GitHub user-attachments URLs).
+
+## Deliberate divergences
+
+Parity is the goal, but we don't copy the web API where its naming would hurt
+more than help. The divergences below are intentional.
+
+- **`lineMode` / `lineData` / `lineValue` — not ported.** In the web API these
+  three morph a candle chart into a line, but the names collide badly with props
+  that already exist: `lineMode` (a boolean) sits next to `mode: 'line' | 'candle'`
+  and only means anything while `mode === 'candle'`; `lineData` / `lineValue`
+  shadow `data` / `value` as a *second* parallel feed. We get the same feature
+  more simply: the candle↔line **morph is driven by `mode`** — flipping it
+  animates the transition, drawing the line from the `data` / `value` the app
+  already supplies. So there's one line source, not two, and no confusingly-named
+  props. (Swift already works this way; Android is the outstanding port.)
+- **`onModeChange` — not ported.** It exists in the web API to report a *built-in*
+  line/candle toggle control. Our library ships no such control — the app owns
+  `mode` (e.g. the demo's Line/Candle buttons) — so it already knows when it
+  changes and there's nothing for the library to call back.
+- **Number formatting** uses declarative `valuePrefix` / `valueSuffix` /
+  `valueDecimals` / `currency` / `locale` / `useGrouping` instead of the web's
+  `formatValue` / `formatTime` closures, so formatting stays native (off the JS
+  thread). See the Number & time formatting docs.
