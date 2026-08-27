@@ -21,6 +21,9 @@ class SeriesLegendView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     var isDark: Boolean = true
         set(v) { field = v; refresh() }
+    /** Dots only, no labels. */
+    var compact: Boolean = false
+        set(v) { field = v; setItems(items) }
     var onToggle: ((String) -> Unit)? = null
 
     private var items: List<Item> = emptyList()
@@ -45,8 +48,8 @@ class SeriesLegendView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
             val dot = View(context).apply { background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(item.color) } }
-            chip.addView(dot, LayoutParams(dp(7f).toInt(), dp(7f).toInt()).apply { rightMargin = dp(6f).toInt() })
-            chip.addView(TextView(context).apply { text = item.label; setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f) })
+            chip.addView(dot, LayoutParams(dp(7f).toInt(), dp(7f).toInt()).apply { rightMargin = if (compact) 0 else dp(6f).toInt() })
+            if (!compact) chip.addView(TextView(context).apply { text = item.label; setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f) })
             addView(chip)
             chips.add(item.id to chip)
         }
@@ -59,7 +62,7 @@ class SeriesLegendView @JvmOverloads constructor(context: Context, attrs: Attrib
         background = GradientDrawable().apply { cornerRadius = dp(999f); setColor(gray(if (isDark) 0.04 else 0.03)) }
         for ((id, chip) in chips) {
             chip.alpha = if (hidden.contains(id)) 0.35f else 1f
-            (chip.getChildAt(1) as TextView).setTextColor(gray(if (isDark) 0.7 else 0.6))
+            (chip.getChildAt(1) as? TextView)?.setTextColor(gray(if (isDark) 0.7 else 0.6))
         }
     }
 }

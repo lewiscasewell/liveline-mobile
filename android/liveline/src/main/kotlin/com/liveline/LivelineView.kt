@@ -172,7 +172,12 @@ class LivelineView @JvmOverloads constructor(
         if (s.buffer.isEmpty() || point.time - s.lastCommit >= bucket) { s.buffer.add(point); s.lastCommit = point.time; if (s.buffer.size > 8192) s.buffer.removeAt(0) } else s.buffer[s.buffer.size - 1] = point
     }
 
-    fun toggleSeries(id: String) { series.firstOrNull { it.id == id }?.let { it.visible = !it.visible } }
+    /** Flips a series' visibility; returns the new visible state. */
+    fun toggleSeries(id: String): Boolean {
+        val s = series.firstOrNull { it.id == id } ?: return true
+        s.visible = !s.visible
+        return s.visible
+    }
     /** (id, colour, label) for building a legend. */
     fun seriesInfo(): List<Triple<String, Int, String>> = series.map { Triple(it.id, it.color, it.label ?: it.id) }
 

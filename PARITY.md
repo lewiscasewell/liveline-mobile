@@ -35,8 +35,8 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | candle↔line morph (via `mode`) | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | mode-driven; see divergences |
 | `lineMode`/`lineData`/`lineValue` | — | — | — | — | — | — | intentionally not ported — see divergences |
 | `onModeChange` | — | — | — | — | — | — | app owns `mode`; no built-in toggle to fire it |
-| `onSeriesToggle` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ☐ | ☐ | in spec; delivery pending legend in the Nitro container |
-| `seriesToggleCompact` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ☐ | ☐ | in spec; delivery pending legend in the Nitro container |
+| `onSeriesToggle` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | legend in the Nitro container; verified on device |
+| `seriesToggleCompact` | ✅ | ✅ | ✅ | ✅ | ☐ | ☐ | legend in the Nitro container; verified on device |
 | `loading` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `paused` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `emptyText` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |

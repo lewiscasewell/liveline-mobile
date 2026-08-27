@@ -19,6 +19,14 @@
         /// Called with the tapped series' id (visibility is tracked internally).
         public var onToggle: ((String) -> Void)?
         public var isDark = false { didSet { applyColors() } }
+        /// Dots only, no labels.
+        public var compact = false {
+            didSet {
+                chips.forEach { $0.label.isHidden = compact }
+                invalidateIntrinsicContentSize()
+                setNeedsLayout()
+            }
+        }
         public var items: [Item] = [] { didSet { rebuild() } }
 
         private let track = UIView()
@@ -62,6 +70,7 @@
                 let label = UILabel()
                 label.text = item.label
                 label.font = font()
+                label.isHidden = compact
                 chip.addSubview(dot)
                 chip.addSubview(label)
                 track.addSubview(chip)
@@ -97,9 +106,9 @@
             let padX: CGFloat = 10
             var x = padX
             for chip in chips {
-                let labelW = ceil(
+                let labelW = compact ? 0 : ceil(
                     ((chip.label.text ?? "") as NSString).size(withAttributes: [.font: font()]).width)
-                let w = padX + dotSize + innerGap + labelW + padX
+                let w = compact ? (padX + dotSize + padX) : (padX + dotSize + innerGap + labelW + padX)
                 chip.dot.frame = CGRect(x: padX, y: (chipH - dotSize) / 2, width: dotSize, height: dotSize)
                 chip.label.frame = CGRect(x: padX + dotSize + innerGap, y: 0, width: labelW, height: chipH)
                 chip.view.frame = CGRect(x: x, y: 0, width: w, height: chipH)

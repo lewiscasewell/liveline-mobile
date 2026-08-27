@@ -44,7 +44,11 @@ final class HybridLivelineView: HybridLivelineSpec {
             self.onModeChange?(candle ? .candle : .line)
         }
         legend.isHidden = true
-        legend.onToggle = { [weak self] id in self?.chart.toggleSeries(id) }
+        legend.onToggle = { [weak self] id in
+            guard let self else { return }
+            let visible = self.chart.toggleSeries(id)
+            self.onSeriesToggle?(id, visible)
+        }
         return LivelineContainerView(legend: legend, bar: bar, chart: chart)
     }()
 
@@ -224,8 +228,9 @@ final class HybridLivelineView: HybridLivelineSpec {
             chart.padBottomOverride = padding?.bottom; chart.padLeftOverride = padding?.left
         }
     }
-    // Legend isn't part of the container yet; stored until it is wired.
-    var seriesToggleCompact: Bool?
+    var seriesToggleCompact: Bool? {
+        didSet { legend.compact = seriesToggleCompact ?? false }
+    }
     var onSeriesToggle: ((_ id: String, _ visible: Bool) -> Void)?
     var pulse: Bool? {
         didSet { chart.pulse = pulse ?? true }

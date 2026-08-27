@@ -8,6 +8,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import com.liveline.LivelineView
+import com.liveline.SeriesLegendView
 import com.liveline.WindowBarView
 import com.liveline.core.BadgeVariant as CoreBadge
 import com.liveline.core.LivelineCandle as CoreCandle
@@ -34,16 +35,25 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
 
     private val chart = LivelineView(context)
     private val windowBar = WindowBarView(context).apply { visibility = View.GONE }
-    // The view is a vertical container: the chart fills, the interval bar (shown
-    // only when `windows` is set) sits below it — mirroring the iOS container.
+    private val seriesLegend = SeriesLegendView(context).apply { visibility = View.GONE }
+    // Vertical container: the legend (shown only for multi-series) on top, the
+    // chart filling, the interval bar (shown only when `windows` is set) below —
+    // mirroring the iOS container.
     private val container = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL
+        val dp = resources.displayMetrics.density
+        addView(
+            seriesLegend,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { gravity = Gravity.CENTER_HORIZONTAL; bottomMargin = (8 * dp).toInt() },
+        )
         addView(chart, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
         addView(
             windowBar,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT,
-            ).apply { gravity = Gravity.CENTER_HORIZONTAL; topMargin = (8 * resources.displayMetrics.density).toInt() },
+            ).apply { gravity = Gravity.CENTER_HORIZONTAL; topMargin = (8 * dp).toInt() },
         )
     }
     override val view: View get() = container
@@ -54,6 +64,17 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
             chart.windowSeconds = secs
             onWindowChange?.invoke(secs)
         }
+        seriesLegend.onToggle = { id ->
+            val visible = chart.toggleSeries(id)
+            onSeriesToggle?.invoke(id, visible)
+        }
+    }
+
+    private fun refreshLegend() {
+        val info = chart.seriesInfo()
+        if (info.isEmpty()) { seriesLegend.visibility = View.GONE; return }
+        seriesLegend.visibility = View.VISIBLE
+        seriesLegend.setItems(info.map { SeriesLegendView.Item(it.first, it.second, it.third) })
     }
 
     private fun refreshWindowBar() {
@@ -125,6 +146,7 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
                     s.data.map { corePoint(it) },
                 )
             })
+            refreshLegend()
         }
     override var value: Double? = null
         set(v) {
@@ -149,6 +171,7 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
             field = v
             chart.theme = if (v == LivelineTheme.LIGHT) CoreTheme.LIGHT else CoreTheme.DARK
             windowBar.isDark = v != LivelineTheme.LIGHT
+            seriesLegend.isDark = v != LivelineTheme.LIGHT
         }
     override var surfaceColor: String? = null
         set(v) {
@@ -206,8 +229,8 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
             chart.padTopOverride = v?.top; chart.padRightOverride = v?.right
             chart.padBottomOverride = v?.bottom; chart.padLeftOverride = v?.left
         }
-    // Legend isn't part of the Nitro container yet; stored until it is wired.
     override var seriesToggleCompact: Boolean? = null
+        set(v) { field = v; if (v != null) seriesLegend.compact = v }
     override var onSeriesToggle: ((id: String, visible: Boolean) -> Unit)? = null
     override var pulse: Boolean? = null
         set(v) { field = v; if (v != null) chart.pulse = v }

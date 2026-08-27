@@ -561,10 +561,12 @@ public final class LivelineView: UIView {
     }
 
     /// Hides or shows a series (driven by the legend chips).
-    public func toggleSeries(_ id: String) {
-        guard let idx = series.firstIndex(where: { $0.id == id }) else { return }
+    @discardableResult
+    public func toggleSeries(_ id: String) -> Bool {
+        guard let idx = series.firstIndex(where: { $0.id == id }) else { return true }
         series[idx].visible.toggle()
         setNeedsDisplay()
+        return series[idx].visible
     }
 
     /// Folds a tick into the forming candle (OHLC), rolling to a new bucket when
