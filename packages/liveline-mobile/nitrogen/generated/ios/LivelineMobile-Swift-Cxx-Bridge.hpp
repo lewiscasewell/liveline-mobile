@@ -22,6 +22,8 @@ namespace margelo::nitro::liveline { enum class LivelineMomentum; }
 namespace margelo::nitro::liveline { struct LivelineOrderbookLevel; }
 // Forward declaration of `LivelineOrderbook` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineOrderbook; }
+// Forward declaration of `LivelinePadding` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelinePadding; }
 // Forward declaration of `LivelinePoint` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelinePoint; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
@@ -47,6 +49,7 @@ namespace LivelineMobile { class HybridLivelineSpec_cxx; }
 #include "LivelineMomentum.hpp"
 #include "LivelineOrderbook.hpp"
 #include "LivelineOrderbookLevel.hpp"
+#include "LivelinePadding.hpp"
 #include "LivelinePoint.hpp"
 #include "LivelineReference.hpp"
 #include "LivelineSeries.hpp"
@@ -131,6 +134,58 @@ namespace margelo::nitro::liveline::bridge::swift {
     return optional.has_value();
   }
   inline std::vector<LivelineSeries> get_std__optional_std__vector_LivelineSeries__(const std::optional<std::vector<LivelineSeries>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<bool>
+  /**
+   * Specialized version of `std::optional<bool>`.
+   */
+  using std__optional_bool_ = std::optional<bool>;
+  inline std::optional<bool> create_std__optional_bool_(const bool& value) noexcept {
+    return std::optional<bool>(value);
+  }
+  inline bool has_value_std__optional_bool_(const std::optional<bool>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline bool get_std__optional_bool_(const std::optional<bool>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::function<void(const std::string& /* id */, bool /* visible */)>
+  /**
+   * Specialized version of `std::function<void(const std::string&, bool)>`.
+   */
+  using Func_void_std__string_bool = std::function<void(const std::string& /* id */, bool /* visible */)>;
+  /**
+   * Wrapper class for a `std::function<void(const std::string& / * id * /, bool / * visible * /)>`, this can be used from Swift.
+   */
+  class Func_void_std__string_bool_Wrapper final {
+  public:
+    explicit Func_void_std__string_bool_Wrapper(std::function<void(const std::string& /* id */, bool /* visible */)>&& func): _function(std::make_unique<std::function<void(const std::string& /* id */, bool /* visible */)>>(std::move(func))) {}
+    inline void call(std::string id, bool visible) const noexcept {
+      _function->operator()(id, visible);
+    }
+  private:
+    std::unique_ptr<std::function<void(const std::string& /* id */, bool /* visible */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_std__string_bool create_Func_void_std__string_bool(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_std__string_bool_Wrapper wrap_Func_void_std__string_bool(Func_void_std__string_bool value) noexcept {
+    return Func_void_std__string_bool_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>
+  /**
+   * Specialized version of `std::optional<std::function<void(const std::string& / * id * /, bool / * visible * /)>>`.
+   */
+  using std__optional_std__function_void_const_std__string_____id_____bool____visible______ = std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>;
+  inline std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>> create_std__optional_std__function_void_const_std__string_____id_____bool____visible______(const std::function<void(const std::string& /* id */, bool /* visible */)>& value) noexcept {
+    return std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>(value);
+  }
+  inline bool has_value_std__optional_std__function_void_const_std__string_____id_____bool____visible______(const std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::function<void(const std::string& /* id */, bool /* visible */)> get_std__optional_std__function_void_const_std__string_____id_____bool____visible______(const std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>& optional) noexcept {
     return optional.value();
   }
   
@@ -335,21 +390,6 @@ namespace margelo::nitro::liveline::bridge::swift {
     return optional.value();
   }
   
-  // pragma MARK: std::optional<bool>
-  /**
-   * Specialized version of `std::optional<bool>`.
-   */
-  using std__optional_bool_ = std::optional<bool>;
-  inline std::optional<bool> create_std__optional_bool_(const bool& value) noexcept {
-    return std::optional<bool>(value);
-  }
-  inline bool has_value_std__optional_bool_(const std::optional<bool>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline bool get_std__optional_bool_(const std::optional<bool>& optional) noexcept {
-    return optional.value();
-  }
-  
   // pragma MARK: std::optional<LivelineBadgeVariant>
   /**
    * Specialized version of `std::optional<LivelineBadgeVariant>`.
@@ -377,6 +417,21 @@ namespace margelo::nitro::liveline::bridge::swift {
     return optional.has_value();
   }
   inline LivelineMomentum get_std__optional_LivelineMomentum_(const std::optional<LivelineMomentum>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<LivelinePadding>
+  /**
+   * Specialized version of `std::optional<LivelinePadding>`.
+   */
+  using std__optional_LivelinePadding_ = std::optional<LivelinePadding>;
+  inline std::optional<LivelinePadding> create_std__optional_LivelinePadding_(const LivelinePadding& value) noexcept {
+    return std::optional<LivelinePadding>(value);
+  }
+  inline bool has_value_std__optional_LivelinePadding_(const std::optional<LivelinePadding>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline LivelinePadding get_std__optional_LivelinePadding_(const std::optional<LivelinePadding>& optional) noexcept {
     return optional.value();
   }
   

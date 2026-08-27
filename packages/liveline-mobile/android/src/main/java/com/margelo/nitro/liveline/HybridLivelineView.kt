@@ -196,6 +196,19 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
         set(v) { field = v; if (v != null) chart.fill = v }
     override var scrub: Boolean? = null
         set(v) { field = v; if (v != null) chart.scrub = v }
+    override var tooltipY: Double? = null
+        set(v) { field = v; if (v != null) chart.tooltipY = v }
+    override var tooltipOutline: Boolean? = null
+        set(v) { field = v; if (v != null) chart.tooltipOutline = v }
+    override var padding: LivelinePadding? = null
+        set(v) {
+            field = v
+            chart.padTopOverride = v?.top; chart.padRightOverride = v?.right
+            chart.padBottomOverride = v?.bottom; chart.padLeftOverride = v?.left
+        }
+    // Legend isn't part of the Nitro container yet; stored until it is wired.
+    override var seriesToggleCompact: Boolean? = null
+    override var onSeriesToggle: ((id: String, visible: Boolean) -> Unit)? = null
     override var pulse: Boolean? = null
         set(v) { field = v; if (v != null) chart.pulse = v }
     override var exaggerate: Boolean? = null

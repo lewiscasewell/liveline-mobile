@@ -14,6 +14,14 @@
 
 namespace margelo::nitro::liveline::bridge::swift {
 
+  // pragma MARK: std::function<void(const std::string& /* id */, bool /* visible */)>
+  Func_void_std__string_bool create_Func_void_std__string_bool(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = LivelineMobile::Func_void_std__string_bool::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::string& id, bool visible) mutable -> void {
+      swiftClosure.call(id, visible);
+    };
+  }
+  
   // pragma MARK: std::function<void(double /* secs */)>
   Func_void_double create_Func_void_double(void* NON_NULL swiftClosureWrapper) noexcept {
     auto swiftClosure = LivelineMobile::Func_void_double::fromUnsafe(swiftClosureWrapper);

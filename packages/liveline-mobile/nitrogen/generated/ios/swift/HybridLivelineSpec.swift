@@ -12,6 +12,8 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
   // Properties
   var data: [LivelinePoint]? { get set }
   var series: [LivelineSeries]? { get set }
+  var seriesToggleCompact: Bool? { get set }
+  var onSeriesToggle: ((_ id: String, _ visible: Bool) -> Void)? { get set }
   var value: Double? { get set }
   var mode: LivelineMode? { get set }
   var candles: [CandlePoint]? { get set }
@@ -33,6 +35,9 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
   var momentum: LivelineMomentum? { get set }
   var fill: Bool? { get set }
   var scrub: Bool? { get set }
+  var tooltipY: Double? { get set }
+  var tooltipOutline: Bool? { get set }
+  var padding: LivelinePadding? { get set }
   var pulse: Bool? { get set }
   var exaggerate: Bool? { get set }
   var paused: Bool? { get set }

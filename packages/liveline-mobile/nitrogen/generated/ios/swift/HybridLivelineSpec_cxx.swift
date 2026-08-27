@@ -181,6 +181,62 @@ open class HybridLivelineSpec_cxx {
     }
   }
   
+  public final var seriesToggleCompact: bridge.std__optional_bool_ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_bool_ in
+        if let __unwrappedValue = self.__implementation.seriesToggleCompact {
+          return bridge.create_std__optional_bool_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.seriesToggleCompact = { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(newValue) {
+          let __unwrapped = bridge.get_std__optional_bool_(newValue)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }()
+    }
+  }
+  
+  public final var onSeriesToggle: bridge.std__optional_std__function_void_const_std__string_____id_____bool____visible______ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_std__function_void_const_std__string_____id_____bool____visible______ in
+        if let __unwrappedValue = self.__implementation.onSeriesToggle {
+          return bridge.create_std__optional_std__function_void_const_std__string_____id_____bool____visible______({ () -> bridge.Func_void_std__string_bool in
+            let __closureWrapper = Func_void_std__string_bool(__unwrappedValue)
+            return bridge.create_Func_void_std__string_bool(__closureWrapper.toUnsafe())
+          }())
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.onSeriesToggle = { () -> ((_ id: String, _ visible: Bool) -> Void)? in
+        if bridge.has_value_std__optional_std__function_void_const_std__string_____id_____bool____visible______(newValue) {
+          let __unwrapped = bridge.get_std__optional_std__function_void_const_std__string_____id_____bool____visible______(newValue)
+          return { () -> (String, Bool) -> Void in
+            let __wrappedFunction = bridge.wrap_Func_void_std__string_bool(__unwrapped)
+            return { (__id: String, __visible: Bool) -> Void in
+              __wrappedFunction.call(std.string(__id), __visible)
+            }
+          }()
+        } else {
+          return nil
+        }
+      }()
+    }
+  }
+  
   public final var value: bridge.std__optional_double_ {
     @inline(__always)
     get {
@@ -668,6 +724,71 @@ open class HybridLivelineSpec_cxx {
           return nil
         }
       }()
+    }
+  }
+  
+  public final var tooltipY: bridge.std__optional_double_ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_double_ in
+        if let __unwrappedValue = self.__implementation.tooltipY {
+          return bridge.create_std__optional_double_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.tooltipY = { () -> Double? in
+        if bridge.has_value_std__optional_double_(newValue) {
+          let __unwrapped = bridge.get_std__optional_double_(newValue)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }()
+    }
+  }
+  
+  public final var tooltipOutline: bridge.std__optional_bool_ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_bool_ in
+        if let __unwrappedValue = self.__implementation.tooltipOutline {
+          return bridge.create_std__optional_bool_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.tooltipOutline = { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(newValue) {
+          let __unwrapped = bridge.get_std__optional_bool_(newValue)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }()
+    }
+  }
+  
+  public final var padding: bridge.std__optional_LivelinePadding_ {
+    @inline(__always)
+    get {
+      return { () -> bridge.std__optional_LivelinePadding_ in
+        if let __unwrappedValue = self.__implementation.padding {
+          return bridge.create_std__optional_LivelinePadding_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__implementation.padding = newValue.value
     }
   }
   

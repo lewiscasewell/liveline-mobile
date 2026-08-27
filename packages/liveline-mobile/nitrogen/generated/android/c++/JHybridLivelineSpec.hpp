@@ -54,6 +54,10 @@ namespace margelo::nitro::liveline {
     void setData(const std::optional<std::vector<LivelinePoint>>& data) override;
     std::optional<std::vector<LivelineSeries>> getSeries() override;
     void setSeries(const std::optional<std::vector<LivelineSeries>>& series) override;
+    std::optional<bool> getSeriesToggleCompact() override;
+    void setSeriesToggleCompact(std::optional<bool> seriesToggleCompact) override;
+    std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>> getOnSeriesToggle() override;
+    void setOnSeriesToggle(const std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>& onSeriesToggle) override;
     std::optional<double> getValue() override;
     void setValue(std::optional<double> value) override;
     std::optional<LivelineMode> getMode() override;
@@ -96,6 +100,12 @@ namespace margelo::nitro::liveline {
     void setFill(std::optional<bool> fill) override;
     std::optional<bool> getScrub() override;
     void setScrub(std::optional<bool> scrub) override;
+    std::optional<double> getTooltipY() override;
+    void setTooltipY(std::optional<double> tooltipY) override;
+    std::optional<bool> getTooltipOutline() override;
+    void setTooltipOutline(std::optional<bool> tooltipOutline) override;
+    std::optional<LivelinePadding> getPadding() override;
+    void setPadding(const std::optional<LivelinePadding>& padding) override;
     std::optional<bool> getPulse() override;
     void setPulse(std::optional<bool> pulse) override;
     std::optional<bool> getExaggerate() override;

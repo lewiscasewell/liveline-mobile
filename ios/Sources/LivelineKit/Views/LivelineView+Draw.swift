@@ -879,17 +879,18 @@ extension LivelineView {
         let maxX = liveDotX + 7 - totalW
         if tx < minX { tx = minX }
         if tx > maxX { tx = maxX }
-        let ty = layout.padTop + 14 + 10
+        let ty = layout.padTop + CGFloat(tooltipY) + 10
+        let outline = tooltipOutline ? palette.tooltipBg.withAlpha(palette.tooltipBg.a * opacity) : nil
         drawText(
             valueText, x: tx, centerY: ty, font: font,
             color: palette.tooltipText.withAlpha(palette.tooltipText.a * opacity),
-            align: .left, outline: palette.tooltipBg.withAlpha(palette.tooltipBg.a * opacity)
+            align: .left, outline: outline
         )
         let valueW = (valueText as NSString).size(withAttributes: [.font: font]).width
         drawText(
             "  ·  " + timeText, x: tx + valueW, centerY: ty, font: font,
             color: palette.gridLabel.withAlpha(palette.gridLabel.a * opacity),
-            align: .left, outline: palette.tooltipBg.withAlpha(palette.tooltipBg.a * opacity)
+            align: .left, outline: outline
         )
     }
 

@@ -22,6 +22,8 @@ namespace margelo::nitro::liveline::views {
     react::ViewProps(context, sourceProps, rawProps, filterObjectKeys),
     data(nitro::ReactProp<std::optional<std::vector<LivelinePoint>>>::fromRawValue("Liveline", "data", rawProps, sourceProps.data)),
     series(nitro::ReactProp<std::optional<std::vector<LivelineSeries>>>::fromRawValue("Liveline", "series", rawProps, sourceProps.series)),
+    seriesToggleCompact(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "seriesToggleCompact", rawProps, sourceProps.seriesToggleCompact)),
+    onSeriesToggle(nitro::ReactProp<std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>>::fromRawValue("Liveline", "onSeriesToggle", rawProps, sourceProps.onSeriesToggle)),
     value(nitro::ReactProp<std::optional<double>>::fromRawValue("Liveline", "value", rawProps, sourceProps.value)),
     mode(nitro::ReactProp<std::optional<LivelineMode>>::fromRawValue("Liveline", "mode", rawProps, sourceProps.mode)),
     candles(nitro::ReactProp<std::optional<std::vector<CandlePoint>>>::fromRawValue("Liveline", "candles", rawProps, sourceProps.candles)),
@@ -43,6 +45,9 @@ namespace margelo::nitro::liveline::views {
     momentum(nitro::ReactProp<std::optional<LivelineMomentum>>::fromRawValue("Liveline", "momentum", rawProps, sourceProps.momentum)),
     fill(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "fill", rawProps, sourceProps.fill)),
     scrub(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "scrub", rawProps, sourceProps.scrub)),
+    tooltipY(nitro::ReactProp<std::optional<double>>::fromRawValue("Liveline", "tooltipY", rawProps, sourceProps.tooltipY)),
+    tooltipOutline(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "tooltipOutline", rawProps, sourceProps.tooltipOutline)),
+    padding(nitro::ReactProp<std::optional<LivelinePadding>>::fromRawValue("Liveline", "padding", rawProps, sourceProps.padding)),
     pulse(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "pulse", rawProps, sourceProps.pulse)),
     exaggerate(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "exaggerate", rawProps, sourceProps.exaggerate)),
     paused(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "paused", rawProps, sourceProps.paused)),
@@ -68,6 +73,8 @@ namespace margelo::nitro::liveline::views {
     switch (hashString(propName)) {
       case hashString("data"): return true;
       case hashString("series"): return true;
+      case hashString("seriesToggleCompact"): return true;
+      case hashString("onSeriesToggle"): return true;
       case hashString("value"): return true;
       case hashString("mode"): return true;
       case hashString("candles"): return true;
@@ -89,6 +96,9 @@ namespace margelo::nitro::liveline::views {
       case hashString("momentum"): return true;
       case hashString("fill"): return true;
       case hashString("scrub"): return true;
+      case hashString("tooltipY"): return true;
+      case hashString("tooltipOutline"): return true;
+      case hashString("padding"): return true;
       case hashString("pulse"): return true;
       case hashString("exaggerate"): return true;
       case hashString("paused"): return true;

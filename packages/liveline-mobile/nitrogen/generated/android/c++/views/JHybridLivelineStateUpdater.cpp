@@ -64,6 +64,16 @@ void JHybridLivelineStateUpdater::updateViewProps(jni::alias_ref<jni::JClass> /*
     hybridView->setSeries(newProps->series.get());
   }
   if (oldProps == nullptr
+        ? newProps->seriesToggleCompact.isProvided()
+        : !newProps->seriesToggleCompact.hasSameValue(oldProps->seriesToggleCompact)) {
+    hybridView->setSeriesToggleCompact(newProps->seriesToggleCompact.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->onSeriesToggle.isProvided()
+        : !newProps->onSeriesToggle.hasSameValue(oldProps->onSeriesToggle)) {
+    hybridView->setOnSeriesToggle(newProps->onSeriesToggle.get());
+  }
+  if (oldProps == nullptr
         ? newProps->value.isProvided()
         : !newProps->value.hasSameValue(oldProps->value)) {
     hybridView->setValue(newProps->value.get());
@@ -167,6 +177,21 @@ void JHybridLivelineStateUpdater::updateViewProps(jni::alias_ref<jni::JClass> /*
         ? newProps->scrub.isProvided()
         : !newProps->scrub.hasSameValue(oldProps->scrub)) {
     hybridView->setScrub(newProps->scrub.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->tooltipY.isProvided()
+        : !newProps->tooltipY.hasSameValue(oldProps->tooltipY)) {
+    hybridView->setTooltipY(newProps->tooltipY.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->tooltipOutline.isProvided()
+        : !newProps->tooltipOutline.hasSameValue(oldProps->tooltipOutline)) {
+    hybridView->setTooltipOutline(newProps->tooltipOutline.get());
+  }
+  if (oldProps == nullptr
+        ? newProps->padding.isProvided()
+        : !newProps->padding.hasSameValue(oldProps->padding)) {
+    hybridView->setPadding(newProps->padding.get());
   }
   if (oldProps == nullptr
         ? newProps->pulse.isProvided()

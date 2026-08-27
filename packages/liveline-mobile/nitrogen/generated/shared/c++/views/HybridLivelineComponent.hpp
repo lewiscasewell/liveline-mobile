@@ -21,15 +21,16 @@
 #include <vector>
 #include <optional>
 #include "LivelineSeries.hpp"
+#include <string>
+#include <functional>
 #include "LivelineMode.hpp"
 #include "CandlePoint.hpp"
-#include <string>
 #include "LivelineTheme.hpp"
 #include "WindowOption.hpp"
 #include "LivelineWindowStyle.hpp"
-#include <functional>
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
+#include "LivelinePadding.hpp"
 #include "LivelineReference.hpp"
 #include "LivelineOrderbook.hpp"
 #include <memory>
@@ -57,6 +58,8 @@ namespace margelo::nitro::liveline::views {
   public:
     nitro::ReactProp<std::optional<std::vector<LivelinePoint>>> data;
     nitro::ReactProp<std::optional<std::vector<LivelineSeries>>> series;
+    nitro::ReactProp<std::optional<bool>> seriesToggleCompact;
+    nitro::ReactProp<std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>> onSeriesToggle;
     nitro::ReactProp<std::optional<double>> value;
     nitro::ReactProp<std::optional<LivelineMode>> mode;
     nitro::ReactProp<std::optional<std::vector<CandlePoint>>> candles;
@@ -78,6 +81,9 @@ namespace margelo::nitro::liveline::views {
     nitro::ReactProp<std::optional<LivelineMomentum>> momentum;
     nitro::ReactProp<std::optional<bool>> fill;
     nitro::ReactProp<std::optional<bool>> scrub;
+    nitro::ReactProp<std::optional<double>> tooltipY;
+    nitro::ReactProp<std::optional<bool>> tooltipOutline;
+    nitro::ReactProp<std::optional<LivelinePadding>> padding;
     nitro::ReactProp<std::optional<bool>> pulse;
     nitro::ReactProp<std::optional<bool>> exaggerate;
     nitro::ReactProp<std::optional<bool>> paused;
@@ -103,6 +109,8 @@ namespace margelo::nitro::liveline::views {
     bool hasSameProps(const HybridLivelineProps& other) const noexcept {
       return data.hasSameValue(other.data) &&
              series.hasSameValue(other.series) &&
+             seriesToggleCompact.hasSameValue(other.seriesToggleCompact) &&
+             onSeriesToggle.hasSameValue(other.onSeriesToggle) &&
              value.hasSameValue(other.value) &&
              mode.hasSameValue(other.mode) &&
              candles.hasSameValue(other.candles) &&
@@ -124,6 +132,9 @@ namespace margelo::nitro::liveline::views {
              momentum.hasSameValue(other.momentum) &&
              fill.hasSameValue(other.fill) &&
              scrub.hasSameValue(other.scrub) &&
+             tooltipY.hasSameValue(other.tooltipY) &&
+             tooltipOutline.hasSameValue(other.tooltipOutline) &&
+             padding.hasSameValue(other.padding) &&
              pulse.hasSameValue(other.pulse) &&
              exaggerate.hasSameValue(other.exaggerate) &&
              paused.hasSameValue(other.paused) &&
@@ -150,6 +161,8 @@ namespace margelo::nitro::liveline::views {
     bool hasAnyProvidedProps() const noexcept {
       return data.isProvided() ||
              series.isProvided() ||
+             seriesToggleCompact.isProvided() ||
+             onSeriesToggle.isProvided() ||
              value.isProvided() ||
              mode.isProvided() ||
              candles.isProvided() ||
@@ -171,6 +184,9 @@ namespace margelo::nitro::liveline::views {
              momentum.isProvided() ||
              fill.isProvided() ||
              scrub.isProvided() ||
+             tooltipY.isProvided() ||
+             tooltipOutline.isProvided() ||
+             padding.isProvided() ||
              pulse.isProvided() ||
              exaggerate.isProvided() ||
              paused.isProvided() ||

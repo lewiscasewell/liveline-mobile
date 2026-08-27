@@ -212,6 +212,21 @@ final class HybridLivelineView: HybridLivelineSpec {
     var scrub: Bool? {
         didSet { chart.scrub = scrub ?? true }
     }
+    var tooltipY: Double? {
+        didSet { chart.tooltipY = tooltipY ?? 14 }
+    }
+    var tooltipOutline: Bool? {
+        didSet { chart.tooltipOutline = tooltipOutline ?? true }
+    }
+    var padding: LivelinePadding? {
+        didSet {
+            chart.padTopOverride = padding?.top; chart.padRightOverride = padding?.right
+            chart.padBottomOverride = padding?.bottom; chart.padLeftOverride = padding?.left
+        }
+    }
+    // Legend isn't part of the container yet; stored until it is wired.
+    var seriesToggleCompact: Bool?
+    var onSeriesToggle: ((_ id: String, _ visible: Bool) -> Void)?
     var pulse: Bool? {
         didSet { chart.pulse = pulse ?? true }
     }

@@ -103,6 +103,15 @@ class LivelineView @JvmOverloads constructor(
     /** Custom typeface for numbers/labels; `null` = monospace (tabular digits). */
     var numberTypeface: Typeface? = null
         set(v) { field = v; applyTypeface() }
+    /** Vertical offset (points) of the crosshair tooltip text. */
+    var tooltipY: Double = 14.0
+    /** Stroke an outline behind the crosshair tooltip text for legibility. */
+    var tooltipOutline: Boolean = true
+    /** Per-side chart-inset overrides in points; `null` keeps the default. */
+    var padTopOverride: Double? = null
+    var padRightOverride: Double? = null
+    var padBottomOverride: Double? = null
+    var padLeftOverride: Double? = null
     var mode: LivelineMode = LivelineMode.LINE
     var candleWidth: Double = 1.0
 
@@ -326,7 +335,10 @@ class LivelineView @JvmOverloads constructor(
 
         if (isMultiSeries) { drawMultiSeries(canvas, w, h, span, now = System.currentTimeMillis() / 1000.0, dt, nowMs); return }
 
-        val padL = dp(8f); val padR = dp(64f); val padT = if (showValue) dp(40f) else dp(12f); val padB = dp(30f)
+        val padL = padLeftOverride?.let { dp(it.toFloat()) } ?: dp(8f)
+        val padR = padRightOverride?.let { dp(it.toFloat()) } ?: dp(64f)
+        val padT = padTopOverride?.let { dp(it.toFloat()) } ?: (if (showValue) dp(40f) else dp(12f))
+        val padB = padBottomOverride?.let { dp(it.toFloat()) } ?: dp(30f)
         val chartW = w - padL - padR; val chartH = h - padT - padB
 
         // Freeze `now` while paused so the line stops scrolling.
@@ -570,23 +582,33 @@ class LivelineView @JvmOverloads constructor(
         if (op < 0.1 || width < 300) return
         val valueText = fmt(hoverValue)
         val timeText = timeFmt("jmmss").format(Date((hoverTime * 1000).toLong()))
-        tipPaint.color = palette.tooltipText.withAlpha(palette.tooltipText.a * op).toInt()
         val full = "$valueText  ·  $timeText"
         val totalW = tipPaint.measureText(full)
         var tx = hx - totalW / 2
         tx = tx.coerceIn(padL + dp(4f), liveDotX + dp(7f) - totalW)
-        val ty = padT + dp(24f)
-        canvas.drawText(valueText, tx, ty, tipPaint)
+        val ty = padT + dp(tooltipY.toFloat())
         val vW = tipPaint.measureText(valueText)
-        val save = tipPaint.color
-        tipPaint.color = palette.gridLabel.withAlpha(palette.gridLabel.a * op).toInt()
-        canvas.drawText("  ·  $timeText", tx + vW, ty, tipPaint)
-        tipPaint.color = save
+        fun tip(text: String, x: Float, color: Int) {
+            if (tooltipOutline) {
+                tipPaint.style = Paint.Style.STROKE
+                tipPaint.strokeWidth = dp(3f)
+                tipPaint.color = palette.background.withAlpha(palette.background.a * op).toInt()
+                canvas.drawText(text, x, ty, tipPaint)
+                tipPaint.style = Paint.Style.FILL
+            }
+            tipPaint.color = color
+            canvas.drawText(text, x, ty, tipPaint)
+        }
+        tip(valueText, tx, palette.tooltipText.withAlpha(palette.tooltipText.a * op).toInt())
+        tip("  ·  $timeText", tx + vW, palette.gridLabel.withAlpha(palette.gridLabel.a * op).toInt())
     }
 
     // ── Multi-series (ported from Swift drawMultiSeries) ────────────────────────
     private fun drawMultiSeries(canvas: Canvas, w: Float, h: Float, span: Double, now: Double, dt: Double, nowMs: Double) {
-        val padL = dp(8f); val padR = dp(64f); val padT = dp(12f); val padB = dp(30f)
+        val padL = padLeftOverride?.let { dp(it.toFloat()) } ?: dp(8f)
+        val padR = padRightOverride?.let { dp(it.toFloat()) } ?: dp(64f)
+        val padT = padTopOverride?.let { dp(it.toFloat()) } ?: dp(12f)
+        val padB = padBottomOverride?.let { dp(it.toFloat()) } ?: dp(30f)
         val chartW = w - padL - padR; val chartH = h - padT - padB
         val winBuffer = 0.1
         val rightEdge = now + span * winBuffer; val leftEdge = rightEdge - span

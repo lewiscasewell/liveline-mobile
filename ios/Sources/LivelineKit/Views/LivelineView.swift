@@ -106,6 +106,15 @@ public final class LivelineView: UIView {
     }
     /// Base easing speed per 60 fps frame. Default 0.08.
     public var lerpSpeed: Double = 0.08
+    /// Vertical offset (points) of the crosshair tooltip text. Default 14.
+    public var tooltipY: Double = 14
+    /// Stroke an outline behind the crosshair tooltip text. Default `true`.
+    public var tooltipOutline: Bool = true
+    /// Per-side chart-inset overrides (points); `nil` keeps the default.
+    public var padTopOverride: Double?
+    public var padRightOverride: Double?
+    public var padBottomOverride: Double?
+    public var padLeftOverride: Double?
     /// Show the live value as a large text overlay above the chart, updated
     /// every frame. Default `false`.
     public var showValue: Bool = false { didSet { valueLabel.isHidden = !showValue } }
@@ -650,7 +659,12 @@ public final class LivelineView: UIView {
         let right: CGFloat = badge ? 80 : (grid ? 54 : 12)
         // Reserve a row above the plot for the showValue overlay (web parity).
         let top: CGFloat = showValue ? 40 : 12
-        return (top, right, 28, 12)
+        return (
+            padTopOverride.map { CGFloat($0) } ?? top,
+            padRightOverride.map { CGFloat($0) } ?? right,
+            padBottomOverride.map { CGFloat($0) } ?? 28,
+            padLeftOverride.map { CGFloat($0) } ?? 12
+        )
     }
 
     /// The right-edge window buffer (fraction of the span). In line mode with

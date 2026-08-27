@@ -30,6 +30,8 @@ namespace margelo::nitro::liveline { enum class LivelineWindowStyle; }
 namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 // Forward declaration of `LivelineMomentum` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineMomentum; }
+// Forward declaration of `LivelinePadding` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelinePadding; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineReference; }
 // Forward declaration of `LivelineOrderbook` to properly resolve imports.
@@ -42,14 +44,15 @@ namespace margelo::nitro::liveline { struct LivelineOrderbookLevel; }
 #include <optional>
 #include "LivelineSeries.hpp"
 #include <string>
+#include <functional>
 #include "LivelineMode.hpp"
 #include "CandlePoint.hpp"
 #include "LivelineTheme.hpp"
 #include "WindowOption.hpp"
 #include "LivelineWindowStyle.hpp"
-#include <functional>
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
+#include "LivelinePadding.hpp"
 #include "LivelineReference.hpp"
 #include "LivelineOrderbook.hpp"
 #include "LivelineOrderbookLevel.hpp"
@@ -113,6 +116,20 @@ namespace margelo::nitro::liveline {
     }
     inline void setSeries(const std::optional<std::vector<LivelineSeries>>& series) noexcept override {
       _swiftPart.setSeries(series);
+    }
+    inline std::optional<bool> getSeriesToggleCompact() noexcept override {
+      auto __result = _swiftPart.getSeriesToggleCompact();
+      return __result;
+    }
+    inline void setSeriesToggleCompact(std::optional<bool> seriesToggleCompact) noexcept override {
+      _swiftPart.setSeriesToggleCompact(seriesToggleCompact);
+    }
+    inline std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>> getOnSeriesToggle() noexcept override {
+      auto __result = _swiftPart.getOnSeriesToggle();
+      return __result;
+    }
+    inline void setOnSeriesToggle(const std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>& onSeriesToggle) noexcept override {
+      _swiftPart.setOnSeriesToggle(onSeriesToggle);
     }
     inline std::optional<double> getValue() noexcept override {
       auto __result = _swiftPart.getValue();
@@ -260,6 +277,27 @@ namespace margelo::nitro::liveline {
     }
     inline void setScrub(std::optional<bool> scrub) noexcept override {
       _swiftPart.setScrub(scrub);
+    }
+    inline std::optional<double> getTooltipY() noexcept override {
+      auto __result = _swiftPart.getTooltipY();
+      return __result;
+    }
+    inline void setTooltipY(std::optional<double> tooltipY) noexcept override {
+      _swiftPart.setTooltipY(tooltipY);
+    }
+    inline std::optional<bool> getTooltipOutline() noexcept override {
+      auto __result = _swiftPart.getTooltipOutline();
+      return __result;
+    }
+    inline void setTooltipOutline(std::optional<bool> tooltipOutline) noexcept override {
+      _swiftPart.setTooltipOutline(tooltipOutline);
+    }
+    inline std::optional<LivelinePadding> getPadding() noexcept override {
+      auto __result = _swiftPart.getPadding();
+      return __result;
+    }
+    inline void setPadding(const std::optional<LivelinePadding>& padding) noexcept override {
+      _swiftPart.setPadding(padding);
     }
     inline std::optional<bool> getPulse() noexcept override {
       auto __result = _swiftPart.getPulse();

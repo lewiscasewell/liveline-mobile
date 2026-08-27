@@ -18,6 +18,10 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridSetter("data", &HybridLivelineSpec::setData);
       prototype.registerHybridGetter("series", &HybridLivelineSpec::getSeries);
       prototype.registerHybridSetter("series", &HybridLivelineSpec::setSeries);
+      prototype.registerHybridGetter("seriesToggleCompact", &HybridLivelineSpec::getSeriesToggleCompact);
+      prototype.registerHybridSetter("seriesToggleCompact", &HybridLivelineSpec::setSeriesToggleCompact);
+      prototype.registerHybridGetter("onSeriesToggle", &HybridLivelineSpec::getOnSeriesToggle);
+      prototype.registerHybridSetter("onSeriesToggle", &HybridLivelineSpec::setOnSeriesToggle);
       prototype.registerHybridGetter("value", &HybridLivelineSpec::getValue);
       prototype.registerHybridSetter("value", &HybridLivelineSpec::setValue);
       prototype.registerHybridGetter("mode", &HybridLivelineSpec::getMode);
@@ -60,6 +64,12 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridSetter("fill", &HybridLivelineSpec::setFill);
       prototype.registerHybridGetter("scrub", &HybridLivelineSpec::getScrub);
       prototype.registerHybridSetter("scrub", &HybridLivelineSpec::setScrub);
+      prototype.registerHybridGetter("tooltipY", &HybridLivelineSpec::getTooltipY);
+      prototype.registerHybridSetter("tooltipY", &HybridLivelineSpec::setTooltipY);
+      prototype.registerHybridGetter("tooltipOutline", &HybridLivelineSpec::getTooltipOutline);
+      prototype.registerHybridSetter("tooltipOutline", &HybridLivelineSpec::setTooltipOutline);
+      prototype.registerHybridGetter("padding", &HybridLivelineSpec::getPadding);
+      prototype.registerHybridSetter("padding", &HybridLivelineSpec::setPadding);
       prototype.registerHybridGetter("pulse", &HybridLivelineSpec::getPulse);
       prototype.registerHybridSetter("pulse", &HybridLivelineSpec::setPulse);
       prototype.registerHybridGetter("exaggerate", &HybridLivelineSpec::getExaggerate);

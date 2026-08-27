@@ -22,6 +22,8 @@ namespace margelo::nitro::liveline { enum class LivelineMomentum; }
 namespace margelo::nitro::liveline { struct LivelineOrderbookLevel; }
 // Forward declaration of `LivelineOrderbook` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineOrderbook; }
+// Forward declaration of `LivelinePadding` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelinePadding; }
 // Forward declaration of `LivelinePoint` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelinePoint; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
@@ -43,6 +45,7 @@ namespace margelo::nitro::liveline { struct WindowOption; }
 #include "LivelineMomentum.hpp"
 #include "LivelineOrderbook.hpp"
 #include "LivelineOrderbookLevel.hpp"
+#include "LivelinePadding.hpp"
 #include "LivelinePoint.hpp"
 #include "LivelineReference.hpp"
 #include "LivelineSeries.hpp"

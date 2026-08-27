@@ -30,6 +30,14 @@ export interface LivelineReference {
   label?: string
 }
 
+/** Chart inset overrides (points); any omitted side keeps its default. */
+export interface LivelinePadding {
+  top?: number
+  right?: number
+  bottom?: number
+  left?: number
+}
+
 /** One equal-peer line in multi-series mode (see the `series` prop). */
 export interface LivelineSeries {
   /** Stable id, used to route live `push(point, id)` updates to this series. */
@@ -113,6 +121,10 @@ export interface LivelineProps extends HybridViewProps {
    * with `push(point, id)`.
    */
   series?: LivelineSeries[]
+  /** Compact legend: colour dots only, no labels. Default `false`. */
+  seriesToggleCompact?: boolean
+  /** Called when a legend chip toggles a series' visibility. */
+  onSeriesToggle?: (id: string, visible: boolean) => void
   /**
    * A single live value; each distinct value is appended as a new sample. A
    * convenience for low-frequency React-driven updates — prefer `push()` for
@@ -182,6 +194,12 @@ export interface LivelineProps extends HybridViewProps {
   fill?: boolean
   /** Enable the touch crosshair (press-and-hold to scrub). Default `true`. */
   scrub?: boolean
+  /** Vertical offset (points) of the crosshair tooltip text. Default `14`. */
+  tooltipY?: number
+  /** Stroke an outline behind the crosshair tooltip text. Default `true`. */
+  tooltipOutline?: boolean
+  /** Override the chart insets (points). Any omitted side keeps its default. */
+  padding?: LivelinePadding
   /** Pulsing ring on the live dot. Default `true`. */
   pulse?: boolean
   /** Tighten the Y-axis range so small moves fill the chart height. Default `false`. */

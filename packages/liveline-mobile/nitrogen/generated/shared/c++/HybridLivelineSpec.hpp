@@ -31,6 +31,8 @@ namespace margelo::nitro::liveline { enum class LivelineWindowStyle; }
 namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 // Forward declaration of `LivelineMomentum` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineMomentum; }
+// Forward declaration of `LivelinePadding` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelinePadding; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineReference; }
 // Forward declaration of `LivelineOrderbook` to properly resolve imports.
@@ -40,15 +42,16 @@ namespace margelo::nitro::liveline { struct LivelineOrderbook; }
 #include <vector>
 #include <optional>
 #include "LivelineSeries.hpp"
+#include <string>
+#include <functional>
 #include "LivelineMode.hpp"
 #include "CandlePoint.hpp"
-#include <string>
 #include "LivelineTheme.hpp"
 #include "WindowOption.hpp"
 #include "LivelineWindowStyle.hpp"
-#include <functional>
 #include "LivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
+#include "LivelinePadding.hpp"
 #include "LivelineReference.hpp"
 #include "LivelineOrderbook.hpp"
 
@@ -83,6 +86,10 @@ namespace margelo::nitro::liveline {
       virtual void setData(const std::optional<std::vector<LivelinePoint>>& data) = 0;
       virtual std::optional<std::vector<LivelineSeries>> getSeries() = 0;
       virtual void setSeries(const std::optional<std::vector<LivelineSeries>>& series) = 0;
+      virtual std::optional<bool> getSeriesToggleCompact() = 0;
+      virtual void setSeriesToggleCompact(std::optional<bool> seriesToggleCompact) = 0;
+      virtual std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>> getOnSeriesToggle() = 0;
+      virtual void setOnSeriesToggle(const std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>& onSeriesToggle) = 0;
       virtual std::optional<double> getValue() = 0;
       virtual void setValue(std::optional<double> value) = 0;
       virtual std::optional<LivelineMode> getMode() = 0;
@@ -125,6 +132,12 @@ namespace margelo::nitro::liveline {
       virtual void setFill(std::optional<bool> fill) = 0;
       virtual std::optional<bool> getScrub() = 0;
       virtual void setScrub(std::optional<bool> scrub) = 0;
+      virtual std::optional<double> getTooltipY() = 0;
+      virtual void setTooltipY(std::optional<double> tooltipY) = 0;
+      virtual std::optional<bool> getTooltipOutline() = 0;
+      virtual void setTooltipOutline(std::optional<bool> tooltipOutline) = 0;
+      virtual std::optional<LivelinePadding> getPadding() = 0;
+      virtual void setPadding(const std::optional<LivelinePadding>& padding) = 0;
       virtual std::optional<bool> getPulse() = 0;
       virtual void setPulse(std::optional<bool> pulse) = 0;
       virtual std::optional<bool> getExaggerate() = 0;

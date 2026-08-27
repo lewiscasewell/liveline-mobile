@@ -6,6 +6,8 @@
   "validAttributes": {
     "data": true,
     "series": true,
+    "seriesToggleCompact": true,
+    "onSeriesToggle": true,
     "value": true,
     "mode": true,
     "candles": true,
@@ -27,6 +29,9 @@
     "momentum": true,
     "fill": true,
     "scrub": true,
+    "tooltipY": true,
+    "tooltipOutline": true,
+    "padding": true,
     "pulse": true,
     "exaggerate": true,
     "paused": true,

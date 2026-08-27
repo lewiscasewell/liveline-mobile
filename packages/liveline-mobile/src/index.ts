@@ -52,7 +52,7 @@ const NativeLiveline = getHostComponent<LivelineProps, LivelineMethods>(
 // (coalesced to sentinels below) or callbacks (wrapped separately).
 type DefaultableProps = Omit<
   LivelineProps,
-  'data' | 'value' | 'series' | 'candles' | 'liveCandle' | 'referenceLine' | 'orderbook' | 'windows' | 'onWindowChange' | 'onModeChange'
+  'data' | 'value' | 'series' | 'candles' | 'liveCandle' | 'referenceLine' | 'orderbook' | 'windows' | 'onWindowChange' | 'onModeChange' | 'onSeriesToggle' | 'padding'
 >
 const defaults: Required<DefaultableProps> = {
   color: '#3b82f6',
@@ -65,6 +65,9 @@ const defaults: Required<DefaultableProps> = {
   momentum: 'auto',
   fill: true,
   scrub: true,
+  tooltipY: 14,
+  tooltipOutline: true,
+  seriesToggleCompact: false,
   pulse: true,
   exaggerate: false,
   paused: false,
@@ -101,10 +104,11 @@ type LivelineComponentProps = React.ComponentProps<typeof NativeLiveline>
  */
 export type LivelineComponentPropsPublic = Omit<
   LivelineComponentProps,
-  'onWindowChange' | 'onModeChange' | 'currency' | 'orderbook'
+  'onWindowChange' | 'onModeChange' | 'onSeriesToggle' | 'currency' | 'orderbook'
 > & {
   onWindowChange?: (secs: number) => void
   onModeChange?: (mode: LivelineMode) => void
+  onSeriesToggle?: (id: string, visible: boolean) => void
   // Native side takes any string; narrow the public API to valid ISO 4217 codes.
   currency?: LivelineCurrency
   // Public API takes web-style `[price, size]` tuples; converted for native.
@@ -220,7 +224,7 @@ export function useLiveline() {
  */
 export function Liveline(props: LivelineComponentPropsPublic): React.ReactElement {
   const ctxRef = React.useContext(LivelineRefContext)
-  const { onWindowChange, onModeChange, ...rest } = props
+  const { onWindowChange, onModeChange, onSeriesToggle, ...rest } = props
   // Auto-register with the nearest LivelineProvider when the caller didn't pass
   // a hybridRef, so `useLiveline().push()` works with zero manual wiring.
   const autoHybridRef = React.useMemo(
@@ -234,6 +238,7 @@ export function Liveline(props: LivelineComponentPropsPublic): React.ReactElemen
   if (merged.series == null) merged.series = []
   if (merged.candles == null) merged.candles = []
   if (merged.windows == null) merged.windows = []
+  if (merged.padding == null) merged.padding = {}
   // Convert the web-style `[price, size]` tuples to the native `{ price, size }`
   // shape (an empty book is the "unset" sentinel, so it's never null).
   merged.orderbook = toNativeOrderbook(rest.orderbook as LivelineOrderbookData | undefined)
@@ -241,12 +246,14 @@ export function Liveline(props: LivelineComponentPropsPublic): React.ReactElemen
   // Wrap the callbacks for Nitro (like hybridRef).
   if (onWindowChange) merged.onWindowChange = callback(onWindowChange)
   if (onModeChange) merged.onModeChange = callback(onModeChange)
+  if (onSeriesToggle) merged.onSeriesToggle = callback(onSeriesToggle)
   return React.createElement(NativeLiveline, merged)
 }
 
 export type {
   WindowOption,
   LivelineWindowStyle,
+  LivelinePadding,
   LivelineProps,
   LivelineMethods,
   LivelinePoint,

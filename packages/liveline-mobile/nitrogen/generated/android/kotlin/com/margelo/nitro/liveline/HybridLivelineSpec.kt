@@ -43,6 +43,26 @@ abstract class HybridLivelineSpec: HybridView() {
   @get:Keep
   @set:DoNotStrip
   @set:Keep
+  abstract var seriesToggleCompact: Boolean?
+  
+  abstract var onSeriesToggle: ((id: String, visible: Boolean) -> Unit)?
+  
+  private var onSeriesToggle_cxx: Func_void_std__string_bool?
+    @Keep
+    @DoNotStrip
+    get() {
+      return onSeriesToggle?.let { Func_void_std__string_bool_java(it) }
+    }
+    @Keep
+    @DoNotStrip
+    set(value) {
+      onSeriesToggle = value?.let { it }
+    }
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
   abstract var value: Double?
   
   @get:DoNotStrip
@@ -180,6 +200,24 @@ abstract class HybridLivelineSpec: HybridView() {
   @set:DoNotStrip
   @set:Keep
   abstract var scrub: Boolean?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var tooltipY: Double?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var tooltipOutline: Boolean?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var padding: LivelinePadding?
   
   @get:DoNotStrip
   @get:Keep

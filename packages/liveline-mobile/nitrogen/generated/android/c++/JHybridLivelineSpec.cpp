@@ -25,6 +25,8 @@ namespace margelo::nitro::liveline { enum class LivelineWindowStyle; }
 namespace margelo::nitro::liveline { enum class LivelineBadgeVariant; }
 // Forward declaration of `LivelineMomentum` to properly resolve imports.
 namespace margelo::nitro::liveline { enum class LivelineMomentum; }
+// Forward declaration of `LivelinePadding` to properly resolve imports.
+namespace margelo::nitro::liveline { struct LivelinePadding; }
 // Forward declaration of `LivelineReference` to properly resolve imports.
 namespace margelo::nitro::liveline { struct LivelineReference; }
 // Forward declaration of `LivelineOrderbook` to properly resolve imports.
@@ -39,6 +41,9 @@ namespace margelo::nitro::liveline { struct LivelineOrderbookLevel; }
 #include "LivelineSeries.hpp"
 #include "JLivelineSeries.hpp"
 #include <string>
+#include <functional>
+#include "JFunc_void_std__string_bool.hpp"
+#include <NitroModules/JNICallable.hpp>
 #include "LivelineMode.hpp"
 #include "JLivelineMode.hpp"
 #include "CandlePoint.hpp"
@@ -49,14 +54,14 @@ namespace margelo::nitro::liveline { struct LivelineOrderbookLevel; }
 #include "JWindowOption.hpp"
 #include "LivelineWindowStyle.hpp"
 #include "JLivelineWindowStyle.hpp"
-#include <functional>
 #include "JFunc_void_double.hpp"
-#include <NitroModules/JNICallable.hpp>
 #include "JFunc_void_LivelineMode.hpp"
 #include "LivelineBadgeVariant.hpp"
 #include "JLivelineBadgeVariant.hpp"
 #include "LivelineMomentum.hpp"
 #include "JLivelineMomentum.hpp"
+#include "LivelinePadding.hpp"
+#include "JLivelinePadding.hpp"
 #include "LivelineReference.hpp"
 #include "JLivelineReference.hpp"
 #include "LivelineOrderbook.hpp"
@@ -147,6 +152,32 @@ namespace margelo::nitro::liveline {
       }
       return __array;
     }(series.value()) : nullptr);
+  }
+  std::optional<bool> JHybridLivelineSpec::getSeriesToggleCompact() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JBoolean>()>("getSeriesToggleCompact");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(static_cast<bool>(__result->value())) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setSeriesToggleCompact(std::optional<bool> seriesToggleCompact) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* seriesToggleCompact */)>("setSeriesToggleCompact");
+    method(_javaPart, seriesToggleCompact.has_value() ? jni::JBoolean::valueOf(seriesToggleCompact.value()) : nullptr);
+  }
+  std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>> JHybridLivelineSpec::getOnSeriesToggle() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JFunc_void_std__string_bool::javaobject>()>("getOnSeriesToggle_cxx");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional([&]() -> std::function<void(const std::string& /* id */, bool /* visible */)> {
+      if (__result->isInstanceOf(JFunc_void_std__string_bool_cxx::javaClassStatic())) [[likely]] {
+        auto downcast = jni::static_ref_cast<JFunc_void_std__string_bool_cxx::javaobject>(__result);
+        return downcast->cthis()->getFunction();
+      } else {
+        auto __resultRef = jni::make_global(__result);
+        return JNICallable<JFunc_void_std__string_bool, void(std::string, bool)>(std::move(__resultRef));
+      }
+    }()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setOnSeriesToggle(const std::optional<std::function<void(const std::string& /* id */, bool /* visible */)>>& onSeriesToggle) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JFunc_void_std__string_bool::javaobject> /* onSeriesToggle */)>("setOnSeriesToggle_cxx");
+    method(_javaPart, onSeriesToggle.has_value() ? JFunc_void_std__string_bool_cxx::fromCpp(onSeriesToggle.value()) : nullptr);
   }
   std::optional<double> JHybridLivelineSpec::getValue() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JDouble>()>("getValue");
@@ -388,6 +419,33 @@ namespace margelo::nitro::liveline {
   void JHybridLivelineSpec::setScrub(std::optional<bool> scrub) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* scrub */)>("setScrub");
     method(_javaPart, scrub.has_value() ? jni::JBoolean::valueOf(scrub.value()) : nullptr);
+  }
+  std::optional<double> JHybridLivelineSpec::getTooltipY() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JDouble>()>("getTooltipY");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(__result->value()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setTooltipY(std::optional<double> tooltipY) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JDouble> /* tooltipY */)>("setTooltipY");
+    method(_javaPart, tooltipY.has_value() ? jni::JDouble::valueOf(tooltipY.value()) : nullptr);
+  }
+  std::optional<bool> JHybridLivelineSpec::getTooltipOutline() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JBoolean>()>("getTooltipOutline");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(static_cast<bool>(__result->value())) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setTooltipOutline(std::optional<bool> tooltipOutline) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* tooltipOutline */)>("setTooltipOutline");
+    method(_javaPart, tooltipOutline.has_value() ? jni::JBoolean::valueOf(tooltipOutline.value()) : nullptr);
+  }
+  std::optional<LivelinePadding> JHybridLivelineSpec::getPadding() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JLivelinePadding>()>("getPadding");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(__result->toCpp()) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setPadding(const std::optional<LivelinePadding>& padding) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JLivelinePadding> /* padding */)>("setPadding");
+    method(_javaPart, padding.has_value() ? JLivelinePadding::fromCpp(padding.value()) : nullptr);
   }
   std::optional<bool> JHybridLivelineSpec::getPulse() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JBoolean>()>("getPulse");

@@ -110,6 +110,18 @@ using namespace margelo::nitro::liveline::views;
           : !newViewProps.series.hasSameValue(oldViewProps->series)) {
       swiftPart.setSeries(newViewProps.series.get());
     }
+    // seriesToggleCompact: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.seriesToggleCompact.isProvided()
+          : !newViewProps.seriesToggleCompact.hasSameValue(oldViewProps->seriesToggleCompact)) {
+      swiftPart.setSeriesToggleCompact(newViewProps.seriesToggleCompact.get());
+    }
+    // onSeriesToggle: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.onSeriesToggle.isProvided()
+          : !newViewProps.onSeriesToggle.hasSameValue(oldViewProps->onSeriesToggle)) {
+      swiftPart.setOnSeriesToggle(newViewProps.onSeriesToggle.get());
+    }
     // value: optional
     if (oldViewProps == nullptr
           ? newViewProps.value.isProvided()
@@ -235,6 +247,24 @@ using namespace margelo::nitro::liveline::views;
           ? newViewProps.scrub.isProvided()
           : !newViewProps.scrub.hasSameValue(oldViewProps->scrub)) {
       swiftPart.setScrub(newViewProps.scrub.get());
+    }
+    // tooltipY: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.tooltipY.isProvided()
+          : !newViewProps.tooltipY.hasSameValue(oldViewProps->tooltipY)) {
+      swiftPart.setTooltipY(newViewProps.tooltipY.get());
+    }
+    // tooltipOutline: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.tooltipOutline.isProvided()
+          : !newViewProps.tooltipOutline.hasSameValue(oldViewProps->tooltipOutline)) {
+      swiftPart.setTooltipOutline(newViewProps.tooltipOutline.get());
+    }
+    // padding: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.padding.isProvided()
+          : !newViewProps.padding.hasSameValue(oldViewProps->padding)) {
+      swiftPart.setPadding(newViewProps.padding.get());
     }
     // pulse: optional
     if (oldViewProps == nullptr
