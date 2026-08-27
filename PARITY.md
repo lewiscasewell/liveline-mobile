@@ -51,11 +51,11 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `padding` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | **A gap** — to port |
 | `onHover` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | map to `onScrub` |
 | `cursor` | ❌ | ❌ | ❌ | ❌ | ☐ | ☐ | to port (map to scrub crosshair) |
-| formatting: `formatValue`/`formatTime` | ✅ | ⚠️ | — | — | ☐ | ☐ | ours: `valuePrefix/suffix/decimals` |
-| `currency` / `locale` / `useGrouping` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** — native NumberFormatter |
-| `fontFamily` | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | **B/C gap** |
-| `surfaceColor` ➕ | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | mobile addition; **C gap** Android |
-| `haptics` ➕ | ✅ | ❌ | ✅ | ❌ | ☐ | ☐ | mobile addition; **B/C gap** |
+| formatting: `formatValue`/`formatTime` | ✅ | ⚠️ | — | — | ☑ | ☐ | ours: `valuePrefix/suffix/decimals` |
+| `currency` / `locale` / `useGrouping` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** — native NumberFormatter |
+| `fontFamily` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
+| `surfaceColor` ➕ | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | mobile addition; **C gap** Android |
+| `haptics` ➕ | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | mobile addition; **B/C gap** |
 | `paletteOverrides` | ✅ | ❌ | — | — | ☐ | ☐ | advanced (Swift-only API) |
 
 **Plan:** feature-by-feature — verify Swift, bring Kotlin to parity, wire Nitro

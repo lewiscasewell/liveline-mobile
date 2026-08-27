@@ -2,6 +2,7 @@ package com.margelo.nitro.liveline
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
@@ -77,6 +78,39 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
         chart.setCandles(c.map { coreCandle(it) }, liveCandle?.let { coreCandle(it) }, candleWidth ?: 1.0)
     }
 
+    /** Builds the value formatter from currency/locale/grouping/prefix/suffix/
+     *  decimals, mirroring the iOS binding's NumberFormatter logic. */
+    private fun rebuildFormatter() {
+        val loc = locale?.takeIf { it.isNotEmpty() }?.let { java.util.Locale.forLanguageTag(it) }
+            ?: java.util.Locale.getDefault()
+        val cur = currency
+        if (!cur.isNullOrEmpty()) {
+            // Currency style provides the symbol/placement and the currency's own
+            // fraction digits; prefix/suffix/decimals don't apply (matches iOS).
+            val nf = java.text.NumberFormat.getCurrencyInstance(loc)
+            runCatching { nf.currency = java.util.Currency.getInstance(cur) }
+            nf.isGroupingUsed = useGrouping ?: true
+            chart.formatValue = { nf.format(it) }
+        } else {
+            val nf = java.text.NumberFormat.getNumberInstance(loc)
+            val d = (valueDecimals ?: 2.0).toInt()
+            nf.minimumFractionDigits = d
+            nf.maximumFractionDigits = d
+            nf.isGroupingUsed = useGrouping ?: true
+            val pre = valuePrefix ?: ""
+            val suf = valueSuffix ?: ""
+            chart.formatValue = { pre + nf.format(it) + suf }
+        }
+        chart.invalidate()
+    }
+
+    /** Resolves an RN font-family name to a Typeface (bundled fonts via
+     *  ReactFontManager; falls back to a system family). */
+    private fun resolveTypeface(family: String): Typeface? = runCatching {
+        com.facebook.react.common.assets.ReactFontManager.getInstance()
+            .getTypeface(family, Typeface.NORMAL, chart.context.assets)
+    }.getOrElse { runCatching { Typeface.create(family, Typeface.NORMAL) }.getOrNull() }
+
     // ── Props ───────────────────────────────────────────────────────────────
     override var data: Array<LivelinePoint>? = null
         set(v) { field = v; if (v != null) chart.setData(v.map { corePoint(it) }) }
@@ -117,6 +151,10 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
             windowBar.isDark = v != LivelineTheme.LIGHT
         }
     override var surfaceColor: String? = null
+        set(v) {
+            field = v
+            chart.surfaceColor = v?.takeIf { it.isNotEmpty() }?.let { runCatching { Color.parseColor(it) }.getOrNull() }
+        }
     override var lineWidth: Double? = null
         set(v) { field = v; if (v != null && v > 0) chart.lineWidth = v }
     override var window: Double? = null
@@ -173,6 +211,7 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
     override var valueMomentumColor: Boolean? = null
         set(v) { field = v; if (v != null) chart.valueMomentumColor = v }
     override var haptics: Boolean? = null
+        set(v) { field = v; if (v != null) chart.haptics = v }
     override var degen: Boolean? = null
         set(v) { field = v; if (v != null) chart.degen = v }
     override var lerpSpeed: Double? = null
@@ -182,15 +221,22 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
     override var orderbook: LivelineOrderbook? = null
         set(v) { field = v; chart.orderbook = v?.let { coreBook(it) } }
     override var valuePrefix: String? = null
-        set(v) { field = v; chart.valuePrefix = v ?: "" }
+        set(v) { field = v; chart.valuePrefix = v ?: ""; rebuildFormatter() }
     override var valueSuffix: String? = null
-        set(v) { field = v; chart.valueSuffix = v ?: "" }
+        set(v) { field = v; chart.valueSuffix = v ?: ""; rebuildFormatter() }
     override var valueDecimals: Double? = null
-        set(v) { field = v; if (v != null) chart.valueDecimals = v.toInt() }
+        set(v) { field = v; if (v != null) chart.valueDecimals = v.toInt(); rebuildFormatter() }
     override var currency: String? = null
+        set(v) { field = v; rebuildFormatter() }
     override var locale: String? = null
+        set(v) { field = v; rebuildFormatter() }
     override var useGrouping: Boolean? = null
+        set(v) { field = v; rebuildFormatter() }
     override var fontFamily: String? = null
+        set(v) {
+            field = v
+            chart.numberTypeface = v?.takeIf { it.isNotEmpty() }?.let { resolveTypeface(it) }
+        }
 
     // ── Methods ─────────────────────────────────────────────────────────────
     override fun push(point: LivelinePoint, seriesId: String?) {

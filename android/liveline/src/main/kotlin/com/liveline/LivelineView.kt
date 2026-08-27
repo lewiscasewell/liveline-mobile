@@ -94,6 +94,18 @@ class LivelineView @JvmOverloads constructor(
     var valuePrefix: String = ""
     var valueSuffix: String = ""
     var valueDecimals: Int = 2
+    /** Overrides the prefix/suffix/decimals formatting (used for the Nitro
+     *  binding's currency/locale/grouping formatter). Applied to the badge, value
+     *  overlay, crosshair and Y-axis labels. */
+    var formatValue: ((Double) -> String)? = null
+    /** Opaque card background; `null` = transparent (the default). */
+    var surfaceColor: Int? = null
+        set(v) { field = v; invalidate() }
+    /** Haptic feedback on degen bursts. */
+    var haptics: Boolean = false
+    /** Custom typeface for numbers/labels; `null` = monospace (tabular digits). */
+    var numberTypeface: Typeface? = null
+        set(v) { field = v; applyTypeface() }
     var mode: LivelineMode = LivelineMode.LINE
     var candleWidth: Double = 1.0
 
@@ -274,7 +286,16 @@ class LivelineView @JvmOverloads constructor(
         return false
     }
 
-    private fun fmt(v: Double): String = valuePrefix + String.format("%.${valueDecimals}f", v) + valueSuffix
+    private fun fmt(v: Double): String =
+        formatValue?.invoke(v) ?: (valuePrefix + String.format("%.${valueDecimals}f", v) + valueSuffix)
+
+    /** Applies the custom typeface (or monospace) to every text paint. */
+    private fun applyTypeface() {
+        val tf = numberTypeface ?: Typeface.MONOSPACE
+        labelPaint.typeface = tf; timeLabelPaint.typeface = tf; badgeTextPaint.typeface = tf
+        overlayPaint.typeface = tf; tipPaint.typeface = tf; seriesLabelPaint.typeface = tf
+        invalidate()
+    }
 
     /** Smoothly log-interpolates the visible span toward [windowSeconds]. */
     private fun advanceWindow(nowMs: Double) {
@@ -292,6 +313,7 @@ class LivelineView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         val w = width.toFloat(); val h = height.toFloat()
         if (w <= 0 || h <= 0) return
+        surfaceColor?.let { canvas.drawColor(it) }
         val nowMs = System.nanoTime() / 1_000_000.0
         val dt = frameDt
         advanceWindow(nowMs)
@@ -362,7 +384,7 @@ class LivelineView @JvmOverloads constructor(
             while (g <= maxV) {
                 val y = toY(g)
                 canvas.drawLine(padL, y, padL + chartW, y, gridPaint)
-                canvas.drawText(String.format("%.${valueDecimals}f", g), padL + chartW + dp(6f), y + dp(4f), labelPaint)
+                canvas.drawText(fmt(g), padL + chartW + dp(6f), y + dp(4f), labelPaint)
                 g += gridInterval
             }
         }
@@ -582,7 +604,7 @@ class LivelineView @JvmOverloads constructor(
         // Grid + value labels.
         val pxPerUnit = chartH / range
         gridInterval = Ticks.pickInterval(range, pxPerUnit.toDouble(), dp(36f).toDouble(), gridInterval)
-        if (gridInterval > 0) { var g = ceil(minV / gridInterval) * gridInterval; labelPaint.textAlign = Paint.Align.LEFT; while (g <= maxV) { val y = mtoY(g); canvas.drawLine(padL, y, padL + chartW, y, gridPaint); canvas.drawText(String.format("%.${valueDecimals}f", g), padL + chartW + dp(6f), y + dp(4f), labelPaint); g += gridInterval } }
+        if (gridInterval > 0) { var g = ceil(minV / gridInterval) * gridInterval; labelPaint.textAlign = Paint.Align.LEFT; while (g <= maxV) { val y = mtoY(g); canvas.drawLine(padL, y, padL + chartW, y, gridPaint); canvas.drawText(fmt(g), padL + chartW + dp(6f), y + dp(4f), labelPaint); g += gridInterval } }
         drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)
 
         // Non-overlapping endpoint-label y positions.
@@ -718,6 +740,7 @@ class LivelineView @JvmOverloads constructor(
         val rise = if (range > 0) (value - degenBaseline) / range else 0.0
         if (rise > 0.06 && degenArmed) {
             degenArmed = false
+            if (haptics) performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
             repeat(18) {
                 val angle = -PI * Math.random()
                 val speed = 120 + Math.random() * 220
@@ -761,7 +784,7 @@ class LivelineView @JvmOverloads constructor(
         if (grid && gridInterval > 0) {
             var g = ceil(minV / gridInterval) * gridInterval
             labelPaint.textAlign = Paint.Align.LEFT
-            while (g <= maxV) { val y = toY(g); canvas.drawLine(padL, y, padL + chartW, y, gridPaint); canvas.drawText(String.format("%.${valueDecimals}f", g), padL + chartW + dp(6f), y + dp(4f), labelPaint); g += gridInterval }
+            while (g <= maxV) { val y = toY(g); canvas.drawLine(padL, y, padL + chartW, y, gridPaint); canvas.drawText(fmt(g), padL + chartW + dp(6f), y + dp(4f), labelPaint); g += gridInterval }
         }
 
         // Candlesticks.

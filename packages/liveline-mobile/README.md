@@ -224,6 +224,18 @@ Base surface tone for background, grid and text. `'light' | 'dark'`, default
 <!-- 🎥 record: toggling theme light ↔ dark -->
 > _Video coming soon._
 
+#### `surfaceColor` ➕ — opaque card
+
+Mobile addition. By default the chart is **transparent**, so it sits on whatever
+is behind it. Set `surfaceColor` to paint an opaque card background instead —
+independent of `theme`.
+
+```tsx
+<Liveline data={data} surfaceColor='#1c1530' />
+```
+<!-- 🎥 record: transparent chart over a gradient, then an opaque surfaceColor -->
+> _Video coming soon._
+
 #### `grid` — Y-axis grid & labels
 
 Toggles the horizontal grid lines and their value labels. The time axis is
@@ -320,6 +332,81 @@ The text shown, centred, when there's no data yet (and not `loading`). Default
 <Liveline data={[]} emptyText='Waiting for feed…' />
 ```
 <!-- 🎥 record: an empty chart showing the empty text, then data arriving -->
+> _Video coming soon._
+
+#### `haptics` ➕ — tactile feedback
+
+Mobile addition. Fires a short haptic on degen bursts (strong up-moves). Default
+`false`. Pairs with `degen`.
+
+```tsx
+<Liveline data={data} value={value} degen haptics />
+```
+<!-- 🎥 record: (device only) a degen burst with a haptic tick -->
+> _Video coming soon._
+
+### Number & time formatting
+
+Formatting is **native** and runs per frame — no JS on the render path. Instead of
+the web's `formatValue`/`formatTime` closures, mobile takes declarative props and
+builds the platform formatter (`NumberFormatter` on iOS, `NumberFormat` on
+Android). They drive the badge, the value overlay, the crosshair, and the Y-axis
+labels alike.
+
+#### `valuePrefix` / `valueSuffix` / `valueDecimals`
+
+The simple path: a leading string, a trailing string, and the fraction-digit
+count (default `2`). Grouping separators are applied for the locale.
+
+```tsx
+<Liveline data={data} value={value} valuePrefix='$' valueDecimals={0} />
+<Liveline data={data} value={hr} valueSuffix=' bpm' valueDecimals={0} />
+```
+<!-- 🎥 record: the same feed as "$1,234", "1234.00 bpm", "12%" -->
+> _Video coming soon._
+
+#### `currency` — currency style
+
+An ISO 4217 code (e.g. `'USD'`, `'EUR'`, `'JPY'`). Switches to the locale's
+currency style — symbol, placement and the currency's own fraction digits (0 for
+JPY, 2 for USD). `valuePrefix`/`valueSuffix`/`valueDecimals` don't apply here.
+
+```tsx
+<Liveline data={data} value={value} currency='USD' />   // $9,680.78
+```
+<!-- 🎥 record: the same value as USD, EUR, JPY -->
+> _Video coming soon._
+
+#### `locale` — formatting locale
+
+A BCP-47 tag (e.g. `'de-DE'`) controlling grouping/decimal separators and the
+currency symbol's placement. Defaults to the device locale.
+
+```tsx
+<Liveline data={data} value={value} currency='EUR' locale='de-DE' />  // 9.680,78 €
+```
+<!-- 🎥 record: one value under en-US vs de-DE -->
+> _Video coming soon._
+
+#### `useGrouping` — thousands separators
+
+Whether to group the integer part (`1,234,567`). Default `true`.
+
+```tsx
+<Liveline data={data} value={value} useGrouping={false} />
+```
+<!-- 🎥 record: a large value with grouping on → off -->
+> _Video coming soon._
+
+#### `fontFamily` — custom font
+
+Renders numbers and labels in a custom font (a bundled font on Expo/RN, resolved
+natively). Falls back to the tabular monospace default.
+
+```tsx
+<Liveline data={data} value={value} fontFamily='Inter' />
+```
+<!-- 🎥 record: default font vs a bundled custom font -->
 > _Video coming soon._
 
 ---
