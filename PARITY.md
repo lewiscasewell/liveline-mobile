@@ -27,7 +27,7 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `exaggerate` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `showValue` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `valueMomentumColor` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `degen` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | haptics part ❌ Kotlin |
+| `degen` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | haptics on both |
 | `mode` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | line/candle |
 | `candles` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
@@ -57,7 +57,7 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `fontFamily` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
 | `surfaceColor` ➕ | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | mobile addition; **C gap** Android |
 | `haptics` ➕ | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | mobile addition; **B/C gap** |
-| `paletteOverrides` | ✅ | ❌ | — | — | ☐ | ☐ | advanced (Swift-only API) |
+| `paletteOverrides` | ✅ | — | — | — | ☐ | ☐ | Swift-only escape hatch (closure; no RN prop) |
 
 **Plan:** feature-by-feature — verify Swift, bring Kotlin to parity, wire Nitro
 on both, write the README doc section (prose + code + video placeholder), verify,
@@ -86,6 +86,10 @@ more than help. The divergences below are intentional.
   no touchscreen equivalent: there's no cursor to style, and "hover" is a
   press-and-hold **scrub** here (see `scrub`), which the app can already read
   from its own gesture handling if it needs the scrubbed point.
+- **`paletteOverrides` — Swift-only.** The native Swift API exposes a
+  `(inout Palette) -> Void` closure to tweak the full palette; a closure that
+  mutates native structs has no declarative RN equivalent, so it stays a
+  Swift/Kotlin-renderer escape hatch, not an RN prop.
 - **Number formatting** uses declarative `valuePrefix` / `valueSuffix` /
   `valueDecimals` / `currency` / `locale` / `useGrouping` instead of the web's
   `formatValue` / `formatTime` closures, so formatting stays native (off the JS
