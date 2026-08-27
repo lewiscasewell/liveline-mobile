@@ -254,7 +254,7 @@ final class HybridLivelineView: HybridLivelineSpec {
         didSet { chart.valueMomentumColor = valueMomentumColor ?? false }
     }
     var haptics: Bool? {
-        didSet { chart.haptics = haptics ?? false }
+        didSet { chart.haptics = haptics ?? true }
     }
     var degen: Bool? {
         didSet { chart.degen = degen ?? false }

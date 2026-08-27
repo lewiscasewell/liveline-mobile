@@ -122,7 +122,7 @@ public final class LivelineView: UIView {
     public var valueMomentumColor: Bool = false
     /// Emit haptic feedback: a light tap as the crosshair moves between samples
     /// while scrubbing, and a stronger hit on each degen burst. Default `false`.
-    public var haptics: Bool = false
+    public var haptics: Bool = true
     /// Degen mode: on a strong upward move the chart shakes and sparks burst from
     /// the live dot (with a haptic hit when ``haptics`` is on). Default `false`.
     public var degen: Bool = false { didSet { if !degen { degenParticles.removeAll(); degenShake = 0 } } }

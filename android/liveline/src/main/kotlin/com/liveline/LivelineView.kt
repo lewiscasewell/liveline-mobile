@@ -99,7 +99,7 @@ class LivelineView @JvmOverloads constructor(
     var surfaceColor: Int? = null
         set(v) { field = v; invalidate() }
     /** Haptic feedback on degen bursts. */
-    var haptics: Boolean = false
+    var haptics: Boolean = true
     /** Custom typeface for numbers/labels; `null` = monospace (tabular digits). */
     var numberTypeface: Typeface? = null
         set(v) { field = v; applyTypeface() }

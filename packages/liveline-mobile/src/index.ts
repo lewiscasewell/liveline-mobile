@@ -74,7 +74,7 @@ const defaults: Required<DefaultableProps> = {
   loading: false,
   showValue: false,
   valueMomentumColor: false,
-  haptics: false,
+  haptics: true,
   degen: false,
   window: 30,
   windowStyle: 'default',

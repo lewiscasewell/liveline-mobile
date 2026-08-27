@@ -216,7 +216,7 @@ export interface LivelineProps extends HybridViewProps {
   valueMomentumColor?: boolean
   /**
    * Haptic feedback: a light tap as the crosshair crosses each step while
-   * scrubbing, and a stronger hit on every degen burst. Default `false`.
+   * scrubbing, and a stronger hit on every degen burst. Default `true`.
    */
   haptics?: boolean
   /**

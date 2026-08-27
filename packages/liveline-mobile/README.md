@@ -385,8 +385,8 @@ The text shown, centred, when there's no data yet (and not `loading`). Default
 
 #### `haptics` ➕ — tactile feedback
 
-Mobile addition. Fires a short haptic on degen bursts (strong up-moves). Default
-`false`. Pairs with `degen`.
+Mobile addition, **on by default** (`true`) — a short haptic on degen bursts
+(strong up-moves). Pairs with `degen`; set `haptics={false}` to silence it.
 
 ```tsx
 <Liveline data={data} value={value} degen haptics />
