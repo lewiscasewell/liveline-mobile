@@ -245,9 +245,11 @@ Base surface tone for background, grid and text. `'light' | 'dark'`, default
 
 #### `surfaceColor` ➕ — opaque card
 
-Mobile addition. By default the chart is **transparent**, so it sits on whatever
-is behind it. Set `surfaceColor` to paint an opaque card background instead —
-independent of `theme`.
+**A mobile extension — the web API has no such prop.** By default the chart is
+**transparent** (matching web liveline), so it sits on whatever is behind it — set
+a background on the view around it and the chart shows through. When you'd rather
+it be a self-contained opaque card, set `surfaceColor` to paint its own
+background, independent of `theme`.
 
 ```tsx
 <Liveline data={data} surfaceColor='#1c1530' />
