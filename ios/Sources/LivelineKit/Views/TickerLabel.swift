@@ -25,6 +25,9 @@
         private var charW: CGFloat = 0
         private var charH: CGFloat = 0
 
+        /// The text currently displayed — lets the caller skip redundant updates.
+        var currentText: String { String(chars) }
+
         override init(frame: CGRect) {
             super.init(frame: frame)
             clipsToBounds = true
@@ -71,9 +74,19 @@
         }
 
         /// Set the displayed text. `up` rolls new digits in from below (a rising
-        /// value); `false` rolls them from above.
-        func setText(_ newText: String, up: Bool) {
+        /// value); `false` rolls them from above. When `animated` is false the row
+        /// snaps instantly — used while the value moves faster than a roll can
+        /// finish, so the digits stay crisp instead of blurring into each other.
+        func setText(_ newText: String, up: Bool, animated: Bool = true) {
             let new = Array(newText)
+            if !animated {
+                // Clear anything mid-flight (incoming + still-animating outgoing)
+                // and lay the row out at rest — a clean snap with no ghost trails.
+                subviews.forEach { $0.removeFromSuperview() }
+                labels = []
+                rebuild(new)
+                return
+            }
             if chars.isEmpty {
                 rebuild(new)  // first show: nothing to animate from
                 return

@@ -267,6 +267,8 @@ public final class LivelineView: UIView {
     }()
     /// Last value shown by the overlay, so the ticker knows which way to roll.
     private var lastValueShown = 0.0
+    /// When the ticker last changed (ms), to throttle updates and pick roll vs snap.
+    private var lastTickerMs = 0.0
 
     // MARK: Derived
 
@@ -298,6 +300,11 @@ public final class LivelineView: UIView {
         static let gridFadeIn = 0.18
         static let gridFadeOut = 0.12
         static let timeFade = 0.08
+        // showValue ticker: don't repaint the number faster than this (readable
+        // cadence), and only roll the digits when at least this long has passed
+        // since the last change — faster than that, snap instead of rolling.
+        static let tickerThrottleMs = 100.0
+        static let tickerRollGapMs = 280.0
         // Badge geometry
         static let badgePadX: CGFloat = 10
         static let badgePadY: CGFloat = 3
@@ -995,9 +1002,20 @@ public final class LivelineView: UIView {
             color = palette.tooltipText
         }
         valueLabel.textColor = UIColor(rgba: color)
-        // Roll the digits that changed, in the direction the value moved.
-        valueLabel.setText(formatValue(shown), up: shown >= lastValueShown)
-        lastValueShown = shown
+        // The ticker rolls each changed digit over ~0.28s. Because it's driven
+        // every frame by the eased value, fast movement restarts a digit's roll
+        // before it finishes — a blur of half-rolled ghosts. So throttle the
+        // number to a readable cadence, and while it's moving faster than a roll
+        // can complete, snap the digits (crisp) instead of rolling; the roll
+        // returns once the value settles.
+        let text = formatValue(shown)
+        let nowMs = CACurrentMediaTime() * 1000
+        if text != valueLabel.currentText, nowMs - lastTickerMs >= K.tickerThrottleMs {
+            let animated = nowMs - lastTickerMs >= K.tickerRollGapMs
+            valueLabel.setText(text, up: shown >= lastValueShown, animated: animated)
+            lastTickerMs = nowMs
+            lastValueShown = shown
+        }
         // Top-left, above the plot (matching web's block above the chart).
         let size = valueLabel.intrinsicContentSize
         valueLabel.frame = CGRect(x: pad.left, y: 6, width: size.width, height: size.height)
