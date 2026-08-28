@@ -145,6 +145,12 @@ abstract class HybridLivelineSpec: HybridView() {
       onWindowChange = value?.let { it }
     }
   
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var modeToggle: Boolean?
+  
   abstract var onModeChange: ((mode: LivelineMode) -> Unit)?
   
   private var onModeChange_cxx: Func_void_LivelineMode?

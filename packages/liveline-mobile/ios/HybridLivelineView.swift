@@ -23,10 +23,8 @@ final class HybridLivelineView: HybridLivelineSpec {
 
     /// Notifies JS when a window button is tapped (set by Nitro).
     var onWindowChange: ((_ secs: Double) -> Void)?
-    /// Notifies JS when the mode toggle is tapped; its presence shows the toggle.
-    var onModeChange: ((_ mode: LivelineMode) -> Void)? {
-        didSet { bar.showModeToggle = onModeChange != nil }
-    }
+    /// Notifies JS when the mode toggle is tapped. Drive `mode` from it.
+    var onModeChange: ((_ mode: LivelineMode) -> Void)?
 
     private lazy var container: LivelineContainerView = {
         bar.isHidden = true
@@ -61,9 +59,23 @@ final class HybridLivelineView: HybridLivelineSpec {
         didSet {
             let ws = windows ?? []
             bar.windows = ws.map { (label: $0.label, secs: $0.secs) }
-            bar.isHidden = ws.isEmpty
-            container.setNeedsLayout()
+            updateBarVisibility()
         }
+    }
+
+    /// Show the native line/candle toggle at the end of the bar (opt-in). The bar
+    /// appears for the toggle even when `windows` is empty.
+    var modeToggle: Bool? {
+        didSet {
+            bar.showModeToggle = modeToggle ?? false
+            updateBarVisibility()
+        }
+    }
+
+    /// The bar is visible when there are windows OR the mode toggle is on.
+    private func updateBarVisibility() {
+        bar.isHidden = (windows ?? []).isEmpty && !(modeToggle ?? false)
+        container.setNeedsLayout()
     }
 
     var windowStyle: LivelineWindowStyle? {

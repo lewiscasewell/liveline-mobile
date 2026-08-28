@@ -64,6 +64,10 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
             chart.windowSeconds = secs
             onWindowChange?.invoke(secs)
         }
+        windowBar.onModeSelect = { candle ->
+            chart.mode = if (candle) CoreMode.CANDLE else CoreMode.LINE
+            onModeChange?.invoke(if (candle) LivelineMode.CANDLE else LivelineMode.LINE)
+        }
         seriesLegend.onToggle = { id ->
             val visible = chart.toggleSeries(id)
             onSeriesToggle?.invoke(id, visible)
@@ -79,9 +83,12 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
 
     private fun refreshWindowBar() {
         val w = windows
-        if (w.isNullOrEmpty()) { windowBar.visibility = View.GONE; return }
+        val show = !w.isNullOrEmpty() || modeToggle == true
+        if (!show) { windowBar.visibility = View.GONE; return }
         windowBar.visibility = View.VISIBLE
-        windowBar.setWindows(w.map { WindowBarView.Window(it.label, it.secs) }, window ?: w.first().secs)
+        windowBar.showModeToggle = modeToggle == true
+        if (!w.isNullOrEmpty()) windowBar.setWindows(w.map { WindowBarView.Window(it.label, it.secs) }, window ?: w.first().secs)
+        else windowBar.setWindows(emptyList(), window ?: 0.0)
     }
 
     private fun corePoint(p: LivelinePoint) = com.liveline.core.LivelinePoint(p.time, p.value)
@@ -157,7 +164,13 @@ class HybridLivelineView(context: Context) : HybridLivelineSpec() {
             }
         }
     override var mode: LivelineMode? = null
-        set(v) { field = v; chart.mode = if (v == LivelineMode.CANDLE) CoreMode.CANDLE else CoreMode.LINE }
+        set(v) {
+            field = v
+            chart.mode = if (v == LivelineMode.CANDLE) CoreMode.CANDLE else CoreMode.LINE
+            windowBar.isCandle = v == LivelineMode.CANDLE
+        }
+    override var modeToggle: Boolean? = null
+        set(v) { field = v; refreshWindowBar() }
     override var candles: Array<CandlePoint>? = null
         set(v) { field = v; applyCandles() }
     override var candleWidth: Double? = null

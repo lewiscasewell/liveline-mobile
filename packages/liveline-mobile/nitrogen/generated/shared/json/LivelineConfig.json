@@ -21,6 +21,7 @@
     "windows": true,
     "windowStyle": true,
     "onWindowChange": true,
+    "modeToggle": true,
     "onModeChange": true,
     "grid": true,
     "badge": true,

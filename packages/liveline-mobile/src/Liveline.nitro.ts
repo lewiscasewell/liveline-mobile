@@ -182,8 +182,14 @@ export interface LivelineProps extends HybridViewProps {
   /** Called with the chosen span (seconds) when a window button is tapped. */
   onWindowChange?: (secs: number) => void
   /**
-   * When set, the window bar shows an optional line/candle mode toggle at its
-   * end; this fires with the chosen mode when tapped. Drive `mode` from it.
+   * Show a native line/candle toggle at the end of the interval bar. Opt-in;
+   * the bar appears for the toggle even when `windows` is empty. Pair it with
+   * `onModeChange` and drive `mode` from that callback. Default `false`.
+   */
+  modeToggle?: boolean
+  /**
+   * Fires with the chosen mode when the `modeToggle` is tapped. Drive `mode`
+   * from it (controlled), the way `onWindowChange` drives `window`.
    */
   onModeChange?: (mode: LivelineMode) => void
 

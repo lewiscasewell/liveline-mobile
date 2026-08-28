@@ -200,6 +200,12 @@ using namespace margelo::nitro::liveline::views;
           : !newViewProps.onWindowChange.hasSameValue(oldViewProps->onWindowChange)) {
       swiftPart.setOnWindowChange(newViewProps.onWindowChange.get());
     }
+    // modeToggle: optional
+    if (oldViewProps == nullptr
+          ? newViewProps.modeToggle.isProvided()
+          : !newViewProps.modeToggle.hasSameValue(oldViewProps->modeToggle)) {
+      swiftPart.setModeToggle(newViewProps.modeToggle.get());
+    }
     // onModeChange: optional
     if (oldViewProps == nullptr
           ? newViewProps.onModeChange.isProvided()

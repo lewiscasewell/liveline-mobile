@@ -73,6 +73,7 @@ namespace margelo::nitro::liveline::views {
     nitro::ReactProp<std::optional<std::vector<WindowOption>>> windows;
     nitro::ReactProp<std::optional<LivelineWindowStyle>> windowStyle;
     nitro::ReactProp<std::optional<std::function<void(double /* secs */)>>> onWindowChange;
+    nitro::ReactProp<std::optional<bool>> modeToggle;
     nitro::ReactProp<std::optional<std::function<void(LivelineMode /* mode */)>>> onModeChange;
     nitro::ReactProp<std::optional<bool>> grid;
     nitro::ReactProp<std::optional<bool>> badge;
@@ -124,6 +125,7 @@ namespace margelo::nitro::liveline::views {
              windows.hasSameValue(other.windows) &&
              windowStyle.hasSameValue(other.windowStyle) &&
              onWindowChange.hasSameValue(other.onWindowChange) &&
+             modeToggle.hasSameValue(other.modeToggle) &&
              onModeChange.hasSameValue(other.onModeChange) &&
              grid.hasSameValue(other.grid) &&
              badge.hasSameValue(other.badge) &&
@@ -176,6 +178,7 @@ namespace margelo::nitro::liveline::views {
              windows.isProvided() ||
              windowStyle.isProvided() ||
              onWindowChange.isProvided() ||
+             modeToggle.isProvided() ||
              onModeChange.isProvided() ||
              grid.isProvided() ||
              badge.isProvided() ||

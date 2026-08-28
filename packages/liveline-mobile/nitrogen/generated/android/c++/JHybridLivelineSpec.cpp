@@ -340,6 +340,15 @@ namespace margelo::nitro::liveline {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JFunc_void_double::javaobject> /* onWindowChange */)>("setOnWindowChange_cxx");
     method(_javaPart, onWindowChange.has_value() ? JFunc_void_double_cxx::fromCpp(onWindowChange.value()) : nullptr);
   }
+  std::optional<bool> JHybridLivelineSpec::getModeToggle() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JBoolean>()>("getModeToggle");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(static_cast<bool>(__result->value())) : std::nullopt;
+  }
+  void JHybridLivelineSpec::setModeToggle(std::optional<bool> modeToggle) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* modeToggle */)>("setModeToggle");
+    method(_javaPart, modeToggle.has_value() ? jni::JBoolean::valueOf(modeToggle.value()) : nullptr);
+  }
   std::optional<std::function<void(LivelineMode /* mode */)>> JHybridLivelineSpec::getOnModeChange() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JFunc_void_LivelineMode::javaobject>()>("getOnModeChange_cxx");
     auto __result = method(_javaPart);

@@ -84,6 +84,8 @@ namespace margelo::nitro::liveline {
     void setWindowStyle(std::optional<LivelineWindowStyle> windowStyle) override;
     std::optional<std::function<void(double /* secs */)>> getOnWindowChange() override;
     void setOnWindowChange(const std::optional<std::function<void(double /* secs */)>>& onWindowChange) override;
+    std::optional<bool> getModeToggle() override;
+    void setModeToggle(std::optional<bool> modeToggle) override;
     std::optional<std::function<void(LivelineMode /* mode */)>> getOnModeChange() override;
     void setOnModeChange(const std::optional<std::function<void(LivelineMode /* mode */)>>& onModeChange) override;
     std::optional<bool> getGrid() override;

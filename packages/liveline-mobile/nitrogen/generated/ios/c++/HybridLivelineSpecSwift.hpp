@@ -222,6 +222,13 @@ namespace margelo::nitro::liveline {
     inline void setOnWindowChange(const std::optional<std::function<void(double /* secs */)>>& onWindowChange) noexcept override {
       _swiftPart.setOnWindowChange(onWindowChange);
     }
+    inline std::optional<bool> getModeToggle() noexcept override {
+      auto __result = _swiftPart.getModeToggle();
+      return __result;
+    }
+    inline void setModeToggle(std::optional<bool> modeToggle) noexcept override {
+      _swiftPart.setModeToggle(modeToggle);
+    }
     inline std::optional<std::function<void(LivelineMode /* mode */)>> getOnModeChange() noexcept override {
       auto __result = _swiftPart.getOnModeChange();
       return __result;

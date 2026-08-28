@@ -37,6 +37,7 @@ namespace margelo::nitro::liveline::views {
     windows(nitro::ReactProp<std::optional<std::vector<WindowOption>>>::fromRawValue("Liveline", "windows", rawProps, sourceProps.windows)),
     windowStyle(nitro::ReactProp<std::optional<LivelineWindowStyle>>::fromRawValue("Liveline", "windowStyle", rawProps, sourceProps.windowStyle)),
     onWindowChange(nitro::ReactProp<std::optional<std::function<void(double /* secs */)>>>::fromRawValue("Liveline", "onWindowChange", rawProps, sourceProps.onWindowChange)),
+    modeToggle(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "modeToggle", rawProps, sourceProps.modeToggle)),
     onModeChange(nitro::ReactProp<std::optional<std::function<void(LivelineMode /* mode */)>>>::fromRawValue("Liveline", "onModeChange", rawProps, sourceProps.onModeChange)),
     grid(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "grid", rawProps, sourceProps.grid)),
     badge(nitro::ReactProp<std::optional<bool>>::fromRawValue("Liveline", "badge", rawProps, sourceProps.badge)),
@@ -88,6 +89,7 @@ namespace margelo::nitro::liveline::views {
       case hashString("windows"): return true;
       case hashString("windowStyle"): return true;
       case hashString("onWindowChange"): return true;
+      case hashString("modeToggle"): return true;
       case hashString("onModeChange"): return true;
       case hashString("grid"): return true;
       case hashString("badge"): return true;

@@ -64,6 +64,8 @@ public struct Liveline: View {
     private var candles: [LivelineCandle] = []
     private var candleWidth: Double = 1
     private var liveCandle: LivelineCandle?
+    private var modeToggle = false
+    private var onModeChange: ((LivelineMode) -> Void)?
 
     /// Creates a chart.
     /// - Parameters:
@@ -163,6 +165,12 @@ public struct Liveline: View {
     public func orderbook(_ v: OrderbookData?) -> Self { with { $0.orderbook = v } }
     /// Sets the chart type (`.line` or `.candle`).
     public func mode(_ v: LivelineMode) -> Self { with { $0.mode = v } }
+    /// Shows a native line/candle toggle at the end of the interval bar (opt-in).
+    /// The bar appears for the toggle even without `windows`. Pair with
+    /// ``onModeChange(_:)`` and drive ``mode(_:)`` from it.
+    public func modeToggle(_ v: Bool = true) -> Self { with { $0.modeToggle = v } }
+    /// Called with the chosen mode when the toggle is tapped. Drive ``mode(_:)`` from it.
+    public func onModeChange(_ f: @escaping (LivelineMode) -> Void) -> Self { with { $0.onModeChange = f } }
     /// Sets the OHLC candles (used when `mode == .candle`).
     public func candles(_ v: [LivelineCandle]) -> Self { with { $0.candles = v } }
     /// Sets the seconds per candle.
@@ -229,6 +237,18 @@ public struct Liveline: View {
             // window is set from config only when the window set first appears or
             // changes; after that the bar owns the selection, so SwiftUI re-applies
             // don't clobber the user's choice.
+            context.coordinator.onModeChange = c.onModeChange
+            if initial {
+                container.windowBar.onModeSelect = { [weak view] candle in
+                    view?.mode = candle ? .candle : .line
+                    context.coordinator.onModeChange?(candle ? .candle : .line)
+                }
+            }
+            container.windowBar.showModeToggle = c.modeToggle
+            container.windowBar.isCandle = c.mode == .candle
+            let barDark = c.theme != .light
+            if container.windowBar.isDark != barDark { container.windowBar.isDark = barDark }
+            container.windowBar.fontFamily = c.fontFamily
             if !c.windows.isEmpty {
                 let signature = c.windows.map { "\($0.label)|\($0.secs)" }.joined(separator: ",")
                 if signature != context.coordinator.windowSignature {
@@ -239,20 +259,15 @@ public struct Liveline: View {
                     view.windowSeconds = initial
                 }
                 container.windowBar.style = WindowBarView.Style(c.windowStyle)
-                let barDark = c.theme != .light
-                if container.windowBar.isDark != barDark { container.windowBar.isDark = barDark }
-                container.windowBar.fontFamily = c.fontFamily
-                if container.windowBar.isHidden {
-                    container.windowBar.isHidden = false
-                    container.setNeedsLayout()
-                }
             } else {
                 context.coordinator.windowSignature = nil
                 view.windowSeconds = c.window
-                if !container.windowBar.isHidden {
-                    container.windowBar.isHidden = true
-                    container.setNeedsLayout()
-                }
+            }
+            // The bar is shown when there are windows OR the mode toggle is on.
+            let showBar = !c.windows.isEmpty || c.modeToggle
+            if container.windowBar.isHidden == showBar {
+                container.windowBar.isHidden = !showBar
+                container.setNeedsLayout()
             }
             view.grid = c.grid
             view.badge = c.badge
@@ -311,6 +326,7 @@ public struct Liveline: View {
             var legendSignature: String?
             var legendIsDark: Bool?
             var windowSignature: String?
+            var onModeChange: ((LivelineMode) -> Void)?
         }
     }
 

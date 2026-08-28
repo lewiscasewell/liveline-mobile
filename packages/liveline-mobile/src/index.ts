@@ -78,6 +78,7 @@ const defaults: Required<DefaultableProps> = {
   degen: false,
   window: 30,
   windowStyle: 'default',
+  modeToggle: false,
   lineWidth: 2,
   lerpSpeed: 0.08,
   candleWidth: 1,

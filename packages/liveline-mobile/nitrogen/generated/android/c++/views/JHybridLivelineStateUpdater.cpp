@@ -139,6 +139,11 @@ void JHybridLivelineStateUpdater::updateViewProps(jni::alias_ref<jni::JClass> /*
     hybridView->setOnWindowChange(newProps->onWindowChange.get());
   }
   if (oldProps == nullptr
+        ? newProps->modeToggle.isProvided()
+        : !newProps->modeToggle.hasSameValue(oldProps->modeToggle)) {
+    hybridView->setModeToggle(newProps->modeToggle.get());
+  }
+  if (oldProps == nullptr
         ? newProps->onModeChange.isProvided()
         : !newProps->onModeChange.hasSameValue(oldProps->onModeChange)) {
     hybridView->setOnModeChange(newProps->onModeChange.get());

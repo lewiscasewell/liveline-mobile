@@ -48,6 +48,8 @@ namespace margelo::nitro::liveline {
       prototype.registerHybridSetter("windowStyle", &HybridLivelineSpec::setWindowStyle);
       prototype.registerHybridGetter("onWindowChange", &HybridLivelineSpec::getOnWindowChange);
       prototype.registerHybridSetter("onWindowChange", &HybridLivelineSpec::setOnWindowChange);
+      prototype.registerHybridGetter("modeToggle", &HybridLivelineSpec::getModeToggle);
+      prototype.registerHybridSetter("modeToggle", &HybridLivelineSpec::setModeToggle);
       prototype.registerHybridGetter("onModeChange", &HybridLivelineSpec::getOnModeChange);
       prototype.registerHybridSetter("onModeChange", &HybridLivelineSpec::setOnModeChange);
       prototype.registerHybridGetter("grid", &HybridLivelineSpec::getGrid);

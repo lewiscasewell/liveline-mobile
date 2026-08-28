@@ -27,6 +27,7 @@ public protocol HybridLivelineSpec_protocol: HybridObject, HybridView {
   var windows: [WindowOption]? { get set }
   var windowStyle: LivelineWindowStyle? { get set }
   var onWindowChange: ((_ secs: Double) -> Void)? { get set }
+  var modeToggle: Bool? { get set }
   var onModeChange: ((_ mode: LivelineMode) -> Void)? { get set }
   var grid: Bool? { get set }
   var badge: Bool? { get set }
