@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.AdapterView
@@ -152,6 +153,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var windowBar: WindowBarView
     private lateinit var legend: SeriesLegendView
     private lateinit var stressSpinner: Spinner
+    private lateinit var demoSpinner: Spinner
+
+    /** Colours the spinner's collapsed selected label to follow the theme (the
+     *  dropdown popup stays on its own light surface, so only the closed view
+     *  needs it — otherwise dark-mode text is invisible on the black background). */
+    private inner class ThemedSpinnerAdapter(items: List<String>) :
+        ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, items) {
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val v = super.getView(position, convertView, parent)
+            (v as? TextView)?.setTextColor(if (dark) Color.WHITE else Color.parseColor("#111111"))
+            return v
+        }
+    }
     private var currentIndex = 0
     private val handler = Handler(Looper.getMainLooper())
     private var dark = true
@@ -201,19 +215,19 @@ class MainActivity : AppCompatActivity() {
 
         val controls = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val themeBtn = Button(this).apply { text = "Dark"; setOnClickListener { dark = !dark; text = if (dark) "Dark" else "Light"; applyTheme() } }
-        val spinner = Spinner(this)
-        spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, demos.map { it.name })
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        demoSpinner = Spinner(this)
+        demoSpinner.adapter = ThemedSpinnerAdapter(demos.map { it.name })
+        demoSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: AdapterView<*>?, view: View?, pos: Int, id: Long) = selectDemo(pos)
             override fun onNothingSelected(p: AdapterView<*>?) {}
         }
         controls.addView(themeBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(12) })
-        controls.addView(spinner, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        controls.addView(demoSpinner, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         root.addView(controls, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(12) })
 
         // Sub-picker for the Stress tests demo's pattern (shown only for it).
         stressSpinner = Spinner(this).apply { visibility = View.GONE }
-        stressSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, stressDefs.map { it.title })
+        stressSpinner.adapter = ThemedSpinnerAdapter(stressDefs.map { it.title })
         stressSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: AdapterView<*>?, view: View?, pos: Int, id: Long) = selectStressVariant(pos)
             override fun onNothingSelected(p: AdapterView<*>?) {}
@@ -246,6 +260,12 @@ class MainActivity : AppCompatActivity() {
         chart.theme = demos[currentIndex].fixedTheme ?: (if (dark) LivelineTheme.DARK else LivelineTheme.LIGHT)
         windowBar.isDark = dark
         legend.isDark = dark
+        // Recolour the spinners' collapsed labels (post so the selected view exists).
+        val recolor = Runnable {
+            (demoSpinner.selectedView as? TextView)?.setTextColor(fg)
+            (stressSpinner.selectedView as? TextView)?.setTextColor(fg)
+        }
+        recolor.run(); demoSpinner.post(recolor)
     }
 
     private fun selectDemo(index: Int) {
