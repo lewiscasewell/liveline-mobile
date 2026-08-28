@@ -530,15 +530,13 @@ class LivelineView @JvmOverloads constructor(
         }
         val dotA = (1 - dim) * dotReveal
         if (dotA > 0.01) {
-            // Soft halo lifting the live dot off the line — light on a dark card,
-            // dark on a light one (a dark shadow would vanish on the near-black bg).
-            val s = if ((palette.background.r + palette.background.g + palette.background.b) / 3 < 0.5) 255 else 0
-            val shR = dp(11f)
+            val shR = dp(8f)
+            val shCy = endY + dp(2.5f)
             dotShadow.shader = RadialGradient(
-                endX, endY, shR,
-                Color.argb((70 * dotA).toInt().coerceIn(0, 255), s, s, s), Color.TRANSPARENT, Shader.TileMode.CLAMP,
+                endX, shCy, shR,
+                Color.argb((55 * dotA).toInt().coerceIn(0, 255), 0, 0, 0), Color.TRANSPARENT, Shader.TileMode.CLAMP,
             )
-            canvas.drawCircle(endX, endY, shR, dotShadow)
+            canvas.drawCircle(endX, shCy, shR, dotShadow)
         }
         dotOuter.alpha = (255 * dotA).toInt().coerceIn(0, 255)
         canvas.drawCircle(endX, endY, dp(6.5f), dotOuter)
