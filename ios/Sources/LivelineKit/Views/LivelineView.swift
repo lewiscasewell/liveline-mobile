@@ -175,6 +175,7 @@ public final class LivelineView: UIView {
         var label: String?
         var buffer: RingBuffer<LivelinePoint>
         var visible = true
+        var visAlpha: Double = 1  // eased toward visible ? 1 : 0, so lines fade in/out
         var lastCommitTime: Double = -.infinity
         var displayValue: Double = 0  // eased current value, for a smooth dot
         var displayInited = false

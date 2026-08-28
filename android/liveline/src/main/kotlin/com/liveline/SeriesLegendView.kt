@@ -44,7 +44,7 @@ class SeriesLegendView @JvmOverloads constructor(context: Context, attrs: Attrib
                 setPadding(dp(9f).toInt(), dp(4f).toInt(), dp(9f).toInt(), dp(4f).toInt())
                 setOnClickListener {
                     if (hidden.contains(item.id)) hidden.remove(item.id) else hidden.add(item.id)
-                    onToggle?.invoke(item.id); refresh()
+                    onToggle?.invoke(item.id); refresh(animated = true)
                 }
             }
             val dot = View(context).apply { background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(item.color) } }
@@ -58,10 +58,12 @@ class SeriesLegendView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun gray(alpha: Double): Int { val c = if (isDark) 255 else 0; return Color.argb((alpha * 255).toInt(), c, c, c) }
 
-    private fun refresh() {
+    private fun refresh(animated: Boolean = false) {
         background = GradientDrawable().apply { cornerRadius = dp(999f); setColor(gray(if (isDark) 0.04 else 0.03)) }
         for ((id, chip) in chips) {
-            chip.alpha = if (hidden.contains(id)) 0.35f else 1f
+            val target = if (hidden.contains(id)) 0.35f else 1f
+            if (animated) chip.animate().alpha(target).setDuration(180).start()
+            else { chip.animate().cancel(); chip.alpha = target }
             (chip.getChildAt(1) as? TextView)?.setTextColor(gray(if (isDark) 0.7 else 0.6))
         }
     }

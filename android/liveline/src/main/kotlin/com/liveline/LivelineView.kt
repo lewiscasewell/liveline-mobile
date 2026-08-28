@@ -155,7 +155,10 @@ class LivelineView @JvmOverloads constructor(
     // ── Multi-series ──────────────────────────────────────────────────────────
     /** One equal-peer line for multi-series mode. */
     class SeriesInput(val id: String, val color: Int, val label: String?, val data: List<LivelinePoint>)
-    private class Series(val id: String, val color: Int, val label: String?, val buffer: MutableList<LivelinePoint>, var visible: Boolean, var displayValue: Double, var lastCommit: Double, var labelY: Float = 0f)
+    private class Series(val id: String, val color: Int, val label: String?, val buffer: MutableList<LivelinePoint>, var visible: Boolean, var displayValue: Double, var lastCommit: Double, var labelY: Float = 0f) {
+        // Eased toward visible ? 1 : 0, so toggled lines fade in/out.
+        var visAlpha: Double = if (visible) 1.0 else 0.0
+    }
     private val series = ArrayList<Series>()
     val isMultiSeries: Boolean get() = series.isNotEmpty()
 
@@ -624,10 +627,10 @@ class LivelineView @JvmOverloads constructor(
         val winBuffer = 0.1
         val rightEdge = now + span * winBuffer; val leftEdge = rightEdge - span
 
-        for (s in series) { val cur = s.buffer.lastOrNull()?.value ?: s.displayValue; s.displayValue = Clock.lerp(s.displayValue, cur, 0.20, dt) }
+        for (s in series) { val cur = s.buffer.lastOrNull()?.value ?: s.displayValue; s.displayValue = Clock.lerp(s.displayValue, cur, 0.20, dt); s.visAlpha = Clock.lerp(s.visAlpha, if (s.visible) 1.0 else 0.0, 0.18, dt) }
 
         val values = ArrayList<Double>()
-        for (s in series) if (s.visible) { for (p in s.buffer) if (p.time in leftEdge..now) values.add(p.value); values.add(s.displayValue) }
+        for (s in series) if (s.visAlpha > 0.01) { for (p in s.buffer) if (p.time in leftEdge..now) values.add(p.value); values.add(s.displayValue) }
         if (values.isEmpty()) return
         domain.update(AutoRange.compute(values, values.last(), null, exaggerate), 0.23, dt, chartH.toDouble())
 
@@ -642,11 +645,11 @@ class LivelineView @JvmOverloads constructor(
         drawTimeAxis(canvas, w, padL, padR, padT + chartH, leftEdge, rightEdge, span, dt)
 
         // Non-overlapping endpoint-label y positions.
-        val order = series.indices.filter { series[it].visible }.sortedBy { mtoY(series[it].displayValue) }
+        val order = series.indices.filter { series[it].visAlpha > 0.01 }.sortedBy { mtoY(series[it].displayValue) }
         var lastY = -Float.MAX_VALUE; val minGap = dp(15f)
         for (idx in order) { var y = mtoY(series[idx].displayValue); if (y - lastY < minGap) y = lastY + minGap; series[idx].labelY = y; lastY = y }
 
-        for (s in series) if (s.visible) drawOneSeries(canvas, s, padR, now)
+        for (s in series) if (s.visAlpha > 0.01) drawOneSeries(canvas, s, padR, now, s.visAlpha)
 
         // Left-edge fade — over lines AND time labels (full height), like iOS.
         val fadeW = dp(56f)
@@ -656,10 +659,10 @@ class LivelineView @JvmOverloads constructor(
         if (scrubAmount > 0.01) drawMultiSeriesHover(canvas, now, scrubAmount)
     }
 
-    private fun drawOneSeries(canvas: Canvas, s: Series, padR: Float, now: Double) {
+    private fun drawOneSeries(canvas: Canvas, s: Series, padR: Float, now: Double, vis: Double = 1.0) {
         val col = s.color.toRgba()
         val endY = mtoY(s.displayValue)
-        dashPaint.color = col.withAlpha(0.35).toInt()
+        dashPaint.color = col.withAlpha(0.35 * vis).toInt()
         canvas.drawLine(msPadL, endY, msPadL + msChartW, endY, dashPaint)
 
         val pts = ArrayList<Point>()
@@ -670,12 +673,12 @@ class LivelineView @JvmOverloads constructor(
         if (pts.size >= 2) {
             val path = Path(); path.moveTo(pts[0].x.toFloat(), pts[0].y.toFloat())
             for (seg in PathBuilder.monotoneSegments(pts)) path.cubicTo(seg.control1.x.toFloat(), seg.control1.y.toFloat(), seg.control2.x.toFloat(), seg.control2.y.toFloat(), seg.end.x.toFloat(), seg.end.y.toFloat())
-            linePaint.color = col.toInt(); linePaint.strokeWidth = dp(lineWidth.toFloat())
+            linePaint.color = col.withAlpha(col.a * vis).toInt(); linePaint.strokeWidth = dp(lineWidth.toFloat())
             canvas.drawPath(path, linePaint)
         }
-        dotOuter.alpha = 255; canvas.drawCircle(dotX, endY, dp(6.5f), dotOuter)
-        dotInner.color = col.toInt(); canvas.drawCircle(dotX, endY, dp(3.5f), dotInner)
-        if (!s.label.isNullOrEmpty()) { seriesLabelPaint.color = col.toInt(); canvas.drawText(s.label, dotX + dp(10f), s.labelY + dp(4.5f), seriesLabelPaint) }
+        dotOuter.alpha = (255 * vis).toInt().coerceIn(0, 255); canvas.drawCircle(dotX, endY, dp(6.5f), dotOuter)
+        dotInner.color = col.withAlpha(col.a * vis).toInt(); canvas.drawCircle(dotX, endY, dp(3.5f), dotInner)
+        if (!s.label.isNullOrEmpty()) { seriesLabelPaint.color = col.withAlpha(col.a * vis).toInt(); canvas.drawText(s.label, dotX + dp(10f), s.labelY + dp(4.5f), seriesLabelPaint) }
     }
 
     private fun drawMultiSeriesHover(canvas: Canvas, now: Double, opacity: Double) {

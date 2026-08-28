@@ -81,20 +81,27 @@
             setNeedsLayout()
         }
 
-        private func applyColors() {
+        private func applyColors(animated: Bool = false) {
             track.backgroundColor = UIColor(white: isDark ? 1 : 0, alpha: isDark ? 0.03 : 0.02)
             let text = UIColor(white: isDark ? 1 : 0, alpha: isDark ? 0.7 : 0.6)
             for chip in chips {
                 let on = !hiddenIds.contains(chip.id)
-                chip.view.alpha = on ? 1 : 0.35
                 chip.label.textColor = text
+                let target: CGFloat = on ? 1 : 0.35
+                if animated {
+                    UIView.animate(
+                        withDuration: 0.22, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut]
+                    ) { chip.view.alpha = target }
+                } else {
+                    chip.view.alpha = target
+                }
             }
         }
 
         @objc private func chipTapped(_ g: UITapGestureRecognizer) {
             guard let view = g.view, let chip = chips.first(where: { $0.view === view }) else { return }
             if hiddenIds.contains(chip.id) { hiddenIds.remove(chip.id) } else { hiddenIds.insert(chip.id) }
-            applyColors()
+            applyColors(animated: true)
             onToggle?(chip.id)
         }
 

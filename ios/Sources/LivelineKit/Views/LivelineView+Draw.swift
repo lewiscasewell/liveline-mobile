@@ -108,11 +108,14 @@ extension LivelineView {
         let reveal = chartReveal
         let chartH = h - pad.top - pad.bottom
 
-        // Ease each series' displayed value toward its latest, for a smooth dot.
+        // Ease each series' displayed value toward its latest (smooth dot), and
+        // its visibility alpha toward on/off so toggled lines fade rather than snap.
         for i in series.indices {
             let cur = series[i].buffer.last?.value ?? series[i].displayValue
             series[i].displayValue = Clock.lerp(
                 current: series[i].displayValue, target: cur, speed: lerpSpeed + 0.12, dt: dt)
+            series[i].visAlpha = Clock.lerp(
+                current: series[i].visAlpha, target: series[i].visible ? 1 : 0, speed: 0.18, dt: dt)
         }
 
         let winBuffer = 0.1  // right-edge room for endpoint dots + labels
@@ -120,8 +123,10 @@ extension LivelineView {
         let leftEdge = rightEdge - displayWindow
 
         // Shared Y-range over every visible series' visible points.
+        // Include fading-out series in the range until they're gone, so the axis
+        // doesn't jump the instant a line is toggled.
         var values = [Double]()
-        for s in series where s.visible {
+        for s in series where s.visAlpha > 0.01 {
             for i in 0..<s.buffer.count {
                 let p = s.buffer[i]
                 if p.time >= leftEdge, p.time <= now { values.append(p.value) }
@@ -147,8 +152,8 @@ extension LivelineView {
         // Non-overlapping endpoint-label positions.
         resolveSeriesLabelYs(layout: layout)
 
-        for s in series where s.visible {
-            drawOneSeries(ctx, s, layout: layout, now: now, nowMs: nowMs, reveal: reveal)
+        for s in series where s.visAlpha > 0.01 {
+            drawOneSeries(ctx, s, layout: layout, now: now, nowMs: nowMs, reveal: reveal, vis: s.visAlpha)
         }
 
         drawLeftEdgeFade(ctx, w: w, h: h, padLeft: pad.left)
@@ -229,10 +234,11 @@ extension LivelineView {
     }
 
     private func drawOneSeries(
-        _ ctx: CGContext, _ s: Series, layout: Layout, now: Double, nowMs: Double, reveal: Double
+        _ ctx: CGContext, _ s: Series, layout: Layout, now: Double, nowMs: Double, reveal: Double,
+        vis: Double = 1
     ) {
         let endY = layout.toY(s.displayValue)
-        let alpha = min(reveal, 1)
+        let alpha = min(reveal, 1) * vis
 
         // Dashed baseline at the current value.
         ctx.saveGState()
@@ -270,7 +276,7 @@ extension LivelineView {
         // Endpoint dot (with pulse).
         if reveal > 0.3 {
             ctx.saveGState()
-            ctx.setAlpha(CGFloat((reveal - 0.3) / 0.7))
+            ctx.setAlpha(CGFloat((reveal - 0.3) / 0.7 * vis))
             drawDot(
                 ctx, at: CGPoint(x: dotX, y: endY), showPulse: pulse && reveal > 0.6,
                 scrubDim: 0, nowMs: nowMs, color: s.color)
@@ -281,7 +287,7 @@ extension LivelineView {
         if let label = s.label, !label.isEmpty, reveal > 0.4 {
             drawText(
                 label, x: dotX + 10, centerY: s.labelY, font: valueFont(),
-                color: s.color.withAlpha(s.color.a * min((reveal - 0.4) / 0.6, 1)),
+                color: s.color.withAlpha(s.color.a * min((reveal - 0.4) / 0.6, 1) * vis),
                 align: .left)
         }
     }
