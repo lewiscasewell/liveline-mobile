@@ -369,14 +369,15 @@ class LivelineView @JvmOverloads constructor(
             return
         }
         if (buffer.size < 2) {
-            if (buffer.isEmpty() && !loading && emptyText.isNotEmpty()) {
-                labelPaint.textAlign = Paint.Align.CENTER
-                labelPaint.textSize = dp(13f)
-                labelPaint.color = palette.timeLabel.withAlpha(palette.timeLabel.a * 0.9).toInt()
-                canvas.drawText(emptyText, w / 2f, padT + chartH / 2f, labelPaint)
-                labelPaint.textAlign = Paint.Align.LEFT
-                labelPaint.textSize = dp(11f)
-            }
+            // No data: loading wins. Show the breathing squiggle while loading,
+            // crossfading to the drifting "no data" wave + label otherwise (iOS parity).
+            if (loadingAlpha > 0.01) drawLoadingWave(canvas, w, padL, padR, padT, chartH, nowMs, loadingAlpha)
+            val emptyA = 1.0 - loadingAlpha
+            if (emptyA > 0.01) drawEmptyWave(canvas, w, padL, padR, padT, chartH, nowMs, emptyA)
+            // Left-edge fade so the waves dissolve into the card edge (matches iOS).
+            val fadeW = dp(56f)
+            fadePaint.shader = LinearGradient(padL, 0f, padL + fadeW, 0f, palette.background.toInt(), palette.background.withAlpha(0.0).toInt(), Shader.TileMode.CLAMP)
+            canvas.drawRect(0f, 0f, padL + fadeW, h, fadePaint)
             return
         }
 
@@ -847,6 +848,65 @@ class LivelineView @JvmOverloads constructor(
         }
     }
 
+    // ── No-data states (loading squiggle + drifting empty wave) ──────────────────
+
+    private fun loadingWave(t: Double, scroll: Double): Double =
+        sin(t * 3.1 + scroll) * 0.6 + sin(t * 6.3 + scroll * 1.25) * 0.28 + sin(t * 1.7 + scroll * 0.6) * 0.16
+
+    /** A breathing synthetic squiggle shown while loading with no data yet. */
+    private fun drawLoadingWave(canvas: Canvas, w: Float, padL: Float, padR: Float, padT: Float, chartH: Float, nowMs: Double, alpha: Double) {
+        val centerY = padT + chartH / 2f
+        val amplitude = chartH * 0.07
+        val scroll = nowMs * 0.001
+        val breath = 0.22 + 0.08 * sin(nowMs / 1200.0 * PI)
+        val left = padL; val right = w - padR
+        val pts = ArrayList<Point>()
+        val steps = 64
+        for (i in 0..steps) {
+            val t = i.toDouble() / steps
+            val x = left + t.toFloat() * (right - left)
+            val y = centerY + amplitude * (sin(t * 9.4 + scroll) * 0.55 + sin(t * 15.7 + scroll * 1.3) * 0.3 + sin(t * 4.2 + scroll * 0.7) * 0.15)
+            pts.add(Point(x.toDouble(), y.toDouble()))
+        }
+        val path = Path(); path.moveTo(pts[0].x.toFloat(), pts[0].y.toFloat())
+        for (s in PathBuilder.monotoneSegments(pts)) path.cubicTo(s.control1.x.toFloat(), s.control1.y.toFloat(), s.control2.x.toFloat(), s.control2.y.toFloat(), s.end.x.toFloat(), s.end.y.toFloat())
+        linePaint.color = palette.line.withAlpha(breath * alpha).toInt()
+        linePaint.strokeWidth = dp(lineWidth.toFloat())
+        canvas.drawPath(path, linePaint)
+        linePaint.color = palette.line.toInt()
+    }
+
+    /** A gently drifting flat-ish wave + label when there's no data and not loading. */
+    private fun drawEmptyWave(canvas: Canvas, w: Float, padL: Float, padR: Float, padT: Float, chartH: Float, nowMs: Double, alpha: Double) {
+        val centerY = padT + chartH / 2f
+        val amplitude = chartH * 0.05
+        val scroll = nowMs * 0.0006
+        val left = padL; val right = w - padR
+        val pts = ArrayList<Point>()
+        val steps = 48
+        for (i in 0..steps) {
+            val t = i.toDouble() / steps
+            val x = left + t.toFloat() * (right - left)
+            pts.add(Point(x.toDouble(), (centerY + amplitude * loadingWave(t, scroll)).toDouble()))
+        }
+        val path = Path(); path.moveTo(pts[0].x.toFloat(), pts[0].y.toFloat())
+        for (s in PathBuilder.monotoneSegments(pts)) path.cubicTo(s.control1.x.toFloat(), s.control1.y.toFloat(), s.control2.x.toFloat(), s.control2.y.toFloat(), s.end.x.toFloat(), s.end.y.toFloat())
+        linePaint.color = palette.gridLine.withAlpha(palette.gridLine.a * alpha).toInt()
+        linePaint.strokeWidth = dp(1f)
+        canvas.drawPath(path, linePaint)
+        linePaint.color = palette.line.toInt()
+        linePaint.strokeWidth = dp(lineWidth.toFloat())
+        if (emptyText.isNotEmpty()) {
+            labelPaint.textAlign = Paint.Align.CENTER
+            labelPaint.textSize = dp(13f)
+            labelPaint.color = palette.gridLabel.withAlpha(palette.gridLabel.a * alpha).toInt()
+            canvas.drawText(emptyText, w / 2f, centerY - dp(10f), labelPaint)
+            labelPaint.textAlign = Paint.Align.LEFT
+            labelPaint.textSize = dp(11f)
+            labelPaint.color = palette.gridLabel.toInt()
+        }
+    }
+
     // ── Candle mode ─────────────────────────────────────────────────────────────
     private fun drawCandleFrame(canvas: Canvas, w: Float, padL: Float, padR: Float, padT: Float, chartH: Float, span: Double, now: Double, leftEdge: Double, rightEdge: Double, nowMs: Double, dt: Double, grow: Double = 1.0) {
         val liveT = liveCandle?.time
@@ -949,6 +1009,16 @@ class LivelineView @JvmOverloads constructor(
                     canvas.drawText(text, tx, ty, tipPaint)
                     tx += tipPaint.measureText(text)
                 }
+            }
+        }
+
+        // Dashed live-close reference line across the chart (matches iOS).
+        liveCandle?.let { lc ->
+            val cy = toY(lc.close)
+            if (cy >= padT && cy <= padT + chartH) {
+                val cc = blend(bear, bull, liveBull)
+                dashPaint.color = cc.withAlpha((1.0 - scrubAmount * 0.3) * 0.4).toInt()
+                canvas.drawLine(padL, cy, w - padR, cy, dashPaint)
             }
         }
 
