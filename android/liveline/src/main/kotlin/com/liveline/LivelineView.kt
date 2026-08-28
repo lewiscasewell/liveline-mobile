@@ -344,7 +344,7 @@ class LivelineView @JvmOverloads constructor(
         if (isMultiSeries) { drawMultiSeries(canvas, w, h, span, now = System.currentTimeMillis() / 1000.0, dt, nowMs); return }
 
         val padL = padLeftOverride?.let { dp(it.toFloat()) } ?: dp(8f)
-        val padR = padRightOverride?.let { dp(it.toFloat()) } ?: dp(64f)
+        val padR = padRightOverride?.let { dp(it.toFloat()) } ?: adaptiveRightPad()
         val padT = padTopOverride?.let { dp(it.toFloat()) } ?: (if (showValue) dp(40f) else dp(12f))
         val padB = padBottomOverride?.let { dp(it.toFloat()) } ?: dp(30f)
         val chartW = w - padL - padR; val chartH = h - padT - padB
@@ -570,6 +570,20 @@ class LivelineView @JvmOverloads constructor(
         chevrons(-1f, arrowUp); chevrons(1f, arrowDown)
     }
 
+    /**
+     * Right gutter width sized to fit the badge pill AND the value labels, so
+     * large numbers (e.g. $100,000.00) don't clip. The badge font is the widest
+     * thing in the gutter, and its pill overhangs the chart edge by ~padX+tail
+     * (+ text width). We size from the axis extent (stable frame-to-frame) rather
+     * than the live value, so the gutter doesn't jitter as the value crosses a
+     * digit boundary (e.g. 9,999 → 10,000).
+     */
+    private fun adaptiveRightPad(): Float {
+        val samples = listOf(fmt(domain.maxVal), fmt(domain.minVal), fmt(displayValue))
+        val widest = samples.maxOf { badgeTextPaint.measureText(it) }
+        return max(dp(64f), widest + dp(20f))
+    }
+
     private fun drawBadge(canvas: Canvas, endX: Float, endY: Float, w: Float, padR: Float, padT: Float, chartH: Float, overrideColor: Int? = null) {
         val label = fmt(displayValue)
         val textW = badgeTextPaint.measureText(label)
@@ -668,7 +682,7 @@ class LivelineView @JvmOverloads constructor(
     // ── Multi-series (ported from Swift drawMultiSeries) ────────────────────────
     private fun drawMultiSeries(canvas: Canvas, w: Float, h: Float, span: Double, now: Double, dt: Double, nowMs: Double) {
         val padL = padLeftOverride?.let { dp(it.toFloat()) } ?: dp(8f)
-        val padR = padRightOverride?.let { dp(it.toFloat()) } ?: dp(64f)
+        val padR = padRightOverride?.let { dp(it.toFloat()) } ?: adaptiveRightPad()
         val padT = padTopOverride?.let { dp(it.toFloat()) } ?: dp(12f)
         val padB = padBottomOverride?.let { dp(it.toFloat()) } ?: dp(30f)
         val chartW = w - padL - padR; val chartH = h - padT - padB

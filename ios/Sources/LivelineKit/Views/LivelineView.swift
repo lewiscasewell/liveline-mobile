@@ -666,7 +666,17 @@ public final class LivelineView: UIView {
     }
 
     private func padding() -> (top: CGFloat, right: CGFloat, bottom: CGFloat, left: CGFloat) {
-        let right: CGFloat = badge ? 80 : (grid ? 54 : 12)
+        // The right gutter holds the badge pill and the value labels, both of
+        // which scale with digit count — so size it to fit, or large numbers
+        // (e.g. $100,000.00) clip. See ``adaptiveRight``.
+        let right: CGFloat
+        if badge {
+            right = max(80, adaptiveRight(font: valueFont(), extra: K.badgePadX + 8))
+        } else if grid {
+            right = max(54, adaptiveRight(font: labelFont(), extra: 6))
+        } else {
+            right = 12
+        }
         // Reserve a row above the plot for the showValue overlay (web parity).
         let top: CGFloat = showValue ? 40 : 12
         return (
@@ -675,6 +685,20 @@ public final class LivelineView: UIView {
             padBottomOverride.map { CGFloat($0) } ?? 28,
             padLeftOverride.map { CGFloat($0) } ?? 12
         )
+    }
+
+    /// Widest formatted value (badge or label) + `extra` overhang. Uses an
+    /// "8"-digit template of the axis extent (stable frame-to-frame) rather than
+    /// the live value, so the gutter doesn't jitter as the value crosses a digit
+    /// boundary (e.g. 9,999 → 10,000).
+    private func adaptiveRight(font: UIFont, extra: CGFloat) -> CGFloat {
+        let widest = [domain.maxVal, domain.minVal, displayValue]
+            .map { v -> CGFloat in
+                let template = String(formatValue(v).map { $0.isNumber ? "8" : $0 })
+                return (template as NSString).size(withAttributes: [.font: font]).width
+            }
+            .max() ?? 0
+        return widest + extra + 4
     }
 
     /// The right-edge window buffer (fraction of the span). In line mode with
