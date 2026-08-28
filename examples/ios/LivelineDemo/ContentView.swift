@@ -144,20 +144,25 @@ func randn() -> Double {
 struct TrendWalk {
     private(set) var value: Double
     private var velocity = 0.0
-    private let center, vol, momentum, reversion: Double
+    private let center, vol, momentum, reversion, drift: Double
 
-    init(center: Double, vol: Double, momentum: Double = 0.94, reversion: Double = 0.01) {
+    init(
+        center: Double, vol: Double, momentum: Double = 0.94, reversion: Double = 0.01,
+        drift: Double = 0
+    ) {
         self.center = center
         self.vol = vol
         self.momentum = momentum
         self.reversion = reversion
+        self.drift = drift
         self.value = center
     }
 
-    /// Advance one step and return the new value.
+    /// Advance one step and return the new value. `drift` biases the velocity, so
+    /// a positive value trends the walk upward (used to make degen mostly moon).
     mutating func step() -> Double {
         let kick = vol * (1 - momentum * momentum).squareRoot()
-        velocity = velocity * momentum + randn() * kick
+        velocity = velocity * momentum + randn() * kick + drift
         value += velocity + (center - value) * reversion
         return value
     }
@@ -198,10 +203,11 @@ final class Walk: ObservableObject {
 
     init(
         center: Double = 100, vol: Double = 0.55, momentum: Double = 0.94, reversion: Double = 0.01,
-        interval: Double = 0.05
+        interval: Double = 0.05, drift: Double = 0
     ) {
         self.interval = interval
-        var w = TrendWalk(center: center, vol: vol, momentum: momentum, reversion: reversion)
+        var w = TrendWalk(
+            center: center, vol: vol, momentum: momentum, reversion: reversion, drift: drift)
         self.seed = w.seed()
         self.value = w.value
         self.walk = w
@@ -287,12 +293,16 @@ private struct ReferenceLineCard: View {
 }
 
 private struct HeartRateCard: View {
-    @StateObject private var walk = Walk(center: 62, vol: 0.3, momentum: 0.8, reversion: 0.02)
+    // A realistic resting rate: updates about once a second, low volatility and
+    // strong mean-reversion so it holds ~68 bpm with only small beat-to-beat
+    // drift — which `exaggerate` then magnifies to fill the height.
+    @StateObject private var walk = Walk(
+        center: 68, vol: 0.5, momentum: 0.5, reversion: 0.06, interval: 1.0)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
             title: "Heart rate (exaggerate + formatter)",
-            subtitle: "exaggerate tightens the Y-axis so tiny moves fill the height. Custom bpm formatter."
+            subtitle: "exaggerate tightens the Y-axis so the small bpm variation fills the height. Custom bpm formatter."
         ) {
             Liveline(data: walk.seed, value: walk.value)
                 .color(Color(red: 0.9, green: 0.3, blue: 0.24))
@@ -325,7 +335,8 @@ final class StatesModel: ObservableObject {
 
     private func step() {
         t += 0.05
-        if t >= 3 { loading = false }
+        // Rotate loading ↔ loaded every 9s so the state is observable on a loop.
+        loading = t.truncatingRemainder(dividingBy: 18) < 9
         value = walk.step()
     }
 
@@ -348,7 +359,9 @@ private struct SurfaceCard: View {
 }
 
 private struct DegenCard: View {
-    @StateObject private var walk = Walk(center: 420, vol: 3)
+    // A mostly-moon feed: an upward drift + long momentum so it keeps pumping,
+    // firing the degen shake/sparks often.
+    @StateObject private var walk = Walk(center: 420, vol: 3, momentum: 0.9, reversion: 0.006, drift: 0.12)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
@@ -373,7 +386,7 @@ private struct StatesCard: View {
     var body: some View {
         Card(
             title: "States",
-            subtitle: "loading shows a breathing line for 3s, then morphs into the backfilled chart."
+            subtitle: "loading toggles every 9s: a breathing line, then it morphs into the backfilled chart."
         ) {
             Liveline(data: model.seed, value: model.value)
                 .color(Color(red: 0.29, green: 0.68, blue: 0.4))
@@ -675,15 +688,17 @@ private struct StressCard: View {
     @StateObject private var feed = StressFeed(.wild)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
-        Card(title: "Stress tests", subtitle: feed.variant.detail) {
-            VStack(spacing: 8) {
-                Picker(
-                    "Pattern",
-                    selection: Binding(get: { feed.variant }, set: { feed.change($0) })
-                ) {
-                    ForEach(Stress.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.menu)
+        // The pattern picker sits above the card, not inside it — over a wild-
+        // swinging chart the menu was awkward to hit.
+        VStack(alignment: .leading, spacing: 8) {
+            Picker(
+                "Pattern",
+                selection: Binding(get: { feed.variant }, set: { feed.change($0) })
+            ) {
+                ForEach(Stress.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.menu)
+            Card(title: "Stress tests", subtitle: feed.variant.detail) {
                 Liveline(data: feed.seed, value: feed.value)
                     .color(Color(red: 0.9, green: 0.3, blue: 0.24))
                     .exaggerate(feed.variant.exaggerate)
@@ -706,8 +721,8 @@ final class PredictionModel: ObservableObject {
 
     private static let defs: [(id: String, color: UIColor, label: String)] = [
         ("yes", UIColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 1), "Yes"),
-        ("no", UIColor(red: 0.94, green: 0.27, blue: 0.27, alpha: 1), "No"),
         ("maybe", UIColor(red: 0.96, green: 0.62, blue: 0.07, alpha: 1), "Maybe"),
+        ("no", UIColor(red: 0.94, green: 0.27, blue: 0.27, alpha: 1), "No"),
     ]
 
     init() {
@@ -727,11 +742,12 @@ final class PredictionModel: ObservableObject {
         }
     }
 
-    /// Deterministic so backfill and live feed line up seamlessly.
+    /// Deterministic so backfill and live feed line up seamlessly. A realistic
+    /// lopsided market: Yes leads at ~70–90%, then Maybe, then No.
     static func market(_ t: Double) -> [String: Double] {
-        let yes = 45 + sin(t * 0.35) * 11 + sin(t * 0.9) * 3
-        let no = 35 + cos(t * 0.3) * 9 + cos(t * 0.8) * 2.5
-        let maybe = 30 + sin(t * 0.25 + 1) * 6 + cos(t * 0.7) * 2
+        let yes = 80 + sin(t * 0.18) * 8 + sin(t * 0.6) * 2
+        let maybe = 13 + sin(t * 0.22 + 1) * 3
+        let no = 7 + cos(t * 0.28) * 2
         let sum = yes + no + maybe
         return ["yes": yes / sum * 100, "no": no / sum * 100, "maybe": maybe / sum * 100]
     }

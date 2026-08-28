@@ -111,8 +111,11 @@ const Reference: React.FC<DemoProps> = ({ dark }) => {
 }
 
 const HeartRate: React.FC<DemoProps> = ({ dark }) => {
+  // ~1 update/sec, low volatility + strong reversion so it holds ~68 bpm with
+  // only small beat-to-beat drift (which `exaggerate` then magnifies).
   const { seed, attachHybridRef } = useWalkFeed(
-    () => createWalk({ center: 62, vol: 0.3, momentum: 0.8, reversion: 0.02, min: 48, max: 90 }),
+    () => createWalk({ center: 68, vol: 0.5, momentum: 0.5, reversion: 0.06, min: 55, max: 85 }),
+    1,
   )
   return (
     <Liveline
@@ -311,8 +314,10 @@ const Orderbook: React.FC<DemoProps> = ({ dark }) => {
 }
 
 const Degen: React.FC<DemoProps> = ({ dark }) => {
+  // A mostly-moon feed: upward drift + long momentum so it keeps pumping and
+  // fires the degen shake/sparks often.
   const { seed, attachHybridRef } = useWalkFeed(
-    () => createWalk({ center: 420, vol: 3 }),
+    () => createWalk({ center: 420, vol: 3, momentum: 0.9, reversion: 0.006, drift: 0.12 }),
   )
   return (
     <Liveline
@@ -333,8 +338,9 @@ const Loading: React.FC<DemoProps> = ({ dark }) => {
   const { seed, attachHybridRef } = useWalkFeed(() => createWalk({ center: 210, vol: 0.9 }))
   const [loading, setLoading] = useState(true)
   useEffect(() => {
-    const id = setTimeout(() => setLoading(false), 3000)
-    return () => clearTimeout(id)
+    // Rotate loading ↔ loaded every 9s so the state is observable on a loop.
+    const id = setInterval(() => setLoading((v) => !v), 9000)
+    return () => clearInterval(id)
   }, [])
   return (
     <Liveline
@@ -400,7 +406,7 @@ const DEMOS: Demo[] = [
   { id: 'prediction', title: 'Prediction market', subtitle: 'Multi-series: three outcomes summing to 100%. Tap a chip to toggle a line.', Comp: Prediction },
   { id: 'orderbook', title: 'Orderbook', subtitle: 'Bid/ask sizes float up behind the price line — green bids, red asks.', Comp: Orderbook },
   { id: 'degen', title: 'Degen', subtitle: 'Chart shake + sparks on strong up-moves, with momentum arrows.', Comp: Degen },
-  { id: 'loading', title: 'Loading', subtitle: 'A breathing line for 3s, then it morphs into the backfilled chart.', Comp: Loading },
+  { id: 'loading', title: 'Loading', subtitle: 'Toggles every 9s: a breathing line, then it morphs into the backfilled chart.', Comp: Loading },
   { id: 'paused', title: 'Paused', subtitle: 'Auto-toggles every 4s. Data keeps arriving; on resume it catches up.', Comp: Paused },
   { id: 'stale', title: 'Stale feed', subtitle: 'The feed stops after 6s. The chart keeps scrolling; the line runs flat.', Comp: Stale },
 ]

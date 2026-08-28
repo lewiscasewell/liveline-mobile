@@ -50,6 +50,8 @@ class MainActivity : AppCompatActivity() {
         val momentum: Double = 0.94,
         /** Pull back toward `center` each step. */
         val reversion: Double = 0.01,
+        /** Positive biases the velocity, trending the walk upward (degen moon). */
+        val drift: Double = 0.0,
         val intervalMs: Long = 100,
         val kind: Kind = Kind.WALK,
         val window: Double = 30.0,
@@ -67,7 +69,8 @@ class MainActivity : AppCompatActivity() {
             it.accent = Color.parseColor("#8b5cf6"); it.valuePrefix = "$"; it.valueDecimals = 0
             it.referenceLine = ReferenceLine(67_500.0, "Above \$67,500")
         },
-        Demo("Heart rate", "Exaggerated Y, bpm.", center = 62.0, vol = 0.3, momentum = 0.8, reversion = 0.02) {
+        // ~1 update/sec, low volatility + strong reversion so it holds ~68 bpm.
+        Demo("Heart rate", "Exaggerated Y, bpm.", center = 68.0, vol = 0.5, momentum = 0.5, reversion = 0.06, intervalMs = 1000) {
             it.accent = Color.parseColor("#e5493d"); it.exaggerate = true; it.valueSuffix = " bpm"; it.valueDecimals = 0
         },
         Demo("CPU usage", "Low baseline + spikes.", center = 14.0, kind = Kind.SPIKES) {
@@ -86,14 +89,15 @@ class MainActivity : AppCompatActivity() {
         Demo("Orderbook", "Bid/ask sizes stream up behind the line.", center = 62.0, vol = 0.45, kind = Kind.ORDERBOOK, window = 45.0) {
             it.valueSuffix = "¢"; it.valueDecimals = 0
         },
-        Demo("Degen", "Shake + sparks on strong up-moves.", center = 420.0, vol = 3.0) {
+        // A mostly-moon feed: upward drift + long momentum so it keeps pumping.
+        Demo("Degen", "Shake + sparks on strong up-moves.", center = 420.0, vol = 3.0, momentum = 0.9, reversion = 0.006, drift = 0.12) {
             it.momentum = Momentum.AUTO; it.degen = true; it.badgeVariant = BadgeVariant.ACCENT
             it.accent = Color.parseColor("#f0731a"); it.valueDecimals = 1
         },
         Demo("Prediction market", "Three outcomes → 100%. Tap a chip to toggle.", kind = Kind.MULTI, window = 45.0) {
             it.valueSuffix = "%"; it.valueDecimals = 0
         },
-        Demo("Loading", "Breathing, then data.", kind = Kind.LOADING) {},
+        Demo("Loading", "Breathing ↔ data, every 9s.", kind = Kind.LOADING) {},
         Demo("Paused", "Freezes, then catches up.", center = 160.0, vol = 0.7, kind = Kind.PAUSED) {
             it.accent = Color.parseColor("#4aad66")
         },
@@ -123,9 +127,11 @@ class MainActivity : AppCompatActivity() {
     private var candleVel = 0.0
 
     /** Advance `v` one trending step and return it. */
-    private fun trendStep(center: Double, vol: Double, momentum: Double, reversion: Double): Double {
+    private fun trendStep(
+        center: Double, vol: Double, momentum: Double, reversion: Double, drift: Double = 0.0
+    ): Double {
         val kick = vol * sqrt(1 - momentum * momentum)
-        velocity = velocity * momentum + rng.nextGaussian() * kick
+        velocity = velocity * momentum + rng.nextGaussian() * kick + drift
         v += velocity + (center - v) * reversion
         return v
     }
@@ -212,8 +218,8 @@ class MainActivity : AppCompatActivity() {
             legend.visibility = View.VISIBLE; legend.isDark = dark
             val defs = listOf(
                 Triple("yes", Color.parseColor("#3b82f6"), "Yes"),
-                Triple("no", Color.parseColor("#ef4444"), "No"),
                 Triple("maybe", Color.parseColor("#f59e0b"), "Maybe"),
+                Triple("no", Color.parseColor("#ef4444"), "No"),
             )
             val nowSec = System.currentTimeMillis() / 1000.0
             val n = 150
@@ -243,10 +249,11 @@ class MainActivity : AppCompatActivity() {
         startFeed(demo)
     }
 
+    // A realistic lopsided market: Yes leads at ~70–90%, then Maybe, then No.
     private fun market(t: Double): Map<String, Double> {
-        val yes = 45 + sin(t * 0.35) * 11 + sin(t * 0.9) * 3
-        val no = 35 + cos(t * 0.3) * 9 + cos(t * 0.8) * 2.5
-        val maybe = 30 + sin(t * 0.25 + 1) * 6 + cos(t * 0.7) * 2
+        val yes = 80 + sin(t * 0.18) * 8 + sin(t * 0.6) * 2
+        val maybe = 13 + sin(t * 0.22 + 1) * 3
+        val no = 7 + cos(t * 0.28) * 2
         val sum = yes + no + maybe
         return mapOf("yes" to yes / sum * 100, "no" to no / sum * 100, "maybe" to maybe / sum * 100)
     }
@@ -279,9 +286,9 @@ class MainActivity : AppCompatActivity() {
                     }
                     Kind.SLOW -> chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion)))
                     Kind.STALE -> if (elapsedMs <= 6000) chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion)))
-                    Kind.LOADING -> { if (elapsedMs >= 3000) chart.loading = false; chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion))) }
+                    Kind.LOADING -> { chart.loading = (elapsedMs / 9000) % 2 == 0L; chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion))) }
                     Kind.PAUSED -> { chart.paused = (elapsedMs / 4000) % 2 == 1L; chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion))) }
-                    Kind.WALK -> chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion)))
+                    Kind.WALK -> chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion, demo.drift)))
                     Kind.MULTI -> {
                         val t = System.currentTimeMillis() / 1000.0
                         val m = market(t)

@@ -30,6 +30,8 @@ export interface WalkOpts {
   momentum?: number
   /** Pull back toward `center` each step (keeps the walk bounded). */
   reversion?: number
+  /** Positive biases the velocity, trending the walk upward (e.g. degen moon). */
+  drift?: number
   min?: number
   max?: number
 }
@@ -47,14 +49,14 @@ export interface Walk extends Feed {
 }
 
 export function createWalk(opts: WalkOpts): Walk {
-  const { center, vol, momentum = 0.94, reversion = 0.01, min, max } = opts
+  const { center, vol, momentum = 0.94, reversion = 0.01, drift = 0, min, max } = opts
   // Scale the random kick so the AR(1) velocity's stationary stddev ≈ vol.
   const kick = vol * Math.sqrt(1 - momentum * momentum)
   let value = center
   let velocity = 0
 
   function step(): number {
-    velocity = velocity * momentum + randn() * kick
+    velocity = velocity * momentum + randn() * kick + drift
     value += velocity + (center - value) * reversion
     if (min != null && value < min) {
       value = min
@@ -138,15 +140,18 @@ export function makeBook(price: number): {
 
 export const MARKET_SERIES = [
   { id: 'yes', color: '#3b82f6', label: 'Yes' },
-  { id: 'no', color: '#ef4444', label: 'No' },
   { id: 'maybe', color: '#f59e0b', label: 'Maybe' },
+  { id: 'no', color: '#ef4444', label: 'No' },
 ] as const
 
-/** Deterministic in `t`, so the backfill and the live feed line up seamlessly. */
+/**
+ * Deterministic in `t`, so the backfill and the live feed line up seamlessly.
+ * A realistic lopsided market: Yes leads at ~70–90%, then Maybe, then No.
+ */
 export function market(t: number): Record<string, number> {
-  const yes = 45 + Math.sin(t * 0.35) * 11 + Math.sin(t * 0.9) * 3
-  const no = 35 + Math.cos(t * 0.3) * 9 + Math.cos(t * 0.8) * 2.5
-  const maybe = 30 + Math.sin(t * 0.25 + 1) * 6 + Math.cos(t * 0.7) * 2
+  const yes = 80 + Math.sin(t * 0.18) * 8 + Math.sin(t * 0.6) * 2
+  const maybe = 13 + Math.sin(t * 0.22 + 1) * 3
+  const no = 7 + Math.cos(t * 0.28) * 2
   const sum = yes + no + maybe
   return { yes: (yes / sum) * 100, no: (no / sum) * 100, maybe: (maybe / sum) * 100 }
 }
