@@ -918,6 +918,40 @@ class LivelineView @JvmOverloads constructor(
         fadePaint.shader = LinearGradient(padL, 0f, padL + fadeW, 0f, palette.background.toInt(), palette.background.withAlpha(0.0).toInt(), Shader.TileMode.CLAMP)
         canvas.drawRect(0f, 0f, padL + fadeW, padT + chartH + dp(32f), fadePaint)
 
+        // Crosshair with an O·H·L·C readout while scrubbing (matches iOS).
+        if (scrub && scrubAmount > 0.01) {
+            val hx = hoverX.coerceIn(padL, padL + chartW)
+            val op = scrubAmount
+            crossPaint.color = palette.crosshairLine.withAlpha(palette.crosshairLine.a * op * 0.5).toInt()
+            canvas.drawLine(hx, padT, hx, padT + chartH, crossPaint)
+            val t = leftEdge + ((hx - padL) / chartW) * (rightEdge - leftEdge)
+            val c = visible.lastOrNull { t >= it.time && t < it.time + candleWidth } ?: visible.last()
+            if (op >= 0.1 && width >= 200) {
+                val vc = if (c.close >= c.open) bull else bear
+                val timeText = timeFmt("jmmss").format(Date((c.time * 1000).toLong()))
+                val segs = listOf(
+                    "O " to palette.gridLabel, fmt(c.open) to vc, " H " to palette.gridLabel, fmt(c.high) to vc,
+                    " L " to palette.gridLabel, fmt(c.low) to vc, " C " to palette.gridLabel, fmt(c.close) to vc,
+                    "  ·  " to palette.gridLabel, timeText to palette.gridLabel,
+                )
+                val total = segs.sumOf { tipPaint.measureText(it.first).toDouble() }.toFloat()
+                val maxX = (padL + chartW - dp(12f) - total).coerceAtLeast(padL + dp(4f))
+                var tx = (hx - total / 2).coerceIn(padL + dp(4f), maxX)
+                val ty = padT + dp(24f)
+                for ((text, colr) in segs) {
+                    if (tooltipOutline) {
+                        tipPaint.style = Paint.Style.STROKE; tipPaint.strokeWidth = dp(3.5f); tipPaint.strokeJoin = Paint.Join.ROUND
+                        tipPaint.color = palette.tooltipBg.withAlpha(palette.tooltipBg.a * op).toInt()
+                        canvas.drawText(text, tx, ty, tipPaint)
+                        tipPaint.style = Paint.Style.FILL
+                    }
+                    tipPaint.color = colr.withAlpha(colr.a * op).toInt()
+                    canvas.drawText(text, tx, ty, tipPaint)
+                    tx += tipPaint.measureText(text)
+                }
+            }
+        }
+
         // Live close dot + badge (tinted by the live candle direction).
         val liveClose = liveCandle?.close ?: visible.last().close
         if (displayValue == 0.0) displayValue = liveClose
