@@ -610,7 +610,7 @@ enum Stress: String, CaseIterable, Identifiable {
 
 final class StressFeed: ObservableObject {
     @Published var value: Double = 100
-    @Published private(set) var variant: Stress
+    private let variant: Stress
     private(set) var seed: [LivelinePoint] = []
     private var timer: Timer?
     private var v = 100.0
@@ -619,12 +619,6 @@ final class StressFeed: ObservableObject {
 
     init(_ variant: Stress) {
         self.variant = variant
-        reset()
-    }
-
-    func change(_ next: Stress) {
-        guard next != variant else { return }
-        variant = next
         reset()
     }
 
@@ -685,26 +679,44 @@ final class StressFeed: ObservableObject {
 }
 
 private struct StressCard: View {
-    @StateObject private var feed = StressFeed(.wild)
+    // The picker binds to a plain `@State`, and the high-frequency value feed
+    // lives in the child `StressChart` — so the ~10–20 pushes/sec never re-render
+    // this view. Previously the picker sat on the same view as the @Published
+    // `value`, so it rebuilt under every tap and swallowed the selection.
+    @State private var variant: Stress = .wild
     @Environment(\.colorScheme) private var scheme
     var body: some View {
-        // The pattern picker sits above the card, not inside it — over a wild-
-        // swinging chart the menu was awkward to hit.
         VStack(alignment: .leading, spacing: 8) {
-            Picker(
-                "Pattern",
-                selection: Binding(get: { feed.variant }, set: { feed.change($0) })
-            ) {
+            Picker("Pattern", selection: $variant) {
                 ForEach(Stress.allCases) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.menu)
-            Card(title: "Stress tests", subtitle: feed.variant.detail) {
-                Liveline(data: feed.seed, value: feed.value)
-                    .color(Color(red: 0.9, green: 0.3, blue: 0.24))
-                    .exaggerate(feed.variant.exaggerate)
-                    .theme(livelineTheme(scheme))
+            Card(title: "Stress tests", subtitle: variant.detail) {
+                // .id restarts the feed (fresh seed) when the pattern changes.
+                StressChart(variant: variant, dark: scheme == .dark).id(variant)
             }
         }
+    }
+}
+
+/// Owns the high-frequency stress feed, isolated from the picker so its
+/// per-push re-renders don't reach the menu.
+private struct StressChart: View {
+    let variant: Stress
+    let dark: Bool
+    @StateObject private var feed: StressFeed
+
+    init(variant: Stress, dark: Bool) {
+        self.variant = variant
+        self.dark = dark
+        _feed = StateObject(wrappedValue: StressFeed(variant))
+    }
+
+    var body: some View {
+        Liveline(data: feed.seed, value: feed.value)
+            .color(Color(red: 0.9, green: 0.3, blue: 0.24))
+            .exaggerate(variant.exaggerate)
+            .theme(dark ? .dark : .light)
     }
 }
 
