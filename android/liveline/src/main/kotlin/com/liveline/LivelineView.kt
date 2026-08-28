@@ -252,7 +252,7 @@ class LivelineView @JvmOverloads constructor(
     private val chevronPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(2.5f); strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
     private val crossPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(1f) }
     private val crossDot = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
-    private val crossShadow = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    private val dotShadow = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val tipPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(13f) }
     private val fadePaint = Paint().apply { style = Paint.Style.FILL }
     private val candleStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
@@ -529,6 +529,17 @@ class LivelineView @JvmOverloads constructor(
             if (t < 1) { ringPaint.color = headColor.withAlpha(headColor.a * 0.35 * (1 - t) * (1 - dim * 3)).toInt(); canvas.drawCircle(endX, endY, dp(9f) + (t * dp(12f).toDouble()).toFloat(), ringPaint) }
         }
         val dotA = (1 - dim) * dotReveal
+        if (dotA > 0.01) {
+            // Soft halo lifting the live dot off the line — light on a dark card,
+            // dark on a light one (a dark shadow would vanish on the near-black bg).
+            val s = if ((palette.background.r + palette.background.g + palette.background.b) / 3 < 0.5) 255 else 0
+            val shR = dp(11f)
+            dotShadow.shader = RadialGradient(
+                endX, endY, shR,
+                Color.argb((70 * dotA).toInt().coerceIn(0, 255), s, s, s), Color.TRANSPARENT, Shader.TileMode.CLAMP,
+            )
+            canvas.drawCircle(endX, endY, shR, dotShadow)
+        }
         dotOuter.alpha = (255 * dotA).toInt().coerceIn(0, 255)
         canvas.drawCircle(endX, endY, dp(6.5f), dotOuter)
         dotInner.color = headColor.withAlpha(headColor.a * dotA).toInt()
@@ -670,18 +681,7 @@ class LivelineView @JvmOverloads constructor(
         canvas.drawLine(hx, padT, hx, padT + chartH, crossPaint)
         val hy = toY(hoverValue)
         val dr = dp(4f) * min(op * 3, 1.0).toFloat()
-        if (dr > dp(0.5f)) {
-            // Soft halo lifting the dot off the line — light on a dark card, dark
-            // on a light one (a dark shadow would vanish on the near-black card).
-            val s = if ((palette.background.r + palette.background.g + palette.background.b) / 3 < 0.5) 255 else 0
-            val shR = dr + dp(4f)
-            crossShadow.shader = RadialGradient(
-                hx, hy, shR,
-                Color.argb((75 * op).toInt().coerceIn(0, 255), s, s, s), Color.TRANSPARENT, Shader.TileMode.CLAMP,
-            )
-            canvas.drawCircle(hx, hy, shR, crossShadow)
-            crossDot.color = palette.line.toInt(); canvas.drawCircle(hx, hy, dr, crossDot)
-        }
+        if (dr > dp(0.5f)) { crossDot.color = palette.line.toInt(); canvas.drawCircle(hx, hy, dr, crossDot) }
         if (op < 0.1 || width < 300) return
         val valueText = fmt(hoverValue)
         val timeText = timeFmt("jmmss").format(Date((hoverTime * 1000).toLong()))
