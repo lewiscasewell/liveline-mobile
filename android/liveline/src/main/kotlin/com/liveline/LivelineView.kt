@@ -401,10 +401,29 @@ class LivelineView @JvmOverloads constructor(
         // 1. Reference line.
         referenceLine?.let { drawReferenceLine(canvas, it, padL, padR, padT, w, chartW, chartH) { v -> toY(v) } }
 
-        // 2. Grid + value labels.
+        // Loading reveal (0 = fully loading, 1 = loaded). While loading the line
+        // morphs to a sleek synthetic wave (the data is ignored) that blooms
+        // center-out into the real data as it loads, and the value chrome + the
+        // Y-axis fade out (the values aren't known yet) — matching the iOS reveal.
+        val reveal = 1.0 - loadingAlpha
+        val breath = 0.22 + 0.08 * sin(nowMs / 1200.0 * PI)
+        val loadCenterY = (padT + chartH / 2f).toDouble()
+        val loadAmp = chartH.toDouble() * 0.07
+        val loadScroll = nowMs * 0.001
+        fun morphY(rawY: Float, x: Float): Float {
+            if (reveal >= 1.0) return rawY
+            val t = ((x - padL) / chartW).toDouble().coerceIn(0.0, 1.0)
+            val centerDist = abs(t - 0.5) * 2
+            val localReveal = ((reveal - centerDist * 0.4) / 0.6).coerceIn(0.0, 1.0)
+            val baseY = loadCenterY + loadAmp * (sin(t * 9.4 + loadScroll) * 0.55 + sin(t * 15.7 + loadScroll * 1.3) * 0.3 + sin(t * 4.2 + loadScroll * 0.7) * 0.15)
+            return (baseY + (rawY.toDouble() - baseY) * localReveal).toFloat()
+        }
+
+        // 2. Grid + value labels — the whole value axis fades out while loading.
         val pxPerUnit = chartH / range
         gridInterval = Ticks.pickInterval(range, pxPerUnit.toDouble(), dp(36f).toDouble(), gridInterval)
-        if (grid && gridInterval > 0) {
+        if (grid && gridInterval > 0 && reveal > 0.01) {
+            val gridLayer = if (reveal < 0.999) canvas.saveLayerAlpha(0f, 0f, w, h, (255 * reveal).toInt().coerceIn(0, 255)) else -1
             var g = ceil(minV / gridInterval) * gridInterval
             labelPaint.textAlign = Paint.Align.LEFT
             while (g <= maxV) {
@@ -413,6 +432,7 @@ class LivelineView @JvmOverloads constructor(
                 canvas.drawText(fmt(g), padL + chartW + dp(6f), y + dp(4f), labelPaint)
                 g += gridInterval
             }
+            if (gridLayer >= 0) canvas.restoreToCount(gridLayer)
         }
 
         val trend = if (momentum == Momentum.OFF) Trend.FLAT else when (momentum) {
@@ -428,19 +448,21 @@ class LivelineView @JvmOverloads constructor(
 
         val endX = toX(now); val endY = toY(displayValue)
         if (degen) degenTrigger(endX, endY, displayValue, range, dt)
+        // Morph each point toward the loading wave, and extend the tip to the full
+        // width at reveal 0 (matching the wave), retracting to the live dot at 1.
+        val tipX = if (reveal < 1.0) (endX + (padL + chartW - endX) * (1 - reveal).toFloat()) else endX
         val pts = ArrayList<Point>(visible.size)
-        for (p in visible) pts.add(Point(toX(p.time).toDouble(), toY(p.value).toDouble()))
-        pts[pts.size - 1] = Point(endX.toDouble(), endY.toDouble())
+        for (p in visible) { val x = toX(p.time); pts.add(Point(x.toDouble(), morphY(toY(p.value), x).toDouble())) }
+        pts[pts.size - 1] = Point(tipX.toDouble(), morphY(endY, tipX).toDouble())
 
-        // 3. Dashed baseline.
-        dashPaint.color = palette.dashLine.toInt()
-        canvas.drawLine(padL, endY, endX, endY, dashPaint)
+        // 3. Dashed baseline — fades out while loading (no current value yet).
+        if (reveal > 0.01) {
+            dashPaint.color = palette.dashLine.withAlpha(palette.dashLine.a * reveal).toInt()
+            canvas.drawLine(padL, endY, endX, endY, dashPaint)
+        }
 
-        // 4. Line + fill. While `loading`, the line is a grey, breathing version of
-        // itself that reveals to the accent colour (and the fill fades in) as
-        // loading ends — matching the iOS reveal.
-        val reveal = 1.0 - loadingAlpha
-        val breath = 0.22 + 0.08 * sin(nowMs / 1200.0 * PI)
+        // 4. Line + fill. While loading the line is grey + breathing, revealing to
+        // the accent colour (and the fill fades in) as loading ends.
         val lineAlpha = if (reveal < 1.0) breath + (1 - breath) * reveal else 1.0
         val strokeCol = if (reveal < 1.0) {
             val t = min(1.0, reveal * 3); val g = palette.gridLabel; val l = palette.line
