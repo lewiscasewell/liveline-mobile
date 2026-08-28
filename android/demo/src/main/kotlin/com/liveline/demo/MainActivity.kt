@@ -39,7 +39,7 @@ import kotlin.random.Random
 /** A native Android showcase mirroring the iOS ContentView demo menu. */
 class MainActivity : AppCompatActivity() {
 
-    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, PAUSED, CANDLE, ORDERBOOK, MULTI }
+    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, PAUSED, CANDLE, ORDERBOOK, MULTI, STRESS }
 
     private class Demo(
         val name: String,
@@ -56,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         val kind: Kind = Kind.WALK,
         val window: Double = 30.0,
         val windowBar: List<WindowBarView.Window>? = null,
+        /** Forces a theme regardless of the global toggle (Custom surface = dark). */
+        val fixedTheme: LivelineTheme? = null,
         val configure: (LivelineView) -> Unit = {},
     )
 
@@ -102,13 +104,54 @@ class MainActivity : AppCompatActivity() {
             it.accent = Color.parseColor("#4aae66")
         },
         Demo("Stale feed", "The feed stops after 6s. The chart keeps scrolling; the line runs flat to the edge.", kind = Kind.STALE) {},
+        Demo("Stress tests", "Extreme feeds that exercise the render loop under wild, chaotic, spiky and irregular input. Pick a pattern.", kind = Kind.STRESS) {
+            it.accent = Color.parseColor("#e64d3d")
+        },
+        Demo("Custom surface", "The opt-in exception: an opaque surfaceColor paints its own card, independent of the theme.", fixedTheme = LivelineTheme.DARK) {
+            it.accent = Color.parseColor("#ab9ff2"); it.surfaceColor = Color.parseColor("#1c1530")
+        },
     )
+
+    // Stress-test patterns (mirrors the iOS StressFeed).
+    private data class StressDef(val title: String, val detail: String, val intervalMs: Long, val exaggerate: Boolean)
+    private val stressDefs = listOf(
+        StressDef("Wild swings", "Large continuous swings at 100ms.", 100, false),
+        StressDef("Near-flat + spikes", "A near-flat line with sudden spikes (exaggerated Y).", 150, true),
+        StressDef("Chaotic", "Massive fluctuations at 80ms.", 80, false),
+        StressDef("Sharp reversals", "Frequent sharp direction reversals at 60ms.", 60, false),
+        StressDef("Isolated spikes", "Nearly flat with rare extreme spikes (exaggerated Y).", 120, true),
+        StressDef("Rapid zigzag", "Rapid alternating oscillation at 50ms.", 50, false),
+        StressDef("Irregular arrivals", "Bursts of updates with random 1–3s stalls.", 60, false),
+    )
+    private var stressVariant = 0
+    private var stressV = 100.0
+    private var stressDir = 1.0
+    private var stressTicks = 0
+    private var stressStallUntil = 0L
+
+    private fun stressStep(): Double {
+        stressTicks++
+        if (stressVariant == 6 && System.currentTimeMillis() < stressStallUntil) return stressV
+        when (stressVariant) {
+            0 -> stressV += Random.nextDouble(-8.0, 8.0)
+            1 -> { stressV += Random.nextDouble(-0.3, 0.3); if (Random.nextDouble() > 0.95) stressV += Random.nextDouble(-25.0, 25.0) }
+            2 -> stressV += Random.nextDouble(-18.0, 18.0)
+            3 -> { if (stressTicks % 6 == 0) stressDir = -stressDir; stressV += stressDir * Random.nextDouble(2.0, 10.0) }
+            4 -> { stressV += Random.nextDouble(-0.2, 0.2); if (Random.nextDouble() > 0.97) stressV += Random.nextDouble(-40.0, 40.0) }
+            5 -> { stressDir = -stressDir; stressV += stressDir * Random.nextDouble(4.0, 9.0) }
+            6 -> { stressV += Random.nextDouble(-6.0, 6.0); if (Random.nextDouble() < 0.02) stressStallUntil = System.currentTimeMillis() + Random.nextLong(1000, 3000) }
+        }
+        stressV = stressV.coerceIn(20.0, 180.0)
+        return stressV
+    }
 
     private lateinit var chart: LivelineView
     private lateinit var subtitle: TextView
     private lateinit var root: LinearLayout
     private lateinit var windowBar: WindowBarView
     private lateinit var legend: SeriesLegendView
+    private lateinit var stressSpinner: Spinner
+    private var currentIndex = 0
     private val handler = Handler(Looper.getMainLooper())
     private var dark = true
     private var v = 100.0
@@ -167,6 +210,15 @@ class MainActivity : AppCompatActivity() {
         controls.addView(spinner, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         root.addView(controls, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(12) })
 
+        // Sub-picker for the Stress tests demo's pattern (shown only for it).
+        stressSpinner = Spinner(this).apply { visibility = View.GONE }
+        stressSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, stressDefs.map { it.title })
+        stressSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p: AdapterView<*>?, view: View?, pos: Int, id: Long) = selectStressVariant(pos)
+            override fun onNothingSelected(p: AdapterView<*>?) {}
+        }
+        root.addView(stressSpinner, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
+
         legend = SeriesLegendView(this).apply { visibility = View.GONE; onToggle = { chart.toggleSeries(it) } }
         root.addView(legend, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(16); gravity = Gravity.START })
         chart = LivelineView(this)
@@ -186,15 +238,17 @@ class MainActivity : AppCompatActivity() {
         val fg = if (dark) Color.WHITE else Color.parseColor("#111111")
         (root.getChildAt(0) as TextView).setTextColor(fg)
         subtitle.setTextColor(if (dark) Color.parseColor("#888888") else Color.parseColor("#666666"))
-        chart.theme = if (dark) LivelineTheme.DARK else LivelineTheme.LIGHT
+        chart.theme = demos[currentIndex].fixedTheme ?: (if (dark) LivelineTheme.DARK else LivelineTheme.LIGHT)
         windowBar.isDark = dark
         legend.isDark = dark
     }
 
     private fun selectDemo(index: Int) {
         val demo = demos[index]
+        currentIndex = index
         handler.removeCallbacksAndMessages(null)
         subtitle.text = demo.subtitle
+        stressSpinner.visibility = if (demo.kind == Kind.STRESS) View.VISIBLE else View.GONE
 
         // Reset config to defaults, then apply the demo's.
         chart.apply {
@@ -206,6 +260,7 @@ class MainActivity : AppCompatActivity() {
             mode = LivelineMode.LINE; setCandles(emptyList(), null, 1.0); orderbook = null; setSeries(emptyList())
         }
         demo.configure(chart)
+        chart.theme = demo.fixedTheme ?: (if (dark) LivelineTheme.DARK else LivelineTheme.LIGHT)
 
         // Interval bar (only for the Time windows demo).
         if (demo.windowBar != null) {
@@ -236,6 +291,13 @@ class MainActivity : AppCompatActivity() {
 
         if (demo.kind == Kind.CANDLE) { seedCandles(); startFeed(demo); return }
 
+        if (demo.kind == Kind.STRESS) {
+            subtitle.text = stressDefs[stressVariant].detail
+            seedStress()
+            startFeed(demo)
+            return
+        }
+
         // Seed a backfill. The live feed continues from the seed's last value
         // (no reset), so there's no jump when it takes over.
         val now = System.currentTimeMillis() / 1000.0
@@ -247,6 +309,24 @@ class MainActivity : AppCompatActivity() {
         chart.setData(seed)
         if (demo.kind == Kind.LOADING) chart.loading = true
         startFeed(demo)
+    }
+
+    private fun seedStress() {
+        stressV = 100.0; stressDir = 1.0; stressTicks = 0; stressStallUntil = 0L
+        chart.exaggerate = stressDefs[stressVariant].exaggerate
+        val now = System.currentTimeMillis() / 1000.0
+        var s = 100.0
+        chart.setData((0 until 180).map { i -> s += Random.nextDouble(-3.0, 3.0); LivelinePoint(now - 30 + i / 179.0 * 30, s) })
+        elapsedMs = 0
+    }
+
+    private fun selectStressVariant(pos: Int) {
+        stressVariant = pos
+        if (!::chart.isInitialized || demos[currentIndex].kind != Kind.STRESS) return
+        subtitle.text = stressDefs[pos].detail
+        handler.removeCallbacksAndMessages(null)
+        seedStress()
+        startFeed(demos[currentIndex])
     }
 
     // A realistic lopsided market: Yes leads at ~70–90%, then Maybe, then No.
@@ -289,6 +369,7 @@ class MainActivity : AppCompatActivity() {
                     Kind.LOADING -> { chart.loading = (elapsedMs / 4000) % 2 == 0L; chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion))) }
                     Kind.PAUSED -> { chart.paused = (elapsedMs / 4000) % 2 == 1L; chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion))) }
                     Kind.WALK -> chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion, demo.drift)))
+                    Kind.STRESS -> chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, stressStep()))
                     Kind.MULTI -> {
                         val t = System.currentTimeMillis() / 1000.0
                         val m = market(t)
@@ -316,7 +397,7 @@ class MainActivity : AppCompatActivity() {
                         chart.setCandles(ArrayList(candleList), liveC, candleWidth)
                     }
                 }
-                handler.postDelayed(this, demo.intervalMs)
+                handler.postDelayed(this, if (demo.kind == Kind.STRESS) stressDefs[stressVariant].intervalMs else demo.intervalMs)
             }
         })
     }

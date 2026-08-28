@@ -156,6 +156,59 @@ export function market(t: number): Record<string, number> {
   return { yes: (yes / sum) * 100, no: (no / sum) * 100, maybe: (maybe / sum) * 100 }
 }
 
+// ── Stress tests: extreme feeds that exercise the render loop ────────────────
+
+export type StressVariant =
+  | 'wild' | 'flatSpikes' | 'chaotic' | 'reversals' | 'isolatedSpikes' | 'zigzag' | 'irregular'
+
+export const STRESS: { id: StressVariant; title: string; detail: string; intervalMs: number; exaggerate: boolean }[] = [
+  { id: 'wild', title: 'Wild swings', detail: 'Large continuous swings at 100ms.', intervalMs: 100, exaggerate: false },
+  { id: 'flatSpikes', title: 'Near-flat + spikes', detail: 'A near-flat line with sudden spikes (exaggerated Y).', intervalMs: 150, exaggerate: true },
+  { id: 'chaotic', title: 'Chaotic', detail: 'Massive fluctuations at 80ms.', intervalMs: 80, exaggerate: false },
+  { id: 'reversals', title: 'Sharp reversals', detail: 'Frequent sharp direction reversals at 60ms.', intervalMs: 60, exaggerate: false },
+  { id: 'isolatedSpikes', title: 'Isolated spikes', detail: 'Nearly flat with rare extreme spikes (exaggerated Y).', intervalMs: 120, exaggerate: true },
+  { id: 'zigzag', title: 'Rapid zigzag', detail: 'Rapid alternating oscillation at 50ms.', intervalMs: 50, exaggerate: false },
+  { id: 'irregular', title: 'Irregular arrivals', detail: 'Bursts of updates with random 1–3s stalls.', intervalMs: 60, exaggerate: false },
+]
+
+export interface StressFeed extends Feed {
+  readonly intervalMs: number
+}
+
+/** Mirrors the iOS StressFeed: one chaotic pattern per variant, bounded to 20..180. */
+export function createStressFeed(variant: StressVariant): StressFeed {
+  const rnd = (a: number, b: number) => a + Math.random() * (b - a)
+  let v = 100
+  let dir = 1
+  let ticks = 0
+  let stallUntil = 0
+  function step(): number {
+    ticks++
+    if (variant === 'irregular' && Date.now() < stallUntil) return v
+    switch (variant) {
+      case 'wild': v += rnd(-8, 8); break
+      case 'flatSpikes': v += rnd(-0.3, 0.3); if (Math.random() > 0.95) v += rnd(-25, 25); break
+      case 'chaotic': v += rnd(-18, 18); break
+      case 'reversals': if (ticks % 6 === 0) dir = -dir; v += dir * rnd(2, 10); break
+      case 'isolatedSpikes': v += rnd(-0.2, 0.2); if (Math.random() > 0.97) v += rnd(-40, 40); break
+      case 'zigzag': dir = -dir; v += dir * rnd(4, 9); break
+      case 'irregular': v += rnd(-6, 6); if (Math.random() < 0.02) stallUntil = Date.now() + rnd(1000, 3000); break
+    }
+    v = Math.max(20, Math.min(180, v))
+    return v
+  }
+  function seed(seconds: number, hz: number): LivelinePoint[] {
+    const now = Date.now() / 1000
+    const n = Math.max(2, Math.round(seconds * hz))
+    let s = 100
+    return Array.from({ length: n }, (_, i) => {
+      s += rnd(-3, 3)
+      return { time: now - seconds + (i / (n - 1)) * seconds, value: s }
+    })
+  }
+  return { step, seed, intervalMs: STRESS.find((x) => x.id === variant)!.intervalMs }
+}
+
 // ── Candles: aggregate a trending price into fixed-width OHLC buckets ─────────
 
 export interface Candle {

@@ -15,11 +15,14 @@ import { Liveline, useLiveline, type LivelinePoint } from 'liveline-mobile'
 import {
   createCandleFeed,
   createCpuFeed,
+  createStressFeed,
   createWalk,
   makeBook,
   market,
   MARKET_SERIES,
+  STRESS,
   type Feed,
+  type StressVariant,
 } from './feeds'
 
 type DemoProps = { dark: boolean }
@@ -393,6 +396,87 @@ const Stale: React.FC<DemoProps> = ({ dark }) => {
   )
 }
 
+const StressPicker: React.FC<{
+  dark: boolean
+  value: StressVariant
+  onChange: (v: StressVariant) => void
+}> = ({ dark, value, onChange }) => {
+  const [open, setOpen] = useState(false)
+  const current = STRESS.find((s) => s.id === value)!
+  return (
+    <>
+      <TouchableOpacity
+        style={[styles.dropdown, dark ? styles.dropdownDark : styles.dropdownLight]}
+        onPress={() => setOpen(true)}
+      >
+        <Text style={[styles.dropdownText, dark ? styles.textLight : styles.textDark]}>{current.title}</Text>
+        <Text style={[styles.dropdownChevron, dark ? styles.textDim : styles.textDimLight]}>▾</Text>
+      </TouchableOpacity>
+      <Modal visible={open} transparent animationType='fade' onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+          <View style={[styles.menu, dark ? styles.menuDark : styles.menuLight]}>
+            {STRESS.map((s) => (
+              <TouchableOpacity
+                key={s.id}
+                style={styles.menuItem}
+                onPress={() => {
+                  onChange(s.id)
+                  setOpen(false)
+                }}
+              >
+                <Text style={[styles.menuItemText, dark ? styles.textLight : styles.textDark, s.id === value && styles.menuItemOn]}>
+                  {s.title}
+                </Text>
+                {s.id === value && <Text style={styles.menuCheck}>✓</Text>}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+    </>
+  )
+}
+
+const Stress: React.FC<DemoProps> = ({ dark }) => {
+  const [variant, setVariant] = useState<StressVariant>('wild')
+  const meta = STRESS.find((s) => s.id === variant)!
+  const feed = useMemo(() => createStressFeed(variant), [variant])
+  const seed = useMemo(() => feed.seed(30, 6), [feed])
+  const { push, attachHybridRef } = useLiveline()
+  useEffect(() => {
+    const id = setInterval(() => push({ time: Date.now() / 1000, value: feed.step() }), feed.intervalMs)
+    return () => clearInterval(id)
+  }, [feed, push])
+  return (
+    <View style={styles.stack}>
+      <StressPicker dark={dark} value={variant} onChange={setVariant} />
+      <Liveline
+        key={variant}
+        style={styles.card}
+        data={seed}
+        color='#e64d3d'
+        exaggerate={meta.exaggerate}
+        theme={themeOf(dark)}
+        hybridRef={attachHybridRef()}
+      />
+    </View>
+  )
+}
+
+const Surface: React.FC<DemoProps> = () => {
+  const { seed, attachHybridRef } = useWalkFeed(() => createWalk({ center: 100, vol: 0.55 }))
+  return (
+    <Liveline
+      style={styles.card}
+      data={seed}
+      color='#ab9ff2'
+      surfaceColor='#1c1530'
+      theme='dark'
+      hybridRef={attachHybridRef()}
+    />
+  )
+}
+
 const DEMOS: Demo[] = [
   { id: 'basic', title: 'Basic', subtitle: 'A live value. Two props: data and value.', Comp: Basic },
   { id: 'momentum', title: 'Momentum', subtitle: 'Directional chevrons on the live dot; the badge tints green up / red down.', Comp: Momentum },
@@ -409,6 +493,8 @@ const DEMOS: Demo[] = [
   { id: 'loading', title: 'Loading', subtitle: 'Toggles every 4s: a breathing line, then it morphs into the backfilled chart.', Comp: Loading },
   { id: 'paused', title: 'Paused', subtitle: 'Auto-toggles every 4s. Data keeps arriving while paused; on resume it catches up.', Comp: Paused },
   { id: 'stale', title: 'Stale feed', subtitle: 'The feed stops after 6s. The chart keeps scrolling; the line runs flat to the edge.', Comp: Stale },
+  { id: 'stress', title: 'Stress tests', subtitle: 'Extreme feeds that exercise the render loop under wild, chaotic, spiky and irregular input. Pick a pattern.', Comp: Stress },
+  { id: 'surface', title: 'Custom surface', subtitle: 'The opt-in exception: an opaque surfaceColor paints its own card, independent of the theme.', Comp: Surface },
 ]
 
 /** A dropdown (menu) picker for the demo, mirroring the native `.menu` Picker. */
