@@ -335,8 +335,8 @@ final class StatesModel: ObservableObject {
 
     private func step() {
         t += 0.05
-        // Rotate loading ↔ loaded every 9s so the state is observable on a loop.
-        loading = t.truncatingRemainder(dividingBy: 18) < 9
+        // Rotate loading ↔ loaded every 4s so the state is observable on a loop.
+        loading = t.truncatingRemainder(dividingBy: 8) < 4
         value = walk.step()
     }
 
@@ -386,7 +386,7 @@ private struct StatesCard: View {
     var body: some View {
         Card(
             title: "States",
-            subtitle: "loading toggles every 9s: a breathing line, then it morphs into the backfilled chart."
+            subtitle: "loading toggles every 4s: a breathing line, then it morphs into the backfilled chart."
         ) {
             Liveline(data: model.seed, value: model.value)
                 .color(Color(red: 0.29, green: 0.68, blue: 0.4))

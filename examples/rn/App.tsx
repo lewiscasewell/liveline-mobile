@@ -338,8 +338,8 @@ const Loading: React.FC<DemoProps> = ({ dark }) => {
   const { seed, attachHybridRef } = useWalkFeed(() => createWalk({ center: 210, vol: 0.9 }))
   const [loading, setLoading] = useState(true)
   useEffect(() => {
-    // Rotate loading ↔ loaded every 9s so the state is observable on a loop.
-    const id = setInterval(() => setLoading((v) => !v), 9000)
+    // Rotate loading ↔ loaded every 4s so the state is observable on a loop.
+    const id = setInterval(() => setLoading((v) => !v), 4000)
     return () => clearInterval(id)
   }, [])
   return (
@@ -406,7 +406,7 @@ const DEMOS: Demo[] = [
   { id: 'prediction', title: 'Prediction market', subtitle: 'Multi-series: three outcomes summing to 100%. Tap a chip to toggle a line.', Comp: Prediction },
   { id: 'orderbook', title: 'Orderbook', subtitle: 'Bid/ask sizes float up behind the price line — green bids, red asks.', Comp: Orderbook },
   { id: 'degen', title: 'Degen', subtitle: 'Chart shake + sparks on strong up-moves, with momentum arrows.', Comp: Degen },
-  { id: 'loading', title: 'Loading', subtitle: 'Toggles every 9s: a breathing line, then it morphs into the backfilled chart.', Comp: Loading },
+  { id: 'loading', title: 'Loading', subtitle: 'Toggles every 4s: a breathing line, then it morphs into the backfilled chart.', Comp: Loading },
   { id: 'paused', title: 'Paused', subtitle: 'Auto-toggles every 4s. Data keeps arriving; on resume it catches up.', Comp: Paused },
   { id: 'stale', title: 'Stale feed', subtitle: 'The feed stops after 6s. The chart keeps scrolling; the line runs flat.', Comp: Stale },
 ]

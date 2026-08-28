@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
         Demo("Prediction market", "Three outcomes → 100%. Tap a chip to toggle.", kind = Kind.MULTI, window = 45.0) {
             it.valueSuffix = "%"; it.valueDecimals = 0
         },
-        Demo("Loading", "Breathing ↔ data, every 9s.", kind = Kind.LOADING) {},
+        Demo("Loading", "Breathing ↔ data, every 4s.", kind = Kind.LOADING) {},
         Demo("Paused", "Freezes, then catches up.", center = 160.0, vol = 0.7, kind = Kind.PAUSED) {
             it.accent = Color.parseColor("#4aad66")
         },
@@ -286,7 +286,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     Kind.SLOW -> chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion)))
                     Kind.STALE -> if (elapsedMs <= 6000) chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion)))
-                    Kind.LOADING -> { chart.loading = (elapsedMs / 9000) % 2 == 0L; chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion))) }
+                    Kind.LOADING -> { chart.loading = (elapsedMs / 4000) % 2 == 0L; chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion))) }
                     Kind.PAUSED -> { chart.paused = (elapsedMs / 4000) % 2 == 1L; chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion))) }
                     Kind.WALK -> chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, trendStep(demo.center, demo.vol, demo.momentum, demo.reversion, demo.drift)))
                     Kind.MULTI -> {
