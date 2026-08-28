@@ -7,6 +7,7 @@ import android.graphics.DashPathEffect
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
@@ -251,6 +252,7 @@ class LivelineView @JvmOverloads constructor(
     private val chevronPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(2.5f); strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
     private val crossPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(1f) }
     private val crossDot = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    private val crossShadow = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val tipPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = dp(13f) }
     private val fadePaint = Paint().apply { style = Paint.Style.FILL }
     private val candleStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
@@ -668,7 +670,18 @@ class LivelineView @JvmOverloads constructor(
         canvas.drawLine(hx, padT, hx, padT + chartH, crossPaint)
         val hy = toY(hoverValue)
         val dr = dp(4f) * min(op * 3, 1.0).toFloat()
-        if (dr > dp(0.5f)) { crossDot.color = palette.line.toInt(); canvas.drawCircle(hx, hy, dr, crossDot) }
+        if (dr > dp(0.5f)) {
+            // Soft halo lifting the dot off the line — light on a dark card, dark
+            // on a light one (a dark shadow would vanish on the near-black card).
+            val s = if ((palette.background.r + palette.background.g + palette.background.b) / 3 < 0.5) 255 else 0
+            val shR = dr + dp(4f)
+            crossShadow.shader = RadialGradient(
+                hx, hy, shR,
+                Color.argb((75 * op).toInt().coerceIn(0, 255), s, s, s), Color.TRANSPARENT, Shader.TileMode.CLAMP,
+            )
+            canvas.drawCircle(hx, hy, shR, crossShadow)
+            crossDot.color = palette.line.toInt(); canvas.drawCircle(hx, hy, dr, crossDot)
+        }
         if (op < 0.1 || width < 300) return
         val valueText = fmt(hoverValue)
         val timeText = timeFmt("jmmss").format(Date((hoverTime * 1000).toLong()))
