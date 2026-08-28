@@ -436,16 +436,29 @@ class LivelineView @JvmOverloads constructor(
         dashPaint.color = palette.dashLine.toInt()
         canvas.drawLine(padL, endY, endX, endY, dashPaint)
 
-        // 4. Line + fill.
+        // 4. Line + fill. While `loading`, the line is a grey, breathing version of
+        // itself that reveals to the accent colour (and the fill fades in) as
+        // loading ends — matching the iOS reveal.
+        val reveal = 1.0 - loadingAlpha
+        val breath = 0.22 + 0.08 * sin(nowMs / 1200.0 * PI)
+        val lineAlpha = if (reveal < 1.0) breath + (1 - breath) * reveal else 1.0
+        val strokeCol = if (reveal < 1.0) {
+            val t = min(1.0, reveal * 3); val g = palette.gridLabel; val l = palette.line
+            Rgba(g.r + (l.r - g.r) * t, g.g + (l.g - g.g) * t, g.b + (l.b - g.b) * t)
+        } else palette.line
+
         val path = Path()
         path.moveTo(pts[0].x.toFloat(), pts[0].y.toFloat())
         for (s in PathBuilder.monotoneSegments(pts)) path.cubicTo(s.control1.x.toFloat(), s.control1.y.toFloat(), s.control2.x.toFloat(), s.control2.y.toFloat(), s.end.x.toFloat(), s.end.y.toFloat())
-        if (fill) {
+        if (fill && reveal > 0.01) {
             val f = Path(path); f.lineTo(pts.last().x.toFloat(), padT + chartH); f.lineTo(pts.first().x.toFloat(), padT + chartH); f.close()
             fillPaint.shader = LinearGradient(0f, padT, 0f, padT + chartH, palette.fillTop.toInt(), palette.fillBottom.toInt(), Shader.TileMode.CLAMP)
+            fillPaint.alpha = (255 * reveal).toInt().coerceIn(0, 255)
             canvas.drawPath(f, fillPaint)
         }
+        linePaint.color = strokeCol.withAlpha(strokeCol.a * lineAlpha).toInt()
         canvas.drawPath(path, linePaint)
+        linePaint.color = palette.line.toInt()  // restore for the scrub-fade + reuse below
 
         // 4b. While scrubbing, fade the line to the RIGHT of the crosshair.
         if (scrubAmount > 0.02) {
@@ -467,21 +480,30 @@ class LivelineView @JvmOverloads constructor(
         // badge + chevrons, not the dot).
         val dim = scrubAmount * 0.7
         val headColor = palette.line
-        if (pulse && dim < 0.3) {
+        // Fade the dot / pulse / arrows / badge in with the loading reveal (iOS).
+        val dotReveal = ((reveal - 0.3) / 0.7).coerceIn(0.0, 1.0)
+        if (pulse && dim < 0.3 && reveal > 0.6) {
             val t = (nowMs % 1500.0) / 900.0
             if (t < 1) { ringPaint.color = headColor.withAlpha(headColor.a * 0.35 * (1 - t) * (1 - dim * 3)).toInt(); canvas.drawCircle(endX, endY, dp(9f) + (t * dp(12f).toDouble()).toFloat(), ringPaint) }
         }
-        val dotA = (1 - dim)
+        val dotA = (1 - dim) * dotReveal
         dotOuter.alpha = (255 * dotA).toInt().coerceIn(0, 255)
         canvas.drawCircle(endX, endY, dp(6.5f), dotOuter)
         dotInner.color = headColor.withAlpha(headColor.a * dotA).toInt()
         canvas.drawCircle(endX, endY, dp(3.5f), dotInner)
 
         // 8. Momentum arrows.
-        if (momentum != Momentum.OFF) drawArrows(canvas, endX, endY, trend, dt, nowMs)
+        if (momentum != Momentum.OFF && reveal > 0.5) drawArrows(canvas, endX, endY, trend, dt, nowMs)
 
-        // 9. Badge (momentum-tinted, tailed).
-        if (badge) drawBadge(canvas, endX, endY, w, padR, padT, chartH)
+        // 9. Badge (momentum-tinted, tailed) — fades in with the reveal.
+        if (badge && reveal > 0.02) {
+            if (reveal >= 0.999) drawBadge(canvas, endX, endY, w, padR, padT, chartH)
+            else {
+                val sc = canvas.saveLayerAlpha(0f, 0f, w, h, (255 * reveal).toInt().coerceIn(0, 255))
+                drawBadge(canvas, endX, endY, w, padR, padT, chartH)
+                canvas.restoreToCount(sc)
+            }
+        }
 
         // 10. Value overlay.
         if (showValue) {
