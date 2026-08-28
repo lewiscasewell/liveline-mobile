@@ -398,17 +398,17 @@ const DEMOS: Demo[] = [
   { id: 'momentum', title: 'Momentum', subtitle: 'Directional chevrons on the live dot; the badge tints green up / red down.', Comp: Momentum },
   { id: 'value', title: 'Value overlay', subtitle: 'showValue draws the live number over the chart; valueMomentumColor tints it.', Comp: ValueOverlay },
   { id: 'reference', title: 'Reference line', subtitle: 'A horizontal marker at a fixed value, kept in view.', Comp: Reference },
-  { id: 'heart', title: 'Heart rate', subtitle: 'exaggerate tightens the Y-axis so tiny moves fill the height.', Comp: HeartRate },
+  { id: 'heart', title: 'Heart rate', subtitle: 'exaggerate tightens the Y-axis so the small bpm variation fills the height. Custom bpm formatter.', Comp: HeartRate },
   { id: 'cpu', title: 'CPU usage', subtitle: 'A low idle baseline with occasional spikes.', Comp: Cpu },
-  { id: 'sparse', title: 'Slow ticker', subtitle: 'One update every 4s. It still scrolls smoothly between ticks.', Comp: SlowTicker },
-  { id: 'windows', title: 'Time windows', subtitle: 'Tap 30s / 1m / 5m to smoothly zoom the interval over 5 minutes of history.', Comp: TimeWindows },
+  { id: 'sparse', title: 'Slow ticker', subtitle: 'One update every 4s (a low-volume asset). It still scrolls smoothly between ticks.', Comp: SlowTicker },
+  { id: 'windows', title: 'Time windows', subtitle: 'Tap a window to smoothly zoom the interval.', Comp: TimeWindows },
   { id: 'candles', title: 'Candlestick', subtitle: 'OHLC candles with a live candle that grows its wicks. Toggle line / candle.', Comp: Candlestick },
   { id: 'prediction', title: 'Prediction market', subtitle: 'Multi-series: three outcomes summing to 100%. Tap a chip to toggle a line.', Comp: Prediction },
   { id: 'orderbook', title: 'Orderbook', subtitle: 'Bid/ask sizes float up behind the price line — green bids, red asks.', Comp: Orderbook },
-  { id: 'degen', title: 'Degen', subtitle: 'Chart shake + sparks on strong up-moves, with momentum arrows.', Comp: Degen },
+  { id: 'degen', title: 'Degen', subtitle: 'Chart shake + sparks on strong up-moves, with momentum arrows and haptics.', Comp: Degen },
   { id: 'loading', title: 'Loading', subtitle: 'Toggles every 4s: a breathing line, then it morphs into the backfilled chart.', Comp: Loading },
-  { id: 'paused', title: 'Paused', subtitle: 'Auto-toggles every 4s. Data keeps arriving; on resume it catches up.', Comp: Paused },
-  { id: 'stale', title: 'Stale feed', subtitle: 'The feed stops after 6s. The chart keeps scrolling; the line runs flat.', Comp: Stale },
+  { id: 'paused', title: 'Paused', subtitle: 'Auto-toggles every 4s. Data keeps arriving while paused; on resume it catches up.', Comp: Paused },
+  { id: 'stale', title: 'Stale feed', subtitle: 'The feed stops after 6s. The chart keeps scrolling; the line runs flat to the edge.', Comp: Stale },
 ]
 
 /** A dropdown (menu) picker for the demo, mirroring the native `.menu` Picker. */

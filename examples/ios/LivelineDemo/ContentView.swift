@@ -19,9 +19,9 @@ struct ContentView: View {
         case timeWindows = "Time windows"
         case candlestick = "Candlestick"
         case prediction = "Prediction market"
-        case orderbook = "Orderbook stream"
+        case orderbook = "Orderbook"
         case degen = "Degen"
-        case states = "States (loading)"
+        case states = "Loading"
         case paused = "Paused"
         case stale = "Stale feed"
         case stress = "Stress tests"
@@ -301,7 +301,7 @@ private struct HeartRateCard: View {
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
-            title: "Heart rate (exaggerate + formatter)",
+            title: "Heart rate",
             subtitle: "exaggerate tightens the Y-axis so the small bpm variation fills the height. Custom bpm formatter."
         ) {
             Liveline(data: walk.seed, value: walk.value)
@@ -348,7 +348,7 @@ private struct SurfaceCard: View {
     var body: some View {
         Card(
             title: "Custom surface",
-            subtitle: "The opt-in exception: an opaque surfaceColor paints its own card, independent of the global theme."
+            subtitle: "The opt-in exception: an opaque surfaceColor paints its own card, independent of the theme."
         ) {
             Liveline(data: walk.seed, value: walk.value)
                 .color(Color(red: 0.67, green: 0.62, blue: 0.95))  // #AB9FF2
@@ -365,11 +365,11 @@ private struct DegenCard: View {
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
-            title: "Degen mode",
+            title: "Degen",
             subtitle: "Chart shake + sparks on strong up-moves, with momentum arrows and haptics."
         ) {
             Liveline(data: walk.seed, value: walk.value)
-                .color(Color(red: 0.96, green: 0.45, blue: 0.16))  // orange, like the reference
+                .color(Color(red: 245.0/255, green: 115.0/255, blue: 31.0/255))  // #f5731f
                 .momentum(.auto)
                 .degen()
                 .haptics()
@@ -385,8 +385,8 @@ private struct StatesCard: View {
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
-            title: "States",
-            subtitle: "loading toggles every 4s: a breathing line, then it morphs into the backfilled chart."
+            title: "Loading",
+            subtitle: "Toggles every 4s: a breathing line, then it morphs into the backfilled chart."
         ) {
             Liveline(data: model.seed, value: model.value)
                 .color(Color(red: 0.29, green: 0.68, blue: 0.4))
@@ -552,15 +552,11 @@ private struct CPUCard: View {
     var body: some View {
         Card(
             title: "CPU usage",
-            subtitle: "A low idle baseline with occasional spikes. Rounded time-window buttons."
+            subtitle: "A low idle baseline with occasional spikes."
         ) {
             Liveline(data: feed.seed, value: feed.value)
-                .color(Color(red: 0.29, green: 0.68, blue: 0.4))
-                .windows([
-                    Window(label: "30s", secs: 30), Window(label: "1m", secs: 60),
-                    Window(label: "5m", secs: 300),
-                ])
-                .windowStyle(.rounded)
+                .color(Color(red: 0.29, green: 0.682, blue: 0.4))  // #4aae66
+                .window(60)
                 .formatValue { String(format: "%.0f%%", $0) }
                 .theme(livelineTheme(scheme))
         }
@@ -836,8 +832,8 @@ private struct OrderbookCard: View {
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
-            title: "Orderbook stream",
-            subtitle: "Bid/ask sizes float up behind the price line — green bids, red asks, faster with momentum."
+            title: "Orderbook",
+            subtitle: "Bid/ask sizes float up behind the price line — green bids, red asks."
         ) {
             Liveline(data: feed.seed, value: feed.value)
                 .orderbook(feed.book)
@@ -912,10 +908,10 @@ private struct TimeWindowsCard: View {
     var body: some View {
         Card(
             title: "Time windows",
-            subtitle: "Tap a window to smoothly zoom the interval. Three styles via windowStyle."
+            subtitle: "Tap a window to smoothly zoom the interval."
         ) {
             Liveline(data: walk.seed, value: walk.value)
-                .color(Color(red: 0.95, green: 0.6, blue: 0.1))
+                .color(Color(red: 242.0/255, green: 153.0/255, blue: 15.0/255))  // #f2990f
                 .windows([
                     Window(label: "30s", secs: 30), Window(label: "1m", secs: 60),
                     Window(label: "5m", secs: 300),

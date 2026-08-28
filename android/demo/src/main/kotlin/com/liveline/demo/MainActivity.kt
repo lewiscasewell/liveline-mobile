@@ -60,48 +60,48 @@ class MainActivity : AppCompatActivity() {
     )
 
     private val demos = listOf(
-        Demo("Basic", "A live value; accent badge.") { it.momentum = Momentum.OFF },
-        Demo("Momentum", "Chevrons + green/red badge.", vol = 0.7) { it.momentum = Momentum.AUTO },
-        Demo("Value overlay", "showValue, tinted by momentum.", center = 9800.0, vol = 4.0, momentum = 0.95, reversion = 0.008, intervalMs = 100) {
+        Demo("Basic", "A live value. Two props: data and value.") { it.momentum = Momentum.OFF },
+        Demo("Momentum", "Directional chevrons on the live dot; the badge tints green up / red down.", vol = 0.7) { it.momentum = Momentum.AUTO },
+        Demo("Value overlay", "showValue draws the live number over the chart; valueMomentumColor tints it.", center = 9800.0, vol = 4.0, momentum = 0.95, reversion = 0.008, intervalMs = 100) {
             it.showValue = true; it.valueMomentumColor = true; it.valuePrefix = "$"
         },
-        Demo("Reference line", "A marker kept in view.", center = 67_500.0, vol = 55.0, momentum = 0.93) {
+        Demo("Reference line", "A horizontal marker at a fixed value, kept in view.", center = 67_500.0, vol = 55.0, momentum = 0.93) {
             it.accent = Color.parseColor("#8b5cf6"); it.valuePrefix = "$"; it.valueDecimals = 0
             it.referenceLine = ReferenceLine(67_500.0, "Above \$67,500")
         },
         // ~1 update/sec, low volatility + strong reversion so it holds ~68 bpm.
-        Demo("Heart rate", "Exaggerated Y, bpm.", center = 68.0, vol = 0.5, momentum = 0.5, reversion = 0.06, intervalMs = 1000) {
-            it.accent = Color.parseColor("#e5493d"); it.exaggerate = true; it.valueSuffix = " bpm"; it.valueDecimals = 0
+        Demo("Heart rate", "exaggerate tightens the Y-axis so the small bpm variation fills the height. Custom bpm formatter.", center = 68.0, vol = 0.5, momentum = 0.5, reversion = 0.06, intervalMs = 1000) {
+            it.accent = Color.parseColor("#e64d3d"); it.exaggerate = true; it.valueSuffix = " bpm"; it.valueDecimals = 0
         },
-        Demo("CPU usage", "Low baseline + spikes.", center = 14.0, kind = Kind.SPIKES) {
-            it.accent = Color.parseColor("#4aad66"); it.valueSuffix = "%"; it.valueDecimals = 0
+        Demo("CPU usage", "A low idle baseline with occasional spikes.", center = 14.0, kind = Kind.SPIKES, window = 60.0) {
+            it.accent = Color.parseColor("#4aae66"); it.valueSuffix = "%"; it.valueDecimals = 0
         },
-        Demo("Slow ticker", "One update / 4s.", vol = 4.0, momentum = 0.6, intervalMs = 4000, kind = Kind.SLOW, window = 60.0) {
+        Demo("Slow ticker", "One update every 4s (a low-volume asset). It still scrolls smoothly between ticks.", vol = 4.0, momentum = 0.6, intervalMs = 4000, kind = Kind.SLOW, window = 60.0) {
             it.accent = Color.parseColor("#8b5cf6")
         },
         Demo(
-            "Time windows", "Tap a chip to zoom the interval.", vol = 0.6, window = 60.0,
+            "Time windows", "Tap a window to smoothly zoom the interval.", vol = 0.6, window = 60.0,
             windowBar = listOf(WindowBarView.Window("30s", 30.0), WindowBarView.Window("1m", 60.0), WindowBarView.Window("5m", 300.0)),
-        ) { it.accent = Color.parseColor("#f0a020") },
-        Demo("Candlestick", "OHLC candles + a live candle.", intervalMs = 60, kind = Kind.CANDLE, window = 54.0) {
+        ) { it.accent = Color.parseColor("#f2990f") },
+        Demo("Candlestick", "OHLC candles with a live candle that grows its wicks. Toggle line / candle.", intervalMs = 60, kind = Kind.CANDLE, window = 54.0) {
             it.mode = LivelineMode.CANDLE; it.valueDecimals = 1
         },
-        Demo("Orderbook", "Bid/ask sizes stream up behind the line.", center = 62.0, vol = 0.45, kind = Kind.ORDERBOOK, window = 45.0) {
+        Demo("Prediction market", "Multi-series: three outcomes summing to 100%. Tap a chip to toggle a line.", kind = Kind.MULTI, window = 45.0) {
+            it.valueSuffix = "%"; it.valueDecimals = 0
+        },
+        Demo("Orderbook", "Bid/ask sizes float up behind the price line — green bids, red asks.", center = 62.0, vol = 0.45, kind = Kind.ORDERBOOK, window = 45.0) {
             it.valueSuffix = "¢"; it.valueDecimals = 0
         },
         // A mostly-moon feed: upward drift + long momentum so it keeps pumping.
-        Demo("Degen", "Shake + sparks on strong up-moves.", center = 420.0, vol = 3.0, momentum = 0.9, reversion = 0.006, drift = 0.12) {
+        Demo("Degen", "Chart shake + sparks on strong up-moves, with momentum arrows and haptics.", center = 420.0, vol = 3.0, momentum = 0.9, reversion = 0.006, drift = 0.12) {
             it.momentum = Momentum.AUTO; it.degen = true; it.badgeVariant = BadgeVariant.ACCENT
-            it.accent = Color.parseColor("#f0731a"); it.valueDecimals = 1
+            it.accent = Color.parseColor("#f5731f"); it.valueDecimals = 1
         },
-        Demo("Prediction market", "Three outcomes → 100%. Tap a chip to toggle.", kind = Kind.MULTI, window = 45.0) {
-            it.valueSuffix = "%"; it.valueDecimals = 0
+        Demo("Loading", "Toggles every 4s: a breathing line, then it morphs into the backfilled chart.", kind = Kind.LOADING) { it.accent = Color.parseColor("#4aae66") },
+        Demo("Paused", "Auto-toggles every 4s. Data keeps arriving while paused; on resume it catches up.", center = 160.0, vol = 0.7, kind = Kind.PAUSED) {
+            it.accent = Color.parseColor("#4aae66")
         },
-        Demo("Loading", "Breathing ↔ data, every 4s.", kind = Kind.LOADING) {},
-        Demo("Paused", "Freezes, then catches up.", center = 160.0, vol = 0.7, kind = Kind.PAUSED) {
-            it.accent = Color.parseColor("#4aad66")
-        },
-        Demo("Stale feed", "Feed stops after 6s.", kind = Kind.STALE) {},
+        Demo("Stale feed", "The feed stops after 6s. The chart keeps scrolling; the line runs flat to the edge.", kind = Kind.STALE) {},
     )
 
     private lateinit var chart: LivelineView
