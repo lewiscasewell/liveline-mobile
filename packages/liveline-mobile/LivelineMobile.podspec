@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   s.author       = { "Lewis Casewell" => "lewiscasewell@hotmail.co.uk" }
   s.platforms    = { :ios => "16.0" }
-  s.source       = { :git => "https://github.com/lewiscasewell/liveline-mobile.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/lewiscasewell/liveline-mobile.git", :tag => "v#{s.version}" }
   s.swift_version = "5.9"
 
   # Compile the binding in Swift 5 language mode: Nitro applies view props on

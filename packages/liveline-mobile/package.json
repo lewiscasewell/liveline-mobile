@@ -1,8 +1,31 @@
 {
   "name": "liveline-mobile",
-  "version": "0.0.0",
-  "description": "Real-time line/candle chart for React Native, backed by native Swift (LivelineKit) via Nitro Modules.",
+  "version": "0.1.0",
+  "description": "Real-time line/candle chart for React Native, backed by native Swift (LivelineKit) and Kotlin via Nitro Modules.",
   "main": "src/index.ts",
+  "types": "src/index.ts",
+  "react-native": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "react-native": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "nitrogen/generated",
+    "ios",
+    "android/src",
+    "android/build.gradle",
+    "android/CMakeLists.txt",
+    "LivelineMobile.podspec",
+    "react-native.config.js",
+    "nitro.json",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "codegen": "nitrogen"
   },
@@ -10,8 +33,22 @@
     "react-native",
     "nitro",
     "chart",
-    "liveline"
+    "candlestick",
+    "realtime",
+    "liveline",
+    "ios",
+    "android"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lewiscasewell/liveline-mobile.git",
+    "directory": "packages/liveline-mobile"
+  },
+  "homepage": "https://github.com/lewiscasewell/liveline-mobile#readme",
+  "bugs": {
+    "url": "https://github.com/lewiscasewell/liveline-mobile/issues"
+  },
+  "author": "Lewis Casewell (https://github.com/lewiscasewell)",
   "license": "MIT",
   "codegenConfig": {
     "name": "LivelineMobileSpec",

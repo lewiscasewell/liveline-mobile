@@ -58,19 +58,30 @@ Once those exist, everything below is scriptable and I can wire it up.
 
 ## One-time prep (before the first publish)
 
-- [ ] Add a **`files`** allowlist to `packages/liveline-mobile/package.json` so
-      the tarball is exactly: `src/`, `nitrogen/generated/`, `ios/`, `android/`,
-      `LivelineMobile.podspec`, `nitro.json`, `README.md`, `package.json`.
-      Exclude tests, `.cxx/`, `build/`, `.gradle/`.
-- [ ] Add `types`, `react-native`, and an `exports` map (decision 2).
-- [ ] Wire **`maven-publish` + signing** into `android/liveline-core` and
-      `android/liveline` `build.gradle` (group `io.github.lewiscasewell`,
-      artifacts `liveline-core` / `liveline`) — decision 3.
-- [ ] Sync mechanism for `version` ↔ podspec `s.version` ↔ Gradle version
-      (a `postversion` npm hook, single source of truth) — decision 1.
-- [ ] `LICENSE` present in the package (root `LICENSE` exists; confirm it's shipped).
-- [ ] `repository`, `homepage`, `bugs` fields in `package.json`.
-- [ ] `npm pack --dry-run` and eyeball the file list.
+Done on the `release-plumbing` branch:
+
+- [x] **`files`** allowlist in `packages/liveline-mobile/package.json` — tarball is
+      `src/`, `nitrogen/generated/`, `ios/`, `android/src` + `android/build.gradle`
+      + `android/CMakeLists.txt`, `LivelineMobile.podspec`, `react-native.config.js`,
+      `nitro.json`, `README.md`, `LICENSE`. (Allowlisting the specific `android/*`
+      paths — not the whole dir — drops `build/` and `.cxx/` with no `.npmignore`.)
+      Verified with `npm pack --dry-run` (106 files, ~76 kB).
+- [x] `types`, `react-native`, and an `exports` map (decision 2).
+- [x] **`maven-publish` + signing** via the `com.vanniktech.maven.publish` plugin
+      in `android/liveline-core` and `android/liveline` (group
+      `io.github.lewiscasewell`, artifacts `liveline-core` / `liveline`, Central
+      Portal target). `liveline` depends on `liveline-core` via `api`, so the
+      published POM lists it as a `compile` dep. Verified with `publishToMavenLocal`
+      (AAR + jar + sources + javadoc + correct POMs). Signing auto-enables only
+      once a real `signing.gnupg.keyName` is set (placeholder ⇒ unsigned local
+      dry-runs work).
+- [x] **Single-source version**: both podspecs and the Android Gradle build read
+      `packages/liveline-mobile/package.json` at configure time, so `npm version`
+      moves all three. Git tags are `vX.Y.Z` (podspecs use `:tag => "v#{s.version}"`).
+      No `postversion` hook needed.
+- [x] `LICENSE` copied into the package (shipped in the tarball).
+- [x] `repository`, `homepage`, `bugs`, `author` fields in `package.json`.
+- [x] `CHANGELOG.md` seeded with `0.1.0`.
 
 ## Pre-flight checks
 
@@ -105,7 +116,8 @@ swift format lint --configuration .swift-format --recursive ios/Sources
 
 ## Release steps
 
-1. **Bump the version** (npm `version` → mirror to podspec `s.version`).
+1. **Bump the version:** `cd packages/liveline-mobile && npm version X.Y.Z`
+   (the podspecs and the Android Gradle build read this file, so all three move).
 2. **Update `CHANGELOG.md`.**
 3. **Commit** the bump: `chore(release): vX.Y.Z`.
 4. **Tag + push:** `git tag vX.Y.Z && git push --follow-tags`.
@@ -116,7 +128,10 @@ swift format lint --configuration .swift-format --recursive ios/Sources
 6. **Publish npm:** `cd packages/liveline-mobile && npm publish` (add `--otp` if
    2FA).
 7. **Publish Android to Maven Central:** `cd android && ./gradlew publishToMavenCentral`
-   (signs + uploads `liveline-core` and `liveline` at the same version).
+   (signs + uploads `liveline-core` and `liveline` to a Central Portal staging
+   deployment; verify and **Publish** it in the portal UI). Use
+   `publishAndReleaseToMavenCentral` instead to skip the manual release step once
+   you trust the pipeline.
 
 Steps 4–7 are what CI will do on a `v*` tag once it's set up; until then, by hand.
 
