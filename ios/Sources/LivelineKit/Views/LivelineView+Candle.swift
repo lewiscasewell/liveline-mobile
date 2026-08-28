@@ -28,7 +28,14 @@ extension LivelineView {
         now: Double, dt: Double, pausedDt: Double, nowMs: Double, modeProgress: Double = 1
     ) {
         let chartH = h - pad.top - pad.bottom
-        let rightEdge = now + displayWindow * CK.buffer
+        // Interpolate the right-edge buffer from the candle buffer (full candle)
+        // to the line buffer (full line — wider, to clear the momentum arrows), so
+        // the morph hands off to the line path without jumping horizontally.
+        let chartW = w - pad.left - pad.right
+        var lineBuf = badge ? K.windowBuffer : K.windowBufferNoBadge
+        if badge, momentum != .off { lineBuf = max(lineBuf, 37.0 / max(Double(chartW), 1)) }
+        let buffer = CK.buffer * modeProgress + lineBuf * (1 - modeProgress)
+        let rightEdge = now + displayWindow * buffer
         let leftEdge = rightEdge - displayWindow
 
         // Live candle OHLC easing.

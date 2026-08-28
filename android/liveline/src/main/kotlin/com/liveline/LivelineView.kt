@@ -357,7 +357,10 @@ class LivelineView @JvmOverloads constructor(
         // Momentum chevrons sit just right of the live dot; widen the right-edge
         // buffer so they clear the badge instead of hiding behind it (mirrors iOS
         // currentWinBuffer). One source of truth so the crosshair mapping agrees.
-        val rightBuf = if (!isCandle && badge && momentum != Momentum.OFF) max(0.05, dp(37f).toDouble() / chartW) else 0.05
+        val lineBuf = if (badge && momentum != Momentum.OFF) max(0.05, dp(37f).toDouble() / chartW) else 0.05
+        // Candle uses a tight buffer; interpolate to the wider line buffer across
+        // the morph so handing off to the line path doesn't jump horizontally.
+        val rightBuf = if (isCandle) 0.05 * modeProgress + lineBuf * (1 - modeProgress) else lineBuf
         val rightEdge = now + span * rightBuf
         val leftEdge = rightEdge - span
 
@@ -924,6 +927,15 @@ class LivelineView @JvmOverloads constructor(
         val endX = toX(now); val endY = toY(displayValue).coerceIn(padT, padT + chartH)
         val col = if ((liveCandle?.let { it.close >= it.open } ?: true)) bull else bear
         drawBadge(canvas, endX, endY, w, padR, padT, chartH, col.toInt())
+        // Momentum arrows persist over candles (like iOS), so they don't pop in
+        // when morphing to line mode.
+        if (momentum != Momentum.OFF) {
+            val trend = when (momentum) {
+                Momentum.UP -> Trend.UP; Momentum.DOWN -> Trend.DOWN; Momentum.FLAT -> Trend.FLAT
+                else -> MomentumDetect.detect(buffer.filter { it.time in leftEdge..now })
+            }
+            drawArrows(canvas, endX, endY, trend, dt, nowMs)
+        }
     }
 
     // ── Time axis ─────────────────────────────────────────────────────────────
