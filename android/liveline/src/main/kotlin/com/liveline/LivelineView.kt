@@ -486,9 +486,11 @@ class LivelineView @JvmOverloads constructor(
         canvas.drawPath(path, linePaint)
         linePaint.color = palette.line.toInt()  // restore for the scrub-fade + reuse below
 
-        // 4b. While scrubbing, fade the line to the RIGHT of the crosshair.
+        // 4b. While scrubbing, fade the line to the RIGHT of the crosshair. The
+        // hover is clamped to the live dot (the line's end), so you can't scrub
+        // into the right-edge buffer past where the data actually is.
         if (scrubAmount > 0.02) {
-            val hx = hoverX.coerceIn(padL, padL + chartW)
+            val hx = hoverX.coerceIn(padL, endX)
             scrubFadePaint.color = palette.background.withAlpha(palette.background.a * scrubAmount * 0.55).toInt()
             canvas.drawRect(hx, padT, padL + chartW, padT + chartH, scrubFadePaint)
         }
@@ -502,9 +504,21 @@ class LivelineView @JvmOverloads constructor(
         fadePaint.shader = LinearGradient(padL, 0f, padL + fadeW, 0f, palette.background.toInt(), palette.background.withAlpha(0.0).toInt(), Shader.TileMode.CLAMP)
         canvas.drawRect(0f, 0f, padL + fadeW, h, fadePaint)
 
+        // Crosshair fades out (and the live dot un-dims) as the hover nears the
+        // live dot — matching iOS, so it "goes small" as you reach the cursor.
+        val crossDist = endX - hoverX.coerceIn(padL, endX)
+        val crossFadeStart = min(dp(80f), chartW * 0.3f)
+        val crossFadeMin = dp(5f)
+        val crossFade = when {
+            scrubAmount <= 0.0 -> 0.0
+            crossDist < crossFadeMin -> 0.0
+            crossDist >= crossFadeStart -> scrubAmount
+            else -> ((crossDist - crossFadeMin) / (crossFadeStart - crossFadeMin)).toDouble() * scrubAmount
+        }
+
         // 7. Live dot + pulse — always the line colour (momentum shows via the
         // badge + chevrons, not the dot).
-        val dim = scrubAmount * 0.7
+        val dim = crossFade * 0.7
         val headColor = palette.line
         // Fade the dot / pulse / arrows / badge in with the loading reveal (iOS).
         val dotReveal = ((reveal - 0.3) / 0.7).coerceIn(0.0, 1.0)
@@ -539,7 +553,7 @@ class LivelineView @JvmOverloads constructor(
         }
 
         // 11. Crosshair (scrubbing).
-        if (scrubAmount > 0.02) drawCrosshair(canvas, padL, padT, chartH, chartW, leftEdge, rightEdge, endX) { v -> toY(v) }
+        if (crossFade > 0.02) drawCrosshair(canvas, padL, padT, chartH, chartW, leftEdge, rightEdge, endX, crossFade) { v -> toY(v) }
 
         // 12. Degen sparks, then unwind the shake transform.
         degenDrawParticles(canvas)
@@ -644,11 +658,12 @@ class LivelineView @JvmOverloads constructor(
         }
     }
 
-    private fun drawCrosshair(canvas: Canvas, padL: Float, padT: Float, chartH: Float, chartW: Float, leftEdge: Double, rightEdge: Double, liveDotX: Float, toY: (Double) -> Float) {
-        val hx = hoverX.coerceIn(padL, padL + chartW)
+    private fun drawCrosshair(canvas: Canvas, padL: Float, padT: Float, chartH: Float, chartW: Float, leftEdge: Double, rightEdge: Double, liveDotX: Float, op: Double, toY: (Double) -> Float) {
+        // Clamp to the live dot (the line's end) so the crosshair can't run into
+        // the right-edge buffer past the data.
+        val hx = hoverX.coerceIn(padL, liveDotX)
         val hoverTime = leftEdge + ((hx - padL) / chartW) * (rightEdge - leftEdge)
         val hoverValue = Interpolate.atTime(buffer, hoverTime) ?: return
-        val op = scrubAmount
         crossPaint.color = palette.crosshairLine.withAlpha(palette.crosshairLine.a * op * 0.5).toInt()
         canvas.drawLine(hx, padT, hx, padT + chartH, crossPaint)
         val hy = toY(hoverValue)
