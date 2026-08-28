@@ -22,6 +22,7 @@ struct ContentView: View {
         case orderbook = "Orderbook"
         case degen = "Degen"
         case states = "Loading"
+        case noData = "No data"
         case paused = "Paused"
         case stale = "Stale feed"
         case stress = "Stress tests"
@@ -88,6 +89,7 @@ struct ContentView: View {
         case .orderbook: OrderbookCard()
         case .degen: DegenCard()
         case .states: StatesCard()
+        case .noData: NoDataCard()
         case .paused: PausedCard()
         case .stale: StaleFeedCard()
         case .stress: StressCard()
@@ -341,6 +343,39 @@ final class StatesModel: ObservableObject {
     }
 
     deinit { timer?.invalidate() }
+}
+
+/// Toggles `loading` on a chart that never receives data — loading wins, so it
+/// breathes while loading and falls back to the empty state otherwise.
+final class NoDataModel: ObservableObject {
+    @Published var loading = true
+    private var timer: Timer?
+    private var t = 0.0
+
+    init() {
+        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+            self?.t += 0.05
+            self?.loading = (self!.t.truncatingRemainder(dividingBy: 8)) < 4
+        }
+    }
+
+    deinit { timer?.invalidate() }
+}
+
+private struct NoDataCard: View {
+    @StateObject private var model = NoDataModel()
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        Card(
+            title: "No data",
+            subtitle: "An empty chart. Loading wins: it breathes while loading, then shows the empty state (toggles every 4s)."
+        ) {
+            Liveline()
+                .color(Color(red: 0.29, green: 0.68, blue: 0.4))
+                .loading(model.loading)
+                .theme(livelineTheme(scheme))
+        }
+    }
 }
 
 private struct SurfaceCard: View {
@@ -932,19 +967,14 @@ private struct CandlestickCard: View {
             title: "Candlestick",
             subtitle: "OHLC candles with a live candle that grows its wicks. Toggle line / candle."
         ) {
-            VStack(spacing: 8) {
-                Picker("", selection: $candle) {
-                    Text("Line").tag(false)
-                    Text("Candle").tag(true)
-                }
-                .pickerStyle(.segmented)
-                Liveline(value: feed.live.close)
-                    .mode(candle ? .candle : .line)
-                    .candles(feed.candles)
-                    .liveCandle(feed.live)
-                    .candleWidth(feed.candleWidth)
-                    .theme(livelineTheme(scheme))
-            }
+            Liveline(value: feed.live.close)
+                .mode(candle ? .candle : .line)
+                .candles(feed.candles)
+                .liveCandle(feed.live)
+                .candleWidth(feed.candleWidth)
+                .modeToggle()
+                .onModeChange { candle = ($0 == .candle) }
+                .theme(livelineTheme(scheme))
         }
     }
 }

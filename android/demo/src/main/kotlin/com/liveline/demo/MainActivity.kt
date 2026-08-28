@@ -39,7 +39,7 @@ import kotlin.random.Random
 /** A native Android showcase mirroring the iOS ContentView demo menu. */
 class MainActivity : AppCompatActivity() {
 
-    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, PAUSED, CANDLE, ORDERBOOK, MULTI, STRESS }
+    private enum class Kind { WALK, SPIKES, SLOW, STALE, LOADING, EMPTY, PAUSED, CANDLE, ORDERBOOK, MULTI, STRESS }
 
     private class Demo(
         val name: String,
@@ -100,6 +100,7 @@ class MainActivity : AppCompatActivity() {
             it.accent = Color.parseColor("#f5731f"); it.valueDecimals = 1
         },
         Demo("Loading", "Toggles every 4s: a breathing line, then it morphs into the backfilled chart.", kind = Kind.LOADING) { it.accent = Color.parseColor("#4aae66") },
+        Demo("No data", "An empty chart. Loading wins: it breathes while loading, then shows the empty state (toggles every 4s).", kind = Kind.EMPTY) { it.accent = Color.parseColor("#4aae66") },
         Demo("Paused", "Auto-toggles every 4s. Data keeps arriving while paused; on resume it catches up.", center = 160.0, vol = 0.7, kind = Kind.PAUSED) {
             it.accent = Color.parseColor("#4aae66")
         },
@@ -223,7 +224,11 @@ class MainActivity : AppCompatActivity() {
         root.addView(legend, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(16); gravity = Gravity.START })
         chart = LivelineView(this)
         root.addView(chart, LinearLayout.LayoutParams(MATCH_PARENT, dp(320)).apply { topMargin = dp(10) })
-        windowBar = WindowBarView(this).apply { visibility = View.GONE; onSelect = { chart.windowSeconds = it } }
+        windowBar = WindowBarView(this).apply {
+            visibility = View.GONE
+            onSelect = { chart.windowSeconds = it }
+            onModeSelect = { setCandleMode(it) }
+        }
         root.addView(windowBar, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { topMargin = dp(12); gravity = Gravity.CENTER_HORIZONTAL })
         subtitle = TextView(this).apply { textSize = 13f }
         root.addView(subtitle, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(12) })
@@ -249,6 +254,7 @@ class MainActivity : AppCompatActivity() {
         handler.removeCallbacksAndMessages(null)
         subtitle.text = demo.subtitle
         stressSpinner.visibility = if (demo.kind == Kind.STRESS) View.VISIBLE else View.GONE
+        windowBar.showModeToggle = false
 
         // Reset config to defaults, then apply the demo's.
         chart.apply {
@@ -289,7 +295,18 @@ class MainActivity : AppCompatActivity() {
             return
         } else legend.visibility = View.GONE
 
-        if (demo.kind == Kind.CANDLE) { seedCandles(); startFeed(demo); return }
+        if (demo.kind == Kind.CANDLE) {
+            seedCandles()
+            windowBar.isDark = dark
+            windowBar.showModeToggle = true
+            windowBar.setWindows(emptyList(), 0.0)
+            windowBar.visibility = View.VISIBLE
+            setCandleMode(true)
+            startFeed(demo)
+            return
+        }
+
+        if (demo.kind == Kind.EMPTY) { chart.setData(emptyList()); chart.loading = true; elapsedMs = 0; startFeed(demo); return }
 
         if (demo.kind == Kind.STRESS) {
             subtitle.text = stressDefs[stressVariant].detail
@@ -318,6 +335,12 @@ class MainActivity : AppCompatActivity() {
         var s = 100.0
         chart.setData((0 until 180).map { i -> s += Random.nextDouble(-3.0, 3.0); LivelinePoint(now - 30 + i / 179.0 * 30, s) })
         elapsedMs = 0
+    }
+
+    private fun setCandleMode(candle: Boolean) {
+        if (!::chart.isInitialized) return
+        chart.mode = if (candle) LivelineMode.CANDLE else LivelineMode.LINE
+        windowBar.isCandle = candle
     }
 
     private fun selectStressVariant(pos: Int) {
@@ -350,6 +373,9 @@ class MainActivity : AppCompatActivity() {
         }
         liveC = LivelineCandle(liveBucket, candlePrice, candlePrice, candlePrice, candlePrice)
         chart.setCandles(ArrayList(candleList), liveC, candleWidth)
+        // Also feed the line buffer (candle closes) so the line/candle toggle and
+        // the morph have real data to draw in line mode (matches iOS/RN).
+        chart.setData(candleList.map { LivelinePoint(it.time + candleWidth, it.close) })
     }
 
     private fun startFeed(demo: Demo) {
@@ -395,7 +421,9 @@ class MainActivity : AppCompatActivity() {
                             liveC = LivelineCandle(bucket, candlePrice, candlePrice, candlePrice, candlePrice)
                         } else liveC = LivelineCandle(liveC.time, liveC.open, max(liveC.high, candlePrice), min(liveC.low, candlePrice), candlePrice)
                         chart.setCandles(ArrayList(candleList), liveC, candleWidth)
+                        chart.push(LivelinePoint(System.currentTimeMillis() / 1000.0, candlePrice))
                     }
+                    Kind.EMPTY -> chart.loading = (elapsedMs / 4000) % 2 == 0L
                 }
                 handler.postDelayed(this, if (demo.kind == Kind.STRESS) stressDefs[stressVariant].intervalMs else demo.intervalMs)
             }

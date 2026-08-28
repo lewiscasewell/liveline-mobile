@@ -226,32 +226,18 @@ const Candlestick: React.FC<DemoProps> = ({ dark }) => {
   }, [feed, push])
   const { candles, live } = stateRef.current
   return (
-    <View style={styles.stack}>
-      <View style={styles.toggleRow}>
-        {(['Line', 'Candle'] as const).map((label, idx) => {
-          const on = candle === (idx === 1)
-          return (
-            <TouchableOpacity
-              key={label}
-              onPress={() => setCandle(idx === 1)}
-              style={[styles.seg, on && styles.segOn]}
-            >
-              <Text style={[styles.segText, on && styles.segTextOn]}>{label}</Text>
-            </TouchableOpacity>
-          )
-        })}
-      </View>
-      <Liveline
-        style={styles.card}
-        data={seed}
-        mode={candle ? 'candle' : 'line'}
-        candles={candles.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))}
-        liveCandle={{ time: live.time, open: live.open, high: live.high, low: live.low, close: live.close }}
-        candleWidth={feed.width}
-        theme={themeOf(dark)}
-        hybridRef={attachHybridRef()}
-      />
-    </View>
+    <Liveline
+      style={styles.card}
+      data={seed}
+      mode={candle ? 'candle' : 'line'}
+      modeToggle
+      onModeChange={(m) => setCandle(m === 'candle')}
+      candles={candles.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))}
+      liveCandle={{ time: live.time, open: live.open, high: live.high, low: live.low, close: live.close }}
+      candleWidth={feed.width}
+      theme={themeOf(dark)}
+      hybridRef={attachHybridRef()}
+    />
   )
 }
 
@@ -355,6 +341,15 @@ const Loading: React.FC<DemoProps> = ({ dark }) => {
       hybridRef={attachHybridRef()}
     />
   )
+}
+
+const NoData: React.FC<DemoProps> = ({ dark }) => {
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    const id = setInterval(() => setLoading((v) => !v), 4000)
+    return () => clearInterval(id)
+  }, [])
+  return <Liveline style={styles.card} data={[]} color='#4aae66' loading={loading} theme={themeOf(dark)} />
 }
 
 const Paused: React.FC<DemoProps> = ({ dark }) => {
@@ -491,6 +486,7 @@ const DEMOS: Demo[] = [
   { id: 'orderbook', title: 'Orderbook', subtitle: 'Bid/ask sizes float up behind the price line — green bids, red asks.', Comp: Orderbook },
   { id: 'degen', title: 'Degen', subtitle: 'Chart shake + sparks on strong up-moves, with momentum arrows and haptics.', Comp: Degen },
   { id: 'loading', title: 'Loading', subtitle: 'Toggles every 4s: a breathing line, then it morphs into the backfilled chart.', Comp: Loading },
+  { id: 'nodata', title: 'No data', subtitle: 'An empty chart. Loading wins: it breathes while loading, then shows the empty state (toggles every 4s).', Comp: NoData },
   { id: 'paused', title: 'Paused', subtitle: 'Auto-toggles every 4s. Data keeps arriving while paused; on resume it catches up.', Comp: Paused },
   { id: 'stale', title: 'Stale feed', subtitle: 'The feed stops after 6s. The chart keeps scrolling; the line runs flat to the edge.', Comp: Stale },
   { id: 'stress', title: 'Stress tests', subtitle: 'Extreme feeds that exercise the render loop under wild, chaotic, spiky and irregular input. Pick a pattern.', Comp: Stress },
