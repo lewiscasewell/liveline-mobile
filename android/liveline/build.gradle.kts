@@ -31,12 +31,15 @@ dependencies {
     api(project(":liveline-core"))
 }
 
-// Central requires signed artifacts. Only sign once a real GPG key is set, so
-// publishToMavenLocal dry-runs work before the key exists. Signs via the local
-// gpg agent (signing.gnupg.keyName from ~/.gradle/gradle.properties).
-val gpgKey = providers.gradleProperty("signing.gnupg.keyName").orNull
-val signingEnabled = !gpgKey.isNullOrBlank() && gpgKey != "PASTE_GPG_KEY_ID"
-if (signingEnabled) {
+// Central requires signed artifacts. Sign locally via the gpg agent
+// (signing.gnupg.keyName) or, in CI, via an in-memory key (signingInMemoryKey,
+// which vanniktech picks up automatically). Neither present ⇒ unsigned, so
+// publishToMavenLocal dry-runs still work before any key exists.
+val gpgKeyName = providers.gradleProperty("signing.gnupg.keyName").orNull
+val useLocalGpg = !gpgKeyName.isNullOrBlank() && gpgKeyName != "PASTE_GPG_KEY_ID"
+val hasInMemoryKey = !providers.gradleProperty("signingInMemoryKey").orNull.isNullOrBlank()
+val signingEnabled = useLocalGpg || hasInMemoryKey
+if (useLocalGpg) {
     signing { useGpgCmd() }
 }
 

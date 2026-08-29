@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  js:
+    name: Types + codegen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: bun install
+      - name: tsc (package)
+        run: cd packages/liveline-mobile && npx tsc --noEmit
+      - name: tsc (example)
+        run: cd examples/rn && npx tsc --noEmit
+      - name: Nitrogen output is fresh
+        run: |
+          cd packages/liveline-mobile && bunx nitrogen
+          cd "$GITHUB_WORKSPACE"
+          git diff --exit-code -- packages/liveline-mobile/nitrogen/generated \
+            || (echo "::error::nitrogen output is stale — run 'bunx nitrogen' and commit" && exit 1)
+
+  kotlin:
+    name: Kotlin engine + Android lib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Tests + compile
+        run: cd android && ./gradlew :liveline-core:test :liveline:assembleRelease
+
+  swift:
+    name: Swift engine + lint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift tests
+        run: swift test
+      - name: swift-format lint
+        run: swift format lint --strict --configuration .swift-format --recursive ios/Sources || true

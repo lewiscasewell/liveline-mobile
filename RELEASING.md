@@ -1,9 +1,11 @@
 # Releasing liveline-mobile
 
-> **Status: the plan.** Repo has never been published (npm `0.0.0`, no git tags,
-> no CI). **One release ships all three artifacts together**, versioned by a
-> single semver / git tag. First public version: **`0.1.0`** (pre-1.0 — the API
-> is complete but we reserve the right to change it before 1.0).
+> **Status: plumbing + CI wired, not yet published.** The publishing config,
+> signing, and the release-please pipeline are set up and verified with local
+> dry-runs; nothing is on npm/Maven yet. **One release ships all three artifacts
+> together**, versioned by a single semver / git tag. First public version:
+> **`0.1.0`** (pre-1.0 — the API is complete but we reserve the right to change
+> it before 1.0), seeded by hand, then automated from `0.2.0`.
 
 ## What ships
 
@@ -114,7 +116,43 @@ swift format lint --configuration .swift-format --recursive ios/Sources
 > Metro needs Node 24; nitrogen must be run with Node 24 too (see
 > `rn-dev-loop` notes).
 
+## Automated releases (the pipeline)
+
+Once `0.1.0` is seeded (below), releases are automated via
+[release-please](https://github.com/googleapis/release-please):
+
+1. **Merge feature PRs to `main`** using [Conventional Commits](https://www.conventionalcommits.org/):
+   `feat:` → minor, `fix:` → patch, `feat!:` / `BREAKING CHANGE:` → major (in
+   0.x a breaking change bumps minor). This is the version *and* the changelog.
+2. `release.yml` keeps a **"Release vX.Y.Z" PR** open with the computed version +
+   generated changelog. Nothing is published while it sits there.
+3. **Merge the Release PR** → release-please tags `vX.Y.Z` + cuts the GitHub
+   release, which gates the two publish jobs: `npm publish --provenance` and
+   `./gradlew publishAndReleaseToMavenCentral`.
+
+`ci.yml` runs on every PR/push: `tsc` (package + example), nitrogen-freshness,
+Kotlin + Swift engine tests, Android library compile, and swift-format lint.
+
+### GitHub secrets (Settings → Secrets and variables → Actions)
+
+The CI equivalents of your local `~/.gradle/gradle.properties`:
+
+| Secret | Value |
+| --- | --- |
+| `NPM_TOKEN` | an npm **automation** access token (npmjs → Access Tokens) |
+| `MAVEN_CENTRAL_USERNAME` | Central Portal user-token username |
+| `MAVEN_CENTRAL_PASSWORD` | Central Portal user-token password |
+| `SIGNING_KEY` | the **armored private** GPG key: `gpg --export-secret-keys --armor <KEY_ID>` |
+| `SIGNING_KEY_PASSWORD` | the key's passphrase (empty for the no-passphrase key) |
+
+CI signs with the in-memory key (`signingInMemoryKey`); locally you keep using
+the gpg agent (`signing.gnupg.keyName`) — the Gradle build accepts either.
+
 ## Release steps
+
+> These are the **manual** path — used once to seed `0.1.0` (worth doing by hand
+> to watch the first-ever publish to a new npm name + Central namespace), and as
+> a fallback if CI is ever unavailable. After `0.1.0`, use the pipeline above.
 
 1. **Bump the version:** `cd packages/liveline-mobile && npm version X.Y.Z`
    (the podspecs and the Android Gradle build read this file, so all three move).
