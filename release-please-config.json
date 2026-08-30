@@ -4,7 +4,6 @@
     "packages/liveline-mobile": {
       "release-type": "node",
       "package-name": "liveline-mobile",
-      "changelog-path": "../../CHANGELOG.md",
       "component": ""
     }
   },

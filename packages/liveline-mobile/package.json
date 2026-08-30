@@ -24,7 +24,8 @@
     "react-native.config.js",
     "nitro.json",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "codegen": "nitrogen"
