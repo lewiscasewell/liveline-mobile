@@ -136,7 +136,7 @@ closures (or `.locale()`) for localization on the Swift side — the `currency` 
 ## Using it in Android (Kotlin, no React Native)
 
 The engine ships to Maven Central (namespace `io.github.lewiscasewell`) — add the
-`liveline` artifact (it pulls in `liveline-core`), Android 7+ / minSdk 24:
+single `liveline` artifact (engine + renderer in one AAR), Android 7+ / minSdk 24:
 
 ```kotlin
 // build.gradle.kts
@@ -194,8 +194,7 @@ props.
 | Path | What |
 | --- | --- |
 | `ios/Sources/LivelineKit` | The native iOS engine — Swift Package (pure-maths modules + UIKit `LivelineView` + SwiftUI `Liveline`). |
-| `android/liveline-core` | The native Android engine — the pure-maths modules ported 1-for-1 to Kotlin (JUnit tests mirror the Swift XCTests). |
-| `android/liveline` | The Android `LivelineView` (Canvas renderer, `Choreographer` loop). |
+| `android/liveline` | The native Android engine + renderer — the pure-maths modules ported 1-for-1 to Kotlin (`com.liveline.core`, JUnit tests mirror the Swift XCTests) plus the `LivelineView` Canvas renderer (`Choreographer` loop). Published as one AAR. |
 | `packages/liveline-mobile` | The React Native library (Nitro binding + JS wrapper). Its README is the RN documentation. |
 | `examples/ios/LivelineDemo` | The native Swift showcase — a card per feature (parity with the web liveline examples). |
 | `android/demo` | The native Kotlin showcase — the same menu of demos as the iOS one. |
@@ -212,7 +211,7 @@ Android (the engine is a 1-for-1 Kotlin port with a mirrored test suite):
 
 ```bash
 cd android
-./gradlew :liveline-core:test      # the maths port's JUnit suite
+./gradlew :liveline:testDebugUnitTest   # the maths port's JUnit suite
 ./gradlew :demo:assembleDebug      # the native Kotlin showcase app
 ```
 
