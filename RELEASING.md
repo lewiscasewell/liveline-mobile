@@ -141,8 +141,10 @@ The CI equivalents of your local `~/.gradle/gradle.properties`:
 | `NPM_TOKEN` | an npm **automation** access token (npmjs → Access Tokens) |
 | `MAVEN_CENTRAL_USERNAME` | Central Portal user-token username |
 | `MAVEN_CENTRAL_PASSWORD` | Central Portal user-token password |
-| `SIGNING_KEY` | the **armored private** GPG key: `gpg --export-secret-keys --armor <KEY_ID>` |
-| `SIGNING_KEY_PASSWORD` | the key's passphrase (empty for the no-passphrase key) |
+| `SIGNING_KEY` | the **armored private** GPG key: `gpg --export-secret-keys --armor <KEY_ID> \| pbcopy` (never print it to screen) |
+
+(No `SIGNING_KEY_PASSWORD` — the signing key has no passphrase, and GitHub won't
+store an empty secret anyway.)
 
 CI signs with the in-memory key (`signingInMemoryKey`); locally you keep using
 the gpg agent (`signing.gnupg.keyName`) — the Gradle build accepts either.
