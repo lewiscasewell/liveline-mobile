@@ -41,7 +41,7 @@ jobs:
           distribution: temurin
           java-version: 17
       - name: Tests + compile
-        run: cd android && ./gradlew :liveline-core:test :liveline:assembleRelease
+        run: cd android && ./gradlew :liveline:testDebugUnitTest :liveline:assembleRelease
 
   swift:
     name: Swift engine + lint

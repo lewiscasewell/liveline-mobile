@@ -15,7 +15,7 @@ One repo, three consumable artifacts — **released together under one version**
 | --- | --- | --- | --- |
 | **`liveline-mobile`** (npm) | React Native apps | `npm i` + autolinking (ships JS source + `nitrogen/generated` + `ios/` + `android/` + the podspec) | npm |
 | **`LivelineKit`** (Swift Package) | native iOS apps | SPM from the GitHub URL at the **git tag** | GitHub tag (+ the CocoaPod, via the podspec) |
-| **`liveline` engine** (`liveline-core` + `liveline`) | native Android apps | Gradle dependency | Maven Central (namespace `io.github.lewiscasewell`) |
+| **`liveline`** (Android engine + renderer, one AAR) | native Android apps | Gradle dependency | Maven Central (namespace `io.github.lewiscasewell`) |
 
 The RN package is source-shipped: `package.json` `main` points at `src/index.ts`
 and Metro transpiles it; the native code is built by the consumer's autolinking.
@@ -70,11 +70,10 @@ Done on the `release-plumbing` branch:
       Verified with `npm pack --dry-run` (106 files, ~76 kB).
 - [x] `types`, `react-native`, and an `exports` map (decision 2).
 - [x] **`maven-publish` + signing** via the `com.vanniktech.maven.publish` plugin
-      in `android/liveline-core` and `android/liveline` (group
-      `io.github.lewiscasewell`, artifacts `liveline-core` / `liveline`, Central
-      Portal target). `liveline` depends on `liveline-core` via `api`, so the
-      published POM lists it as a `compile` dep. Verified with `publishToMavenLocal`
-      (AAR + jar + sources + javadoc + correct POMs). Signing auto-enables only
+      in `android/liveline` (group `io.github.lewiscasewell`, single artifact
+      `liveline` — the engine + renderer in one AAR, Central Portal target).
+      Verified with `publishToMavenLocal` (AAR + sources + javadoc + correct POM).
+      Signing auto-enables only
       once a real `signing.gnupg.keyName` is set (placeholder ⇒ unsigned local
       dry-runs work).
 - [x] **Single-source version**: both podspecs and the Android Gradle build read
@@ -100,7 +99,7 @@ cd examples/rn && npx tsc --noEmit && cd ../..
 
 # 3. Engine tests (both platforms, host — no device)
 swift test                                   # iOS maths (LivelineKit)
-cd android && ./gradlew :liveline-core:test && cd ..   # Kotlin maths
+cd android && ./gradlew :liveline:testDebugUnitTest && cd ..   # Kotlin maths
 
 # 4. Both example apps build
 cd examples/rn/ios && pod install && cd ../../..        # after any nitro change
@@ -166,7 +165,7 @@ the gpg agent (`signing.gnupg.keyName`) — the Gradle build accepts either.
 6. **Publish npm:** `cd packages/liveline-mobile && npm publish` (add `--otp` if
    2FA).
 7. **Publish Android to Maven Central:** `cd android && ./gradlew publishToMavenCentral`
-   (signs + uploads `liveline-core` and `liveline` to a Central Portal staging
+   (signs + uploads `liveline` to a Central Portal staging
    deployment; verify and **Publish** it in the portal UI). Use
    `publishAndReleaseToMavenCentral` instead to skip the manual release step once
    you trust the pipeline.

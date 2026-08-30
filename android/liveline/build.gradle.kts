@@ -26,9 +26,7 @@ kotlin {
 }
 
 dependencies {
-    // `api`, not `implementation`: liveline's public API exposes core types
-    // (LivelineCandle, LivelineTheme, …), so consumers need them transitively.
-    api(project(":liveline-core"))
+    testImplementation(kotlin("test"))
 }
 
 // Central requires signed artifacts. Sign locally via the gpg agent
@@ -55,7 +53,7 @@ mavenPublishing {
 
     pom {
         name.set("liveline")
-        description.set("Native Android renderer for the Liveline real-time line/candlestick chart.")
+        description.set("Native Android engine + renderer for the Liveline real-time line/candlestick chart.")
         url.set("https://github.com/lewiscasewell/liveline-mobile")
         licenses {
             license {

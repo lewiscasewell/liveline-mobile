@@ -14,6 +14,12 @@ def reactNativeArchitectures() {
   return value ? value.split(",") : ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
 }
 
+// In the monorepo the shared Kotlin engine + renderer is compiled from source
+// (fast iteration, no publish needed). Installed from npm those paths don't
+// exist, so we depend on the published Maven artifact instead (see dependencies).
+def livelineSrc = file("../../../android/liveline/src/main/kotlin")
+def useLocalSource = livelineSrc.exists()
+
 android {
   namespace "com.liveline.mobile"
   compileSdk safeExtGet("compileSdkVersion", 36)
@@ -43,13 +49,11 @@ android {
     buildConfig true
   }
 
-  // Pull in the shared Kotlin engine + renderer as source (monorepo local dev).
-  sourceSets {
-    main {
-      java.srcDirs += [
-        "../../../android/liveline-core/src/main/kotlin",
-        "../../../android/liveline/src/main/kotlin",
-      ]
+  if (useLocalSource) {
+    sourceSets {
+      main {
+        java.srcDirs += ["../../../android/liveline/src/main/kotlin"]
+      }
     }
   }
 }
@@ -60,4 +64,11 @@ apply from: "../nitrogen/generated/android/LivelineMobile+autolinking.gradle"
 dependencies {
   implementation "com.facebook.react:react-android"
   implementation project(":react-native-nitro-modules")
+
+  // Published install: pull the engine + renderer from Maven Central at the
+  // matching version (single source of truth: this package's package.json).
+  if (!useLocalSource) {
+    def pkg = new groovy.json.JsonSlurper().parseText(file("../package.json").text)
+    implementation "io.github.lewiscasewell:liveline:${pkg.version}"
+  }
 }
