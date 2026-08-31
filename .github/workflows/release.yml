@@ -35,7 +35,9 @@ jobs:
     name: Publish to npm
     needs: release-please
     if: always() && (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.releases_created == 'true')
-    runs-on: ubuntu-latest
+    # macOS: the published tarball ships a prebuilt LivelineKit.xcframework, built
+    # fresh here (not committed) so the RN pod is self-contained on iOS.
+    runs-on: macos-latest
     permissions:
       contents: read
       id-token: write # npm provenance
@@ -49,6 +51,8 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - run: bun install
+      - name: Build iOS xcframework
+        run: bash scripts/build-ios-xcframework.sh
       - name: npm publish
         run: cd packages/liveline-mobile && npm publish --provenance --access public
         env:
