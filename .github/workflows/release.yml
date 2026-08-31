@@ -3,6 +3,11 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)publish, e.g. v0.1.0"
+        required: true
 
 permissions:
   contents: write
@@ -11,12 +16,13 @@ permissions:
 jobs:
   # Maintains the "Release vX.Y.Z" PR (changelog + version from conventional
   # commits). Merging that PR creates the tag + GitHub release and flips
-  # release_created, which gates the publish jobs below.
+  # releases_created, which gates the publish jobs below. Skipped on manual runs.
   release-please:
     name: Release PR / tag
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
-      release_created: ${{ steps.rp.outputs.release_created }}
+      releases_created: ${{ steps.rp.outputs.releases_created }}
       tag_name: ${{ steps.rp.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
@@ -28,7 +34,7 @@ jobs:
   publish-npm:
     name: Publish to npm
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    if: always() && (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.releases_created == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ github.event.inputs.tag || needs.release-please.outputs.tag_name }}
       - uses: oven-sh/setup-bun@v2
       - uses: actions/setup-node@v4
         with:
@@ -51,12 +57,12 @@ jobs:
   publish-maven:
     name: Publish to Maven Central
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    if: always() && (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.releases_created == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ github.event.inputs.tag || needs.release-please.outputs.tag_name }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
