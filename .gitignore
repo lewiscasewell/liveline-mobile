@@ -38,3 +38,4 @@ Pods/
 
 # Native build output (CMake/Ninja) — regenerated every build
 **/.cxx/
+packages/liveline-mobile/ios/LivelineKit.xcframework/

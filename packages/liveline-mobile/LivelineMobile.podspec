@@ -20,11 +20,12 @@ Pod::Spec.new do |s|
   s.pod_target_xcconfig = { "SWIFT_VERSION" => "5.0" }
 
   # The thin Nitro HybridView shell (wraps LivelineKit's LivelineView).
-  s.source_files = "ios/**/*.{swift}"
+  s.source_files = "ios/*.swift"
 
-  # The native chart engine, as its own module (avoids type-name collisions
-  # with the Nitrogen-generated types).
-  s.dependency "LivelineKit"
+  # The native chart engine, vendored as a prebuilt binary framework so it stays
+  # its own module (no CocoaPods registry, no Nitro C++/type-name conflicts).
+  # iOS-native apps consume the same engine via Swift Package Manager instead.
+  s.vendored_frameworks = "ios/LivelineKit.xcframework"
 
   # React Native / Fabric dependencies for the view.
   install_modules_dependencies(s)
