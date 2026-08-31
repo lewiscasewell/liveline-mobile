@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/lewiscasewell/liveline-mobile/compare/v0.1.0...v0.1.1) (2026-08-31)
+
+
+### Bug Fixes
+
+* **ios:** self-contained RN pod via vendored xcframework ([68844e4](https://github.com/lewiscasewell/liveline-mobile/commit/68844e4a3e2f1fe6dd019463b7f74fca2a77fa41))
+* **ios:** vendor the engine as a prebuilt xcframework (self-contained RN pod) ([c55fd7a](https://github.com/lewiscasewell/liveline-mobile/commit/c55fd7af5ac5792bd53ae0b0e14aebbf722cf293))
+
 ## 0.1.0 (2026-08-30)
 
 First public release. Pre-1.0: the API is complete but may still change before 1.0.
