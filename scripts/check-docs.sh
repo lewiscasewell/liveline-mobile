@@ -22,12 +22,23 @@ echo "==> 1. video embeds"
 # line. Inline (in a table cell, or after other text) it stays a plain link.
 for f in "${DOCS[@]}"; do
   [[ -f "$f" ]] || continue
-  while IFS=: read -r line _; do
-    [[ -z "$line" ]] && continue
-    err "$f:$line — video URL is not alone on its line, so it renders as a link, not a player"
-  done < <(grep -n 'github\.com/user-attachments/assets/' "$f" \
-           | grep -v '^\([0-9]*\):https://github\.com/user-attachments/assets/[A-Za-z0-9-]*$' \
-           | cut -d: -f1 | sed 's/$/:/')
+  # The URL must be its own paragraph: alone on the line, blank line either
+  # side. Anything else (a table cell, or butted against prose) stays a link.
+  awk -v f="$f" '
+    /github\.com\/user-attachments\/assets\// {
+      if ($0 !~ /^https:\/\/github\.com\/user-attachments\/assets\/[A-Za-z0-9-]+$/)
+        print f ":" NR " — video URL is not alone on its line"
+      else if (NR > 1 && prev !~ /^[ \t]*$/)
+        print f ":" NR " — video URL has no blank line before it"
+      else if ((getline nxt) > 0 && nxt !~ /^[ \t]*$/) {
+        print f ":" NR " — video URL has no blank line after it"
+        prev = nxt; next
+      }
+    }
+    { prev = $0 }
+  ' "$f" | while read -r msg; do
+      err "$msg, so it renders as a link, not a player"
+    done
 done
 
 echo "==> 2. versions"
