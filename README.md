@@ -28,77 +28,26 @@ device loop — no post-production, no sped-up footage.
 
 <!-- Each URL must sit alone in its own paragraph, with a blank line either side.
      That is the only form GitHub swaps for a video player; inside a table cell,
-     or on the same line as other text, it stays a plain link. -->
-
-### The chart types
-
-**Basic** — A live value. Two props: `data` and `value`.
-
-https://github.com/user-attachments/assets/683393ca-6680-4c9a-92dc-9db22a461326
-
-**Momentum** — Directional chevrons on the live dot; the badge tints green up / red down.
-
-https://github.com/user-attachments/assets/c027bacc-cb33-40dc-8cae-75462e793b01
-
-**Candlesticks** — OHLC candles with a live candle that grows its wicks — toggled against line mode.
-
-https://github.com/user-attachments/assets/57a30e0e-b816-4cae-86c7-8173b134d577
-
-**Multi-series** — A prediction market: three outcomes summing to 100%. Tap a chip to toggle a line.
-
-https://github.com/user-attachments/assets/733ed229-13da-4e91-b65a-fd916aec5072
-
-**Orderbook** — Resting bid/ask sizes float up behind the price line — green bids, red asks.
-
-https://github.com/user-attachments/assets/aa9e32b1-3716-486d-a0f0-3f1e8d5d9709
-
-**Time windows** — Tap the native interval bar to smoothly zoom the visible span.
-
-https://github.com/user-attachments/assets/5b2c9c1e-e9ca-4630-9f41-bb8b2566a06a
-
-### Feeds it was built for
-
-**Heart rate** — `exaggerate` tightens the Y-axis so a few bpm of variation fills the height.
-
-https://github.com/user-attachments/assets/f07bf958-67d0-4b06-a8c6-74bcce0bcdc2
-
-**CPU usage** — A low idle baseline with occasional spikes.
-
-https://github.com/user-attachments/assets/9bb3325f-1c1a-4220-ad5b-f12f10608044
-
-**Slow ticker** — One update every 4s, and it still scrolls smoothly between ticks.
-
-https://github.com/user-attachments/assets/a3578da4-b5eb-461d-911c-432c5f20839c
-
-**Reference line** — A horizontal marker at a fixed value, kept in view.
-
-https://github.com/user-attachments/assets/a3fc4e50-5400-49b9-9cfe-adafe19145dd
-
-**Value overlay** — `showValue` draws the live number over the chart; `valueMomentumColor` tints it.
-
-https://github.com/user-attachments/assets/cd6a9511-2431-4e59-933c-8509a211f6a4
+     or on the same line as other text, it stays a plain link.
+     scripts/check-docs.sh enforces this. -->
 
 **Degen** — Chart shake and sparks on strong up-moves, with momentum arrows and haptics.
 
 https://github.com/user-attachments/assets/d16fc7b2-3dd6-45ea-a438-2aa68a1da291
 
-### States, and holding up under load
+**Time windows** — Tap the native interval bar to smoothly zoom the visible span.
 
-**Loading** — A breathing line that morphs into the backfilled chart once data lands.
+https://github.com/user-attachments/assets/5b2c9c1e-e9ca-4630-9f41-bb8b2566a06a
 
-https://github.com/user-attachments/assets/7162e90e-553a-49e6-b72f-696b402ee988
+**Prediction markets** — Multi-series: three outcomes summing to 100%. Tap a chip to toggle a line.
 
-**No data** — The empty state, for a feed that has nothing to show yet.
-
-https://github.com/user-attachments/assets/03a73d38-e4a4-459f-991e-52b3ee8c69a1
-
-**Paused** — Data keeps arriving while paused; on resume the chart catches up.
-
-https://github.com/user-attachments/assets/0bacdaa3-8d21-4d45-8272-fd148d2e2b1c
+https://github.com/user-attachments/assets/733ed229-13da-4e91-b65a-fd916aec5072
 
 **Stress tests** — Wild, chaotic, spiky and irregular feeds driven straight at the render loop.
 
 https://github.com/user-attachments/assets/30bb1025-70a5-4f03-b47a-d36ca8b2daa2
+
+**[→ The other twelve demos](#every-demo)** — line and candle basics, the orderbook, real-world feeds, and the loading/empty/paused states.
 
 _See the original web charts in motion in Benji Taylor's
 [liveline](https://github.com/benjitaylor/liveline) and its
@@ -155,7 +104,7 @@ formatting/localization, and every prop).
 straight from GitHub:
 
 ```swift
-.package(url: "https://github.com/lewiscasewell/liveline-mobile", branch: "main")
+.package(url: "https://github.com/lewiscasewell/liveline-mobile", from: "0.1.1")
 // then: import LivelineKit
 ```
 
@@ -206,7 +155,7 @@ single `liveline` artifact (engine + renderer in one AAR), Android 7+ / minSdk 2
 
 ```kotlin
 // build.gradle.kts
-implementation("io.github.lewiscasewell:liveline:0.1.0")
+implementation("io.github.lewiscasewell:liveline:0.1.1")
 ```
 
 `com.liveline.LivelineView` is a plain Android `View` whose property names match
@@ -295,6 +244,65 @@ requires a `pod install` in `examples/rn/ios`; changing the Nitro spec
 
 - **Format:** `swift format --configuration .swift-format --in-place --recursive ios/Sources`
 - **Lint:** `swift format lint --configuration .swift-format --recursive ios/Sources`
+
+## Every demo
+
+The four above plus the rest of the showcase — every card in the demo
+app, in the order it appears there.
+
+### The chart types
+
+**Basic** — A live value. Two props: `data` and `value`.
+
+https://github.com/user-attachments/assets/683393ca-6680-4c9a-92dc-9db22a461326
+
+**Momentum** — Directional chevrons on the live dot; the badge tints green up / red down.
+
+https://github.com/user-attachments/assets/c027bacc-cb33-40dc-8cae-75462e793b01
+
+**Candlesticks** — OHLC candles with a live candle that grows its wicks — toggled against line mode.
+
+https://github.com/user-attachments/assets/57a30e0e-b816-4cae-86c7-8173b134d577
+
+**Orderbook** — Resting bid/ask sizes float up behind the price line — green bids, red asks.
+
+https://github.com/user-attachments/assets/aa9e32b1-3716-486d-a0f0-3f1e8d5d9709
+
+### Feeds it was built for
+
+**Heart rate** — `exaggerate` tightens the Y-axis so a few bpm of variation fills the height.
+
+https://github.com/user-attachments/assets/f07bf958-67d0-4b06-a8c6-74bcce0bcdc2
+
+**CPU usage** — A low idle baseline with occasional spikes.
+
+https://github.com/user-attachments/assets/9bb3325f-1c1a-4220-ad5b-f12f10608044
+
+**Slow ticker** — One update every 4s, and it still scrolls smoothly between ticks.
+
+https://github.com/user-attachments/assets/a3578da4-b5eb-461d-911c-432c5f20839c
+
+**Reference line** — A horizontal marker at a fixed value, kept in view.
+
+https://github.com/user-attachments/assets/a3fc4e50-5400-49b9-9cfe-adafe19145dd
+
+**Value overlay** — `showValue` draws the live number over the chart; `valueMomentumColor` tints it.
+
+https://github.com/user-attachments/assets/cd6a9511-2431-4e59-933c-8509a211f6a4
+
+### States
+
+**Loading** — A breathing line that morphs into the backfilled chart once data lands.
+
+https://github.com/user-attachments/assets/7162e90e-553a-49e6-b72f-696b402ee988
+
+**No data** — The empty state, for a feed that has nothing to show yet.
+
+https://github.com/user-attachments/assets/03a73d38-e4a4-459f-991e-52b3ee8c69a1
+
+**Paused** — Data keeps arriving while paused; on resume the chart catches up.
+
+https://github.com/user-attachments/assets/0bacdaa3-8d21-4d45-8272-fd148d2e2b1c
 
 ## Credit
 
