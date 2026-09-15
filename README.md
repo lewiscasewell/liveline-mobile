@@ -30,7 +30,7 @@ device loop — no post-production, no sped-up footage.
 
 | | |
 | --- | --- |
-| **Basic**<br>A live value. Two props: `data` and `value`.<br>https://github.com/user-attachments/assets/683393ca-6680-4c9a-92dc-9db22a461326 | **Momentum**<br>Directional chevrons on the live dot; the badge tints green up / red down.<br>https://github.com/user-attachments/assets/c027bacc-cb33-40dc-8cae-75462e793b01 |
+| **Basic**<br>A live value. Two props: `data` and `value`. <br>https://github.com/user-attachments/assets/683393ca-6680-4c9a-92dc-9db22a461326 | **Momentum**<br>Directional chevrons on the live dot; the badge tints green up / red down.<br>https://github.com/user-attachments/assets/c027bacc-cb33-40dc-8cae-75462e793b01 |
 | **Candlesticks**<br>OHLC candles with a live candle that grows its wicks — toggled against line mode.<br>https://github.com/user-attachments/assets/57a30e0e-b816-4cae-86c7-8173b134d577 | **Multi-series**<br>A prediction market: three outcomes summing to 100%. Tap a chip to toggle a line.<br>https://github.com/user-attachments/assets/733ed229-13da-4e91-b65a-fd916aec5072 |
 | **Orderbook**<br>Resting bid/ask sizes float up behind the price line — green bids, red asks.<br>https://github.com/user-attachments/assets/aa9e32b1-3716-486d-a0f0-3f1e8d5d9709 | **Time windows**<br>Tap the native interval bar to smoothly zoom the visible span.<br>https://github.com/user-attachments/assets/5b2c9c1e-e9ca-4630-9f41-bb8b2566a06a |
 
