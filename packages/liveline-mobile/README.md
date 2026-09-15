@@ -20,16 +20,25 @@ web/React/canvas) — the prop vocabulary matches, so names carry across platfor
 
 ## Preview
 
-<!-- TODO: add demo videos. On GitHub, drag an .mp4 into the README editor (or any
-     issue/PR comment) to upload it and get a https://github.com/user-attachments/…
-     URL, then paste that URL on its own line in place of a placeholder below. -->
+**Line + momentum** — Directional chevrons on the live dot; the badge tints green up / red down.
 
-> **Demo videos coming soon.**
+https://github.com/user-attachments/assets/c027bacc-cb33-40dc-8cae-75462e793b01
 
-| | |
-| --- | --- |
-| **Line + momentum** — _video coming soon_ | **Candlesticks** — _video coming soon_ |
-| **Multi-series** — _video coming soon_ | **Orderbook stream** — _video coming soon_ |
+**Candlesticks** — OHLC candles with a live candle that grows its wicks — toggled against line mode.
+
+https://github.com/user-attachments/assets/57a30e0e-b816-4cae-86c7-8173b134d577
+
+**Multi-series** — A prediction market: three outcomes summing to 100%. Tap a chip to toggle a line.
+
+https://github.com/user-attachments/assets/733ed229-13da-4e91-b65a-fd916aec5072
+
+**Orderbook stream** — Resting bid/ask sizes float up behind the price line — green bids, red asks.
+
+https://github.com/user-attachments/assets/aa9e32b1-3716-486d-a0f0-3f1e8d5d9709
+
+**[→ All 16 demos, in the repository README](https://github.com/lewiscasewell/liveline-mobile#preview)** —
+time windows, heart rate, CPU, the slow ticker, loading/empty/paused states and
+the stress feeds.
 
 ---
 
