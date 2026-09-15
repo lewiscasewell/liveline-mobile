@@ -173,8 +173,8 @@ again when the timeframe changes), never a growing array every tick.
 ```tsx
 <Liveline data={history} />   // history: { time: number; value: number }[]
 ```
-<!-- 🎥 record: a chart mounting already populated from `data` -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/683393ca-6680-4c9a-92dc-9db22a461326
 
 #### `value` — the live value
 
@@ -196,8 +196,7 @@ low-frequency source still scrolls at the display's refresh rate.
 > touches, stalled logic). **For real-time feeds, use
 > [`push()`](#push--useliveline--the-imperative-feed).**
 
-<!-- 🎥 record: value updating live, badge tracking the tip -->
-> _Video coming soon._
+https://github.com/user-attachments/assets/683393ca-6680-4c9a-92dc-9db22a461326
 
 #### `push()` / `useLiveline()` — the imperative feed
 
@@ -213,8 +212,8 @@ useEffect(() => {
 
 return <Liveline data={history} hybridRef={attachHybridRef()} />
 ```
-<!-- 🎥 record: a fast (50–100Hz) push feed staying smooth -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/30bb1025-70a5-4f03-b47a-d36ca8b2daa2
 
 #### `series` — multiple lines
 
@@ -231,8 +230,8 @@ Several equal-peer lines on one chart. A non-empty `series` replaces
 />
 // live: push({ time, value }, 'yes')
 ```
-<!-- 🎥 record: Prediction-market demo, tapping legend chips to toggle lines -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/733ed229-13da-4e91-b65a-fd916aec5072
 
 #### `onSeriesToggle` — legend toggle callback
 
@@ -241,8 +240,8 @@ Fires when a legend chip shows/hides a line: `(id, visible) => void`.
 ```tsx
 <Liveline series={series} onSeriesToggle={(id, visible) => console.log(id, visible)} />
 ```
-<!-- 🎥 record: tapping a chip, the line hiding, the callback logging -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/733ed229-13da-4e91-b65a-fd916aec5072
 
 #### `seriesToggleCompact` — dots-only legend
 
@@ -252,7 +251,6 @@ Shows the legend as colour dots without labels. Default `false`.
 <Liveline series={series} seriesToggleCompact />
 ```
 <!-- 🎥 record: the legend as labels vs compact dots -->
-> _Video coming soon._
 
 ### Appearance
 
@@ -265,7 +263,6 @@ Default `#3b82f6`.
 <Liveline data={data} color='#8b5cf6' />
 ```
 <!-- 🎥 record: same chart in two accent colours -->
-> _Video coming soon._
 
 #### `theme` — light / dark
 
@@ -276,7 +273,6 @@ Base surface tone for background, grid and text. `'light' | 'dark'`, default
 <Liveline data={data} theme='light' />
 ```
 <!-- 🎥 record: toggling theme light ↔ dark -->
-> _Video coming soon._
 
 #### `surfaceColor` ➕ — opaque card
 
@@ -290,7 +286,6 @@ background, independent of `theme`.
 <Liveline data={data} surfaceColor='#1c1530' />
 ```
 <!-- 🎥 record: transparent chart over a gradient, then an opaque surfaceColor -->
-> _Video coming soon._
 
 #### `grid` — Y-axis grid & labels
 
@@ -301,7 +296,6 @@ unaffected. Default `true`.
 <Liveline data={data} grid={false} />
 ```
 <!-- 🎥 record: Basic chart, grid on → off -->
-> _Video coming soon._
 
 #### `fill` — area under the line
 
@@ -311,7 +305,6 @@ The gradient fill beneath the curve. Default `true`; set `false` for a bare line
 <Liveline data={data} fill={false} />
 ```
 <!-- 🎥 record: same chart with fill on → off -->
-> _Video coming soon._
 
 #### `padding` — chart insets
 
@@ -323,7 +316,6 @@ the chart.
 <Liveline data={data} padding={{ top: 24, right: 12 }} />
 ```
 <!-- 🎥 record: default insets vs a custom padding -->
-> _Video coming soon._
 
 #### `lineWidth` — stroke width
 
@@ -333,7 +325,6 @@ The line's stroke width in points. Default `2`.
 <Liveline data={data} lineWidth={4} />
 ```
 <!-- 🎥 record: same chart at lineWidth 2 → 5 -->
-> _Video coming soon._
 
 #### `badge` — the value pill
 
@@ -344,7 +335,6 @@ The rounded pill that tracks the chart tip and shows the current value. Default
 <Liveline data={data} value={value} badge={false} />
 ```
 <!-- 🎥 record: chart with badge on → off -->
-> _Video coming soon._
 
 #### `badgeVariant` — pill style
 
@@ -355,7 +345,6 @@ tail and uses the surface tone; `accent` fills the pill with the accent colour.
 <Liveline data={data} value={value} badgeVariant='accent' />
 ```
 <!-- 🎥 record: the three badge variants side by side -->
-> _Video coming soon._
 
 #### `badgeTail` — the pill's pointer
 
@@ -366,7 +355,6 @@ a plain rounded pill (also implied by the `minimal` variant).
 <Liveline data={data} value={value} badgeTail={false} />
 ```
 <!-- 🎥 record: badge with tail on → off -->
-> _Video coming soon._
 
 #### `pulse` — the live-dot ring
 
@@ -376,7 +364,6 @@ The pulsing ring radiating from the live dot. Default `true`.
 <Liveline data={data} value={value} pulse={false} />
 ```
 <!-- 🎥 record: the dot with the pulse ring on → off -->
-> _Video coming soon._
 
 ### Behaviour
 
@@ -389,7 +376,6 @@ smoother/laggier; higher snaps faster.
 <Liveline data={data} value={value} lerpSpeed={0.2} />
 ```
 <!-- 🎥 record: a jumpy feed at low vs high lerpSpeed -->
-> _Video coming soon._
 
 #### `emptyText` — empty state
 
@@ -399,8 +385,8 @@ The text shown, centred, when there's no data yet (and not `loading`). Default
 ```tsx
 <Liveline data={[]} emptyText='Waiting for feed…' />
 ```
-<!-- 🎥 record: an empty chart showing the empty text, then data arriving -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/03a73d38-e4a4-459f-991e-52b3ee8c69a1
 
 #### `haptics` ➕ — tactile feedback
 
@@ -410,8 +396,8 @@ Mobile addition, **on by default** (`true`) — a short haptic on degen bursts
 ```tsx
 <Liveline data={data} value={value} degen haptics />
 ```
-<!-- 🎥 record: (device only) a degen burst with a haptic tick -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/d16fc7b2-3dd6-45ea-a438-2aa68a1da291
 
 ### Number & time formatting
 
@@ -431,7 +417,6 @@ count (default `2`). Grouping separators are applied for the locale.
 <Liveline data={data} value={hr} valueSuffix=' bpm' valueDecimals={0} />
 ```
 <!-- 🎥 record: the same feed as "$1,234", "1234.00 bpm", "12%" -->
-> _Video coming soon._
 
 #### `currency` — currency style
 
@@ -443,7 +428,6 @@ JPY, 2 for USD). `valuePrefix`/`valueSuffix`/`valueDecimals` don't apply here.
 <Liveline data={data} value={value} currency='USD' />   // $9,680.78
 ```
 <!-- 🎥 record: the same value as USD, EUR, JPY -->
-> _Video coming soon._
 
 #### `locale` — formatting locale
 
@@ -454,7 +438,6 @@ currency symbol's placement. Defaults to the device locale.
 <Liveline data={data} value={value} currency='EUR' locale='de-DE' />  // 9.680,78 €
 ```
 <!-- 🎥 record: one value under en-US vs de-DE -->
-> _Video coming soon._
 
 #### `useGrouping` — thousands separators
 
@@ -464,7 +447,6 @@ Whether to group the integer part (`1,234,567`). Default `true`.
 <Liveline data={data} value={value} useGrouping={false} />
 ```
 <!-- 🎥 record: a large value with grouping on → off -->
-> _Video coming soon._
 
 #### `fontFamily` — custom font
 
@@ -475,7 +457,6 @@ natively). Falls back to the tabular monospace default.
 <Liveline data={data} value={value} fontFamily='Inter' />
 ```
 <!-- 🎥 record: default font vs a bundled custom font -->
-> _Video coming soon._
 
 ### Momentum & effects
 
@@ -488,8 +469,8 @@ direction from the recent slope; the explicit values force it).
 ```tsx
 <Liveline data={data} value={value} momentum='auto' />
 ```
-<!-- 🎥 record: a rising then falling feed, badge tinting green → red -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/c027bacc-cb33-40dc-8cae-75462e793b01
 
 #### `scrub` — press-and-hold crosshair
 
@@ -501,7 +482,6 @@ Default `true`.
 <Liveline data={data} value={value} scrub />
 ```
 <!-- 🎥 record: pressing and dragging along the line, crosshair + values -->
-> _Video coming soon._
 
 #### `tooltipY` / `tooltipOutline` — crosshair tooltip
 
@@ -513,7 +493,6 @@ over the line (default `true`).
 <Liveline data={data} value={value} tooltipY={20} tooltipOutline={false} />
 ```
 <!-- 🎥 record: scrubbing, tooltip offset + outline on vs off -->
-> _Video coming soon._
 
 #### `exaggerate` — amplify small moves
 
@@ -523,8 +502,8 @@ Tightens the Y-axis around the recent range so tiny fluctuations fill the height
 ```tsx
 <Liveline data={data} value={bpm} exaggerate valueSuffix=' bpm' />
 ```
-<!-- 🎥 record: a near-flat feed, normal vs exaggerated -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/f07bf958-67d0-4b06-a8c6-74bcce0bcdc2
 
 #### `showValue` / `valueMomentumColor` — the big number
 
@@ -534,8 +513,8 @@ tints that number green/red by momentum. Both default `false`.
 ```tsx
 <Liveline data={data} value={value} showValue valueMomentumColor currency='USD' />
 ```
-<!-- 🎥 record: the large value updating and tinting with direction -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/cd6a9511-2431-4e59-933c-8509a211f6a4
 
 #### `degen` — burst + shake
 
@@ -545,8 +524,8 @@ Confetti-style particle bursts and a screen shake on strong up-moves. Pairs with
 ```tsx
 <Liveline data={data} value={value} degen momentum='auto' badgeVariant='accent' haptics />
 ```
-<!-- 🎥 record: a pump triggering the sparks + shake -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/d16fc7b2-3dd6-45ea-a438-2aa68a1da291
 
 ### Candles
 
@@ -558,8 +537,8 @@ candlesticks instead of the line.
 ```tsx
 <Liveline mode='candle' candles={candles} liveCandle={live} candleWidth={3} />
 ```
-<!-- 🎥 record: toggling a chart between line and candle -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/57a30e0e-b816-4cae-86c7-8173b134d577
 
 #### `candles` / `candleWidth` / `liveCandle`
 
@@ -570,8 +549,8 @@ updated every tick so its wicks grow in place until the bucket rolls over.
 ```tsx
 <Liveline mode='candle' candles={history} candleWidth={3} liveCandle={live} />
 ```
-<!-- 🎥 record: the live candle growing, then a new bucket starting -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/57a30e0e-b816-4cae-86c7-8173b134d577
 
 #### candle ↔ line morph
 
@@ -584,8 +563,8 @@ just toggle `mode`. There's no separate "line mode" prop — see
 ```tsx
 <Liveline mode={showCandles ? 'candle' : 'line'} data={ticks} candles={history} liveCandle={live} candleWidth={3} />
 ```
-<!-- 🎥 record: toggling mode, candles melting into the line and back -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/57a30e0e-b816-4cae-86c7-8173b134d577
 
 ### The interval bar
 
@@ -596,8 +575,8 @@ The visible time window, in seconds (default `30`). Changing it smoothly zooms.
 ```tsx
 <Liveline data={data} window={60} />
 ```
-<!-- 🎥 record: window changing 30s → 5m, the line zooming -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/5b2c9c1e-e9ca-4630-9f41-bb8b2566a06a
 
 #### `windows` / `windowStyle` / `onWindowChange` — the native bar
 
@@ -614,8 +593,8 @@ has a single pill style for now).
   onWindowChange={(secs) => console.log(secs)}
 />
 ```
-<!-- 🎥 record: tapping the 30s / 1m / 5m chips -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/5b2c9c1e-e9ca-4630-9f41-bb8b2566a06a
 
 ### States
 
@@ -627,8 +606,8 @@ morphs into the (backfilled) data. Default `false`.
 ```tsx
 <Liveline data={history} loading={isConnecting} />
 ```
-<!-- 🎥 record: loading breathing line → morph into data -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/7162e90e-553a-49e6-b72f-696b402ee988
 
 #### `paused` — freeze scrolling
 
@@ -638,8 +617,8 @@ catches up. Default `false`.
 ```tsx
 <Liveline data={data} value={value} paused={isPaused} />
 ```
-<!-- 🎥 record: pausing, data building up, then resuming/catch-up -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/0bacdaa3-8d21-4d45-8272-fd148d2e2b1c
 
 ### Overlays
 
@@ -651,8 +630,8 @@ the autoscale. `{ value, label? }`.
 ```tsx
 <Liveline data={data} value={value} referenceLine={{ value: 67500, label: 'Above $67,500' }} />
 ```
-<!-- 🎥 record: the reference line held in view as the line moves around it -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/a3fc4e50-5400-49b9-9cfe-adafe19145dd
 
 #### `orderbook` — depth stream
 
@@ -664,8 +643,8 @@ Stream it live via `useLiveline().pushOrderbook()`.
 const { pushOrderbook } = useLiveline()
 // each tick: pushOrderbook({ bids: [[price - d, size], …], asks: [[price + d, size], …] })
 ```
-<!-- 🎥 record: the bid/ask sizes streaming up behind the price line -->
-> _Video coming soon._
+
+https://github.com/user-attachments/assets/aa9e32b1-3716-486d-a0f0-3f1e8d5d9709
 
 ---
 
