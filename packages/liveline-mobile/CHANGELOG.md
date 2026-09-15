@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/lewiscasewell/liveline-mobile/compare/v0.1.1...v0.1.2) (2026-09-15)
+
+
+### Documentation
+
+* lead with four demos, refresh stale references, guard them in CI ([#13](https://github.com/lewiscasewell/liveline-mobile/issues/13)) ([5ee77be](https://github.com/lewiscasewell/liveline-mobile/commit/5ee77be4d568a236d359810cd37c6ddbe9141a95))
+* **rn:** fill the prop sections with clips, drop the rest of the noise ([#15](https://github.com/lewiscasewell/liveline-mobile/issues/15)) ([e759540](https://github.com/lewiscasewell/liveline-mobile/commit/e759540bc6a24d2cbefefde43504ee1c39d15d0b))
+
 ## [0.1.1](https://github.com/lewiscasewell/liveline-mobile/compare/v0.1.0...v0.1.1) (2026-08-31)
 
 
