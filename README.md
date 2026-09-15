@@ -155,7 +155,7 @@ formatting/localization, and every prop).
 straight from GitHub:
 
 ```swift
-.package(url: "https://github.com/lewiscasewell/liveline-mobile", branch: "main")
+.package(url: "https://github.com/lewiscasewell/liveline-mobile", from: "0.1.1")
 // then: import LivelineKit
 ```
 
@@ -206,7 +206,7 @@ single `liveline` artifact (engine + renderer in one AAR), Android 7+ / minSdk 2
 
 ```kotlin
 // build.gradle.kts
-implementation("io.github.lewiscasewell:liveline:0.1.0")
+implementation("io.github.lewiscasewell:liveline:0.1.1")
 ```
 
 `com.liveline.LivelineView` is a plain Android `View` whose property names match
