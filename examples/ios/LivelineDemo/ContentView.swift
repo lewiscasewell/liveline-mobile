@@ -205,12 +205,12 @@ final class Walk: ObservableObject {
 
     init(
         center: Double = 100, vol: Double = 0.55, momentum: Double = 0.94, reversion: Double = 0.01,
-        interval: Double = 0.05, drift: Double = 0
+        interval: Double = 0.05, drift: Double = 0, seedSeconds: Double = 45
     ) {
         self.interval = interval
         var w = TrendWalk(
             center: center, vol: vol, momentum: momentum, reversion: reversion, drift: drift)
-        self.seed = w.seed()
+        self.seed = w.seed(seconds: seedSeconds)
         self.value = w.value
         self.walk = w
         start()
@@ -938,7 +938,12 @@ final class CandleFeed: ObservableObject {
 }
 
 private struct TimeWindowsCard: View {
-    @StateObject private var walk = Walk(center: 87, vol: 0.6)
+    // Seeded past the longest window (5m) so zooming out fills the chart rather
+    // than stranding a short line at the right edge. Over that many steps the
+    // default volatility wanders far outside 0-100%, so the walk is tighter and
+    // more mean-reverting to stay plausible as a percentage.
+    @StateObject private var walk = Walk(
+        center: 65, vol: 0.5, reversion: 0.05, seedSeconds: 360)
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Card(
