@@ -6,13 +6,14 @@ across **Swift** (`LivelineKit`), **Kotlin** (`liveline`), and the **RN** Nitro
 binding (delivery on iOS + Android), plus our deliberate mobile additions.
 
 Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in web) ·
-📄 doc section written (README) · 🎥 video captured.
+📄 doc section written (README) · 🎥 demonstrated in a published
+demo clip (see the README Preview) — not necessarily a clip of its own.
 
 | Prop / feature | Swift | Kotlin | RN·iOS | RN·Android | 📄 | 🎥 | Notes |
 | --- | :--: | :--: | :--: | :--: | :--: | :--: | --- |
-| `data` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | backfill |
-| `value` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | live feed (or `push()`) |
-| `series` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | multi-series |
+| `data` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ | backfill |
+| `value` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ | live feed (or `push()`) |
+| `series` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ | multi-series |
 | `theme` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `color` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | accent |
 | `grid` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | Kotlin renderer + Nitro now respect it |
@@ -22,32 +23,32 @@ Legend: ✅ done · ⚠️ partial · ❌ missing · ➕ mobile addition (not in
 | `fill` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `pulse` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
 | `lineWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
-| `momentum` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `momentum` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
 | `scrub` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | press-and-hold on mobile |
-| `exaggerate` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `showValue` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `valueMomentumColor` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `degen` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | haptics on both |
-| `mode` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | line/candle |
-| `candles` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `exaggerate` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
+| `showValue` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
+| `valueMomentumColor` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
+| `degen` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ | haptics on both |
+| `mode` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ | line/candle |
+| `candles` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
 | `candleWidth` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| candle↔line morph (via `mode`) | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | mode-driven; see divergences |
+| `liveCandle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
+| candle↔line morph (via `mode`) | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ | mode-driven; see divergences |
 | `lineMode`/`lineData`/`lineValue` | — | — | — | — | — | — | intentionally not ported — see divergences |
 | `onModeChange` | — | — | — | — | — | — | app owns `mode`; no built-in toggle to fire it |
-| `onSeriesToggle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | legend in the Nitro container; verified on device |
+| `onSeriesToggle` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ | legend in the Nitro container; verified on device |
 | `seriesToggleCompact` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | legend in the Nitro container; verified on device |
-| `loading` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `paused` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `emptyText` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
-| `window` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `windows` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | Android bar wired |
+| `loading` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
+| `paused` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
+| `emptyText` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ | **B/C gap** |
+| `window` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
+| `windows` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ | Android bar wired |
 | `onWindowChange` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
 | `windowStyle` | — | — | — | — | ☑ | ☐ | accepted for compat; native styling per platform (see divergences) |
 | `tooltipY` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | ported (renderer + Nitro, both platforms) |
 | `tooltipOutline` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | ported (renderer + Nitro, both platforms) |
-| `orderbook` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
-| `referenceLine` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ |  |
+| `orderbook` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
+| `referenceLine` | ✅ | ✅ | ✅ | ✅ | ☑ | ☑ |  |
 | `lerpSpeed` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | **B/C gap** |
 | `padding` | ✅ | ✅ | ✅ | ✅ | ☑ | ☐ | ported (renderer + Nitro, both platforms) |
 | `onHover` | — | — | — | — | — | — | intentionally not ported — no pointer/hover on touch |
