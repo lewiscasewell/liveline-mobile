@@ -23,16 +23,31 @@ ticks, so a fast feed never re-renders React.
 
 ## Preview
 
-<!-- TODO: add demo videos. On GitHub, drag an .mp4 into the README editor (or any
-     issue/PR comment) to upload it and get a https://github.com/user-attachments/…
-     URL, then paste that URL on its own line to replace each placeholder below. -->
+Every clip is the iOS demo app (`examples/ios/LivelineDemo`) running on a real
+device loop — no post-production, no sped-up footage.
 
-> **Demo videos coming soon.**
+### The chart types
 
 | | |
 | --- | --- |
-| **Line + momentum** — _video coming soon_ | **Candlesticks** — _video coming soon_ |
-| **Multi-series** — _video coming soon_ | **Orderbook stream** — _video coming soon_ |
+| **Basic**<br>A live value. Two props: `data` and `value`.<br>https://github.com/user-attachments/assets/683393ca-6680-4c9a-92dc-9db22a461326 | **Momentum**<br>Directional chevrons on the live dot; the badge tints green up / red down.<br>https://github.com/user-attachments/assets/c027bacc-cb33-40dc-8cae-75462e793b01 |
+| **Candlesticks**<br>OHLC candles with a live candle that grows its wicks — toggled against line mode.<br>https://github.com/user-attachments/assets/57a30e0e-b816-4cae-86c7-8173b134d577 | **Multi-series**<br>A prediction market: three outcomes summing to 100%. Tap a chip to toggle a line.<br>https://github.com/user-attachments/assets/733ed229-13da-4e91-b65a-fd916aec5072 |
+| **Orderbook**<br>Resting bid/ask sizes float up behind the price line — green bids, red asks.<br>https://github.com/user-attachments/assets/aa9e32b1-3716-486d-a0f0-3f1e8d5d9709 | **Time windows**<br>Tap the native interval bar to smoothly zoom the visible span.<br>https://github.com/user-attachments/assets/5b2c9c1e-e9ca-4630-9f41-bb8b2566a06a |
+
+### Feeds it was built for
+
+| | |
+| --- | --- |
+| **Heart rate**<br>`exaggerate` tightens the Y-axis so a few bpm of variation fills the height.<br>https://github.com/user-attachments/assets/f07bf958-67d0-4b06-a8c6-74bcce0bcdc2 | **CPU usage**<br>A low idle baseline with occasional spikes.<br>https://github.com/user-attachments/assets/9bb3325f-1c1a-4220-ad5b-f12f10608044 |
+| **Slow ticker**<br>One update every 4s, and it still scrolls smoothly between ticks.<br>https://github.com/user-attachments/assets/a3578da4-b5eb-461d-911c-432c5f20839c | **Reference line**<br>A horizontal marker at a fixed value, kept in view.<br>https://github.com/user-attachments/assets/a3fc4e50-5400-49b9-9cfe-adafe19145dd |
+| **Value overlay**<br>`showValue` draws the live number over the chart; `valueMomentumColor` tints it.<br>https://github.com/user-attachments/assets/cd6a9511-2431-4e59-933c-8509a211f6a4 | **Degen**<br>Chart shake and sparks on strong up-moves, with momentum arrows and haptics.<br>https://github.com/user-attachments/assets/d16fc7b2-3dd6-45ea-a438-2aa68a1da291 |
+
+### States, and holding up under load
+
+| | |
+| --- | --- |
+| **Loading**<br>A breathing line that morphs into the backfilled chart once data lands.<br>https://github.com/user-attachments/assets/7162e90e-553a-49e6-b72f-696b402ee988 | **No data**<br>The empty state, for a feed that has nothing to show yet.<br>https://github.com/user-attachments/assets/03a73d38-e4a4-459f-991e-52b3ee8c69a1 |
+| **Paused**<br>Data keeps arriving while paused; on resume the chart catches up.<br>https://github.com/user-attachments/assets/0bacdaa3-8d21-4d45-8272-fd148d2e2b1c | **Stress tests**<br>Wild, chaotic, spiky and irregular feeds driven straight at the render loop.<br>https://github.com/user-attachments/assets/30bb1025-70a5-4f03-b47a-d36ca8b2daa2 |
 
 _See the original web charts in motion in Benji Taylor's
 [liveline](https://github.com/benjitaylor/liveline) and its
